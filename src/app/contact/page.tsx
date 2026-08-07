@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
-import { Mail, Phone, MapPin } from "lucide-react";
+import Link from "next/link";
+import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { ContactForm } from "@/components/contact-form";
 import { getTripBySlug } from "@/lib/data";
+import { site, whatsappLink } from "@/config/site";
 
-export const metadata: Metadata = { title: "Contact us" };
+export const metadata: Metadata = {
+  title: "Contact us",
+  description:
+    "Questions about Escape 001, room sharing, custom dates or an existing booking — write to Outway Club and a person replies within one business day.",
+  alternates: { canonical: "/contact" },
+};
 
 export default async function ContactPage({
   searchParams,
@@ -13,31 +20,75 @@ export default async function ContactPage({
 }) {
   const { trip: tripSlug } = await searchParams;
   const trip = tripSlug ? await getTripBySlug(tripSlug) : null;
+  const whatsapp = whatsappLink("Hi Outway — I have a question about Escape 001.");
 
   return (
-    <div className="py-14">
+    <div className="py-14 sm:py-20">
       <Container>
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.3fr]">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.25fr] lg:gap-16">
           <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-clay">Get in touch</p>
-            <h1 className="font-display text-4xl font-semibold text-ink">
-              {trip ? "Tell us more about your trip" : "Let's plan something"}
+            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+              Get in touch
+            </p>
+            <h1 className="font-display text-4xl font-semibold leading-tight text-ink sm:text-5xl">
+              {trip ? "Tell us what you need to know" : "Ask us anything"}
             </h1>
-            <p className="mt-3 max-w-md text-ink-500">
-              Whether it&apos;s a question about an existing departure or a fully custom
-              itinerary, our team replies within a business day.
+            <p className="mt-4 max-w-md text-lg leading-relaxed text-ink-500">
+              Room sharing, dietary needs, whether the monsoon drive is rough, changing an existing
+              booking — a real person reads every message and replies within {site.responseTime}.
             </p>
 
-            <div className="mt-8 space-y-4">
-              <div className="flex items-center gap-3 text-sm text-ink-700">
-                <Mail size={18} className="text-pine" /> hello@outwayclub.example
-              </div>
-              <div className="flex items-center gap-3 text-sm text-ink-700">
-                <Phone size={18} className="text-pine" /> +91 98765 43210
-              </div>
-              <div className="flex items-center gap-3 text-sm text-ink-700">
-                <MapPin size={18} className="text-pine" /> Bengaluru, India
-              </div>
+            <dl className="mt-10 space-y-5">
+              <ContactRow icon={<Mail size={17} />} label="Email">
+                <a href={`mailto:${site.email}`} className="text-ink-700 hover:text-pine">
+                  {site.email}
+                </a>
+              </ContactRow>
+
+              {whatsapp && (
+                <ContactRow icon={<MessageCircle size={17} />} label="WhatsApp">
+                  <a
+                    href={whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-ink-700 hover:text-pine"
+                  >
+                    Message us on WhatsApp
+                  </a>
+                </ContactRow>
+              )}
+
+              {site.phoneDisplay && (
+                <ContactRow icon={<Phone size={17} />} label="Phone">
+                  <a
+                    href={`tel:${site.phoneDisplay.replace(/\s/g, "")}`}
+                    className="text-ink-700 hover:text-pine"
+                  >
+                    {site.phoneDisplay}
+                  </a>
+                </ContactRow>
+              )}
+
+              <ContactRow icon={<MapPin size={17} />} label="Based in">
+                <span className="text-ink-700">{site.address || site.city}</span>
+              </ContactRow>
+
+              <ContactRow icon={<Clock size={17} />} label="Reply time">
+                <span className="text-ink-700">
+                  Within {site.responseTime}, Monday to Saturday
+                </span>
+              </ContactRow>
+            </dl>
+
+            <div className="mt-10 rounded-2xl bg-cream-300/70 p-5">
+              <p className="text-sm font-semibold text-ink">Already booked?</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-500">
+                You can view, and if you need to, cancel your booking yourself from{" "}
+                <Link href="/account" className="font-medium text-pine underline underline-offset-2">
+                  My bookings
+                </Link>
+                . It shows the exact refund before you confirm anything.
+              </p>
             </div>
           </div>
 
@@ -46,6 +97,28 @@ export default async function ContactPage({
           </div>
         </div>
       </Container>
+    </div>
+  );
+}
+
+function ContactRow({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3.5">
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pine-50 text-pine">
+        {icon}
+      </span>
+      <div>
+        <dt className="text-xs font-semibold uppercase tracking-wider text-ink-400">{label}</dt>
+        <dd className="mt-0.5 text-sm">{children}</dd>
+      </div>
     </div>
   );
 }

@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { SmartImage } from "@/components/ui/smart-image";
 import { notFound, redirect } from "next/navigation";
-import { CheckCircle2, Calendar, Users, Receipt } from "lucide-react";
+import { CheckCircle2, Calendar, Mail, Users, Receipt } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { getBookingById } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth";
 import { formatINR, formatDate, formatDateRange } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Booking confirmed" };
+export const metadata: Metadata = {
+  title: "Booking confirmed",
+  robots: { index: false, follow: false },
+};
 
 export default async function BookingConfirmationPage({
   params,
@@ -23,6 +26,8 @@ export default async function BookingConfirmationPage({
   const booking = await getBookingById(bookingId);
   if (!booking || !booking.trip) notFound();
 
+  const receiptEmail = booking.contact_email ?? currentUser.user.email;
+
   return (
     <div className="py-14">
       <Container className="max-w-2xl">
@@ -35,14 +40,21 @@ export default async function BookingConfirmationPage({
               Booking confirmed
             </h1>
             <p className="mt-2 text-sm text-ink-500">
-              A confirmation has been recorded against your account. Reference:{" "}
-              <span className="font-mono text-ink-700">{booking.id.slice(0, 8).toUpperCase()}</span>
+              Your seat is paid for and held. Reference:{" "}
+              <span className="font-mono font-semibold text-ink-700">
+                {booking.id.slice(0, 8).toUpperCase()}
+              </span>
             </p>
+            {receiptEmail && (
+              <p className="mt-3 flex items-center gap-2 rounded-full bg-pine-50 px-4 py-2 text-xs text-pine-600">
+                <Mail size={13} /> A receipt is on its way to {receiptEmail}
+              </p>
+            )}
           </div>
 
           <div className="mt-8 flex gap-4 border-t border-border pt-6">
             <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl">
-              <Image src={booking.trip.hero_image} alt={booking.trip.title} fill sizes="96px" className="object-cover" />
+              <SmartImage src={booking.trip.hero_image} alt={booking.trip.title} fill sizes="96px" className="object-cover" />
             </div>
             <div>
               <p className="font-display text-lg font-semibold text-ink">{booking.trip.title}</p>
@@ -84,14 +96,38 @@ export default async function BookingConfirmationPage({
             </span>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 rounded-2xl bg-cream-300/70 p-5">
+            <p className="text-sm font-semibold text-ink">What happens next</p>
+            <ol className="mt-2.5 space-y-2 text-sm leading-relaxed text-ink-500">
+              <li>1. Keep this reference — it&apos;s what we&apos;ll ask for.</li>
+              <li>
+                2. A few days before departure we&apos;ll email the reporting point, timings and
+                your trip captain&apos;s number.
+              </li>
+              <li>
+                3. Pack an original government photo ID. It&apos;s mandatory at hotel check-in and
+                a photo on your phone won&apos;t do.
+              </li>
+            </ol>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/account" className="btn-primary flex-1">
               View my bookings
             </Link>
-            <Link href="/trips" className="btn-outline flex-1">
-              Browse more trips
+            <Link href="/faq" className="btn-outline flex-1">
+              Read the FAQs
             </Link>
           </div>
+
+          <p className="mt-5 text-center text-xs leading-relaxed text-ink-400">
+            Need to change or cancel? You can do it yourself from My bookings, and you&apos;ll see
+            the exact refund first.{" "}
+            <Link href="/refund-policy" className="underline underline-offset-2 hover:text-pine">
+              Cancellation policy
+            </Link>
+            .
+          </p>
         </div>
       </Container>
     </div>

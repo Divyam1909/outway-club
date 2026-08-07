@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { Calendar, Users } from "lucide-react";
+import { SmartImage } from "@/components/ui/smart-image";
 import { formatINR, formatDateRange } from "@/lib/utils";
 import type { Departure, Trip } from "@/lib/types";
 
@@ -20,7 +20,7 @@ export function OrderSummary({
     <div className="rounded-3xl border border-border bg-white p-6 shadow-card lg:sticky lg:top-24">
       <div className="flex gap-3">
         <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl">
-          <Image src={trip.hero_image} alt={trip.title} fill sizes="80px" className="object-cover" />
+          <SmartImage src={trip.hero_image} alt={trip.title} fill sizes="80px" className="object-cover" />
         </div>
         <div>
           <p className="font-display text-base font-semibold leading-snug text-ink">{trip.title}</p>

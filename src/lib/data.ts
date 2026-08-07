@@ -8,6 +8,9 @@ import type {
   TripWithDepartures,
   Review,
   Booking,
+  Profile,
+  Enquiry,
+  Subscriber,
 } from "@/lib/types";
 
 const TRIP_COLUMNS = "*, destination:destinations(*)";
@@ -79,27 +82,6 @@ export async function getFeaturedTrips(limit = 6): Promise<Trip[]> {
 
   if (error) throw error;
   return (data as Trip[]) ?? [];
-}
-
-export async function getGroupTrips(): Promise<TripWithDepartures[]> {
-  if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("trips")
-    .select("*, destination:destinations(*), departures(*)")
-    .eq("is_published", true)
-    .eq("is_group_trip", true)
-    .order("rating", { ascending: false });
-
-  if (error) throw error;
-
-  const trips = (data as unknown as TripWithDepartures[]) ?? [];
-  return trips.map((trip) => ({
-    ...trip,
-    departures: [...(trip.departures ?? [])]
-      .filter((d) => d.status !== "closed" && new Date(d.start_date) >= new Date())
-      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()),
-  }));
 }
 
 export async function getAllTrips(filters: TripFilters = {}): Promise<Trip[]> {
@@ -186,31 +168,67 @@ export async function getAllBookingsForAdmin(): Promise<Booking[]> {
   return (data as unknown as Booking[]) ?? [];
 }
 
-export async function getAdminStats() {
-  if (!isSupabaseConfigured()) {
-    return { tripCount: 0, publishedCount: 0, destinationCount: 0, bookingCount: 0, revenue: 0 };
-  }
+const EMPTY_ADMIN_STATS = {
+  tripCount: 0,
+  publishedCount: 0,
+  bookingCount: 0,
+  travellerCount: 0,
+  revenue: 0,
+  refunded: 0,
+  cancelledCount: 0,
+  customerCount: 0,
+  newEnquiryCount: 0,
+  pendingReviewCount: 0,
+  subscriberCount: 0,
+  seatsSold: 0,
+  seatsTotal: 0,
+};
+
+export type AdminStats = typeof EMPTY_ADMIN_STATS;
+
+export async function getAdminStats(): Promise<AdminStats> {
+  if (!isSupabaseConfigured()) return EMPTY_ADMIN_STATS;
   const supabase = await createClient();
 
-  const [{ count: tripCount }, { count: publishedCount }, { data: bookings }, { count: destinationCount }] =
-    await Promise.all([
-      supabase.from("trips").select("*", { count: "exact", head: true }),
-      supabase.from("trips").select("*", { count: "exact", head: true }).eq("is_published", true),
-      supabase.from("bookings").select("total_amount, payment_status, status"),
-      supabase.from("destinations").select("*", { count: "exact", head: true }),
-    ]);
+  const [
+    { count: tripCount },
+    { count: publishedCount },
+    { data: bookings },
+    { count: customerCount },
+    { count: newEnquiryCount },
+    { count: pendingReviewCount },
+    { count: subscriberCount },
+    { data: departures },
+  ] = await Promise.all([
+    supabase.from("trips").select("*", { count: "exact", head: true }),
+    supabase.from("trips").select("*", { count: "exact", head: true }).eq("is_published", true),
+    supabase.from("bookings").select("total_amount, refund_amount, payment_status, status, num_travelers"),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("enquiries").select("*", { count: "exact", head: true }).eq("status", "new"),
+    supabase.from("reviews").select("*", { count: "exact", head: true }).eq("is_approved", false),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
+    supabase.from("departures").select("total_seats, seats_booked"),
+  ]);
 
-  const confirmedBookings = (bookings ?? []).filter((b) => b.status !== "cancelled");
-  const revenue = (bookings ?? [])
-    .filter((b) => b.payment_status === "paid")
-    .reduce((sum, b) => sum + Number(b.total_amount), 0);
+  const rows = bookings ?? [];
+  const live = rows.filter((booking) => booking.status !== "cancelled");
 
   return {
     tripCount: tripCount ?? 0,
     publishedCount: publishedCount ?? 0,
-    destinationCount: destinationCount ?? 0,
-    bookingCount: confirmedBookings.length,
-    revenue,
+    bookingCount: live.length,
+    travellerCount: live.reduce((sum, booking) => sum + Number(booking.num_travelers ?? 0), 0),
+    revenue: rows
+      .filter((booking) => booking.payment_status === "paid")
+      .reduce((sum, booking) => sum + Number(booking.total_amount), 0),
+    refunded: rows.reduce((sum, booking) => sum + Number(booking.refund_amount ?? 0), 0),
+    cancelledCount: rows.filter((booking) => booking.status === "cancelled").length,
+    customerCount: customerCount ?? 0,
+    newEnquiryCount: newEnquiryCount ?? 0,
+    pendingReviewCount: pendingReviewCount ?? 0,
+    subscriberCount: subscriberCount ?? 0,
+    seatsSold: (departures ?? []).reduce((sum, d) => sum + Number(d.seats_booked ?? 0), 0),
+    seatsTotal: (departures ?? []).reduce((sum, d) => sum + Number(d.total_seats ?? 0), 0),
   };
 }
 
@@ -234,18 +252,122 @@ export async function getTripByIdForAdmin(id: string): Promise<TripWithDetails |
   return trip;
 }
 
-export async function getFeaturedReviews(limit = 6): Promise<(Review & { trip: Pick<Trip, "title" | "slug"> })[]> {
+export type ReviewWithTrip = Review & { trip: Pick<Trip, "title" | "slug"> | null };
+
+/**
+ * Approved reviews across every trip, newest first.
+ *
+ * There is no seeded or synthesised review data anywhere in this project —
+ * if this returns an empty array, nobody has travelled and reviewed yet, and
+ * the UI says so rather than inventing filler.
+ */
+export async function getApprovedReviews(limit?: number): Promise<ReviewWithTrip[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+
+  let query = supabase
+    .from("reviews")
+    .select("*, trip:trips(title, slug)")
+    .eq("is_approved", true)
+    .order("created_at", { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data as unknown as ReviewWithTrip[]) ?? [];
+}
+
+/** Highest-rated approved reviews, for the homepage strip. */
+export async function getFeaturedReviews(limit = 3): Promise<ReviewWithTrip[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reviews")
     .select("*, trip:trips(title, slug)")
     .eq("is_approved", true)
-    .eq("rating", 5)
+    .gte("rating", 4)
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) throw error;
-  return (data as unknown as (Review & { trip: Pick<Trip, "title" | "slug"> })[]) ?? [];
+  return (data as unknown as ReviewWithTrip[]) ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Admin console queries
+// ---------------------------------------------------------------------------
+
+export async function getPendingReviewsForAdmin(): Promise<ReviewWithTrip[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*, trip:trips(title, slug)")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data as unknown as ReviewWithTrip[]) ?? [];
+}
+
+export async function getBookingByIdForAdmin(id: string): Promise<Booking | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("*, trip:trips(*), departure:departures(*), travelers(*)")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as unknown as Booking | null;
+}
+
+export async function getProfilesForAdmin(): Promise<(Profile & { booking_count: number })[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+
+  const [{ data: profiles, error }, { data: bookings }] = await Promise.all([
+    supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+    supabase.from("bookings").select("user_id, status"),
+  ]);
+
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  for (const booking of bookings ?? []) {
+    if (booking.status === "cancelled") continue;
+    counts.set(booking.user_id, (counts.get(booking.user_id) ?? 0) + 1);
+  }
+
+  return ((profiles as Profile[]) ?? []).map((profile) => ({
+    ...profile,
+    booking_count: counts.get(profile.id) ?? 0,
+  }));
+}
+
+export async function getEnquiriesForAdmin(): Promise<Enquiry[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("enquiries")
+    .select("*, trip:trips(title, slug)")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data as unknown as Enquiry[]) ?? [];
+}
+
+export async function getSubscribersForAdmin(): Promise<Subscriber[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("newsletter_subscribers")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data as Subscriber[]) ?? [];
 }
 
 export async function getTripBySlug(slug: string): Promise<TripWithDetails | null> {

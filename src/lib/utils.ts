@@ -29,6 +29,18 @@ export function seatsLeft(totalSeats: number, seatsBooked: number): number {
   return Math.max(totalSeats - seatsBooked, 0);
 }
 
+/**
+ * Normalises an embedded Supabase relation to a single row.
+ *
+ * Without generated database types, postgrest-js widens every embedded
+ * relation to an array — even a many-to-one like bookings → departures, which
+ * actually comes back as a single object at runtime. This accepts both shapes.
+ */
+export function relatedOne<T>(value: unknown): T | null {
+  if (Array.isArray(value)) return (value[0] as T) ?? null;
+  return (value as T) ?? null;
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

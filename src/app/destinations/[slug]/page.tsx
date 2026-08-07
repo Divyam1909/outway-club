@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
+import { SmartImage } from "@/components/ui/smart-image";
 import { MapPin, CalendarDays } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { TripCard } from "@/components/trips/trip-card";
@@ -36,13 +36,14 @@ export default async function DestinationPage({
   return (
     <div>
       <section className="relative flex h-[26rem] items-end">
-        <Image
+        <SmartImage
           src={destination.hero_image}
           alt={destination.name}
           fill
           priority
           sizes="100vw"
           className="object-cover"
+          fallbackLabel={destination.name}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent" />
         <Container className="relative pb-10 text-cream-100">
@@ -66,7 +67,7 @@ export default async function DestinationPage({
               <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {destination.gallery.map((src, i) => (
                   <div key={src} className="relative aspect-square overflow-hidden rounded-xl">
-                    <Image
+                    <SmartImage
                       src={src}
                       alt={`${destination.name} ${i + 1}`}
                       fill

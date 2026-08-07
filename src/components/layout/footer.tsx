@@ -1,90 +1,146 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Instagram, Facebook, Youtube } from "lucide-react";
+import { Instagram, Mail, MapPin, MessageCircle, Youtube } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { site, whatsappLink } from "@/config/site";
 
 const COLUMNS = [
   {
-    title: "Explore",
+    title: "Travel",
     links: [
-      { href: "/trips", label: "All trips" },
+      { href: "/trips", label: "Escape 001" },
+      { href: "/upcoming", label: "Upcoming escapes" },
+      { href: "/testimonials", label: "Traveller reviews" },
       { href: "/destinations", label: "Destinations" },
-      { href: "/group-trips", label: "Group trips" },
-      { href: "/trips?category=honeymoon", label: "Honeymoon trips" },
     ],
   },
   {
-    title: "Company",
+    title: "Outway",
     links: [
       { href: "/about", label: "About us" },
       { href: "/contact", label: "Contact" },
       { href: "/faq", label: "FAQs" },
+      { href: "/account", label: "My bookings" },
     ],
   },
   {
-    title: "Account",
+    title: "Legal",
     links: [
-      { href: "/login", label: "Log in" },
-      { href: "/signup", label: "Create account" },
-      { href: "/account", label: "My bookings" },
+      { href: "/terms", label: "Terms of Service" },
+      { href: "/privacy", label: "Privacy Policy" },
+      { href: "/refund-policy", label: "Cancellation & refunds" },
     ],
   },
 ];
 
 export function Footer() {
+  const whatsapp = whatsappLink("Hi Outway — I have a question.");
+
   return (
     <footer className="border-t border-border bg-pine-700 text-cream-100">
-      <Container className="py-14">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
-          <div>
-            <Link href="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="Outway Club" className="h-12 w-12 rounded-full" />
+      <Container className="py-14 sm:py-16">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:grid-cols-[1.6fr_1fr_1fr_1fr_1.4fr]">
+          <div className="col-span-2 md:col-span-1">
+            <Link href="/" className="inline-flex items-center gap-2" aria-label="Outway Club — home">
+              <Image
+                src="/logo.png"
+                alt="Outway Club"
+                width={48}
+                height={48}
+                className="h-12 w-12 rounded-full"
+              />
             </Link>
-            <p className="mt-4 max-w-xs text-sm text-cream-100/70">
-              Small-group and private trips across India, planned properly — full itineraries,
-              honest pricing, real trip leaders on the ground.
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream-100/70">
+              One escape at a time, planned end to end and capped at eighteen people. Currently
+              running Escape 001 — Udaipur × Mount Abu, 15–17 August.
             </p>
-            <div className="mt-5 flex gap-4">
-              <a href="#" aria-label="Instagram" className="text-cream-100/70 hover:text-gold">
-                <Instagram size={18} />
-              </a>
-              <a href="#" aria-label="Facebook" className="text-cream-100/70 hover:text-gold">
-                <Facebook size={18} />
-              </a>
-              <a href="#" aria-label="YouTube" className="text-cream-100/70 hover:text-gold">
-                <Youtube size={18} />
-              </a>
+
+            <div className="mt-5 flex gap-3">
+              {site.social.instagram && (
+                <a
+                  href={site.social.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Outway Club on Instagram"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/75 transition-colors hover:bg-gold hover:text-pine-700"
+                >
+                  <Instagram size={17} />
+                </a>
+              )}
+              {site.social.youtube && (
+                <a
+                  href={site.social.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Outway Club on YouTube"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/75 transition-colors hover:bg-gold hover:text-pine-700"
+                >
+                  <Youtube size={17} />
+                </a>
+              )}
+              {whatsapp && (
+                <a
+                  href={whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Message Outway Club on WhatsApp"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/75 transition-colors hover:bg-gold hover:text-pine-700"
+                >
+                  <MessageCircle size={17} />
+                </a>
+              )}
             </div>
           </div>
 
-          {COLUMNS.map((col) => (
-            <div key={col.title}>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-cream-100/50">
-                {col.title}
+          {COLUMNS.map((column) => (
+            <nav key={column.title} aria-label={column.title}>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cream-100/45">
+                {column.title}
               </p>
               <ul className="space-y-3">
-                {col.links.map((link) => (
+                {column.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-cream-100/80 hover:text-gold">
+                    <Link
+                      href={link.href}
+                      className="text-sm text-cream-100/80 transition-colors hover:text-gold"
+                    >
                       {link.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
           ))}
 
-          <div>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-cream-100/50">
-              Trip ideas in your inbox
+          <div className="col-span-2 md:col-span-4 lg:col-span-1">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cream-100/45">
+              Hear about Escape 002 first
             </p>
-            <NewsletterForm />
+            <NewsletterForm source="footer" />
+            <p className="mt-3 text-xs leading-relaxed text-cream-100/50">
+              One email when a new escape opens. Nothing else, ever.
+            </p>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-cream-100/10 pt-6 text-xs text-cream-100/50 sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} Outway Club. All rights reserved.</p>
-          <p>Made for people who&apos;d rather be somewhere else this weekend.</p>
+        <div className="mt-12 flex flex-col gap-4 border-t border-cream-100/10 pt-7 text-xs text-cream-100/55 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <a href={`mailto:${site.email}`} className="flex items-center gap-1.5 hover:text-gold">
+              <Mail size={13} /> {site.email}
+            </a>
+            {site.phoneDisplay && (
+              <a href={`tel:${site.phoneDisplay.replace(/\s/g, "")}`} className="hover:text-gold">
+                {site.phoneDisplay}
+              </a>
+            )}
+            <span className="flex items-center gap-1.5">
+              <MapPin size={13} /> {site.address || site.city}
+            </span>
+          </div>
+          <p>
+            &copy; {new Date().getFullYear()} {site.legalName}. All rights reserved.
+          </p>
         </div>
       </Container>
     </footer>

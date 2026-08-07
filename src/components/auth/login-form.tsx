@@ -3,28 +3,38 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") ?? "/account";
+  const redirect = safeRedirect(searchParams.get("redirect"));
+  const linkError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [reveal, setReveal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     setLoading(true);
     setError(null);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
 
-    if (error) {
-      setError(error.message);
+    if (signInError) {
+      setError(
+        /invalid login credentials/i.test(signInError.message)
+          ? "That email and password don't match an account."
+          : signInError.message
+      );
       setLoading(false);
       return;
     }
@@ -35,30 +45,67 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {linkError && !error && (
+        <p role="alert" className="rounded-xl bg-clay-50 px-4 py-3 text-sm text-clay-600">
+          {linkError}
+        </p>
+      )}
+
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-ink-700">Email</label>
+        <label htmlFor="login-email" className="field-label">
+          Email
+        </label>
         <input
+          id="login-email"
           type="email"
           required
+          autoComplete="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-pine focus:outline-none"
+          onChange={(event) => setEmail(event.target.value)}
+          className="field"
           placeholder="you@email.com"
         />
       </div>
+
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-ink-700">Password</label>
-        <input
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-pine focus:outline-none"
-          placeholder="••••••••"
-        />
+        <div className="mb-1.5 flex items-baseline justify-between gap-3">
+          <label htmlFor="login-password" className="field-label !mb-0">
+            Password
+          </label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-pine hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+        <div className="relative">
+          <input
+            id="login-password"
+            type={reveal ? "text" : "password"}
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="field pr-11"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            onClick={() => setReveal((value) => !value)}
+            aria-label={reveal ? "Hide password" : "Show password"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700"
+          >
+            {reveal ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
+        </div>
       </div>
 
-      {error && <p className="text-sm text-clay-600">{error}</p>}
+      {error && (
+        <p role="alert" className="rounded-xl bg-clay-50 px-4 py-3 text-sm text-clay-600">
+          {error}
+        </p>
+      )}
 
       <button type="submit" disabled={loading} className="btn-primary w-full py-3">
         {loading ? "Signing in…" : "Log in"}
@@ -72,4 +119,10 @@ export function LoginForm() {
       </p>
     </form>
   );
+}
+
+/** Never bounce a signed-in user to an off-site URL supplied in a query param. */
+function safeRedirect(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/account";
+  return value;
 }

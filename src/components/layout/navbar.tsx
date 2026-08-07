@@ -2,10 +2,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { NavbarClient } from "./navbar-client";
 
 export const NAV_LINKS = [
-  { href: "/trips", label: "Trips" },
-  { href: "/destinations", label: "Destinations" },
-  { href: "/group-trips", label: "Group Trips" },
+  { href: "/trips", label: "Escapes" },
+  { href: "/upcoming", label: "What's next" },
+  { href: "/testimonials", label: "Reviews" },
   { href: "/about", label: "About" },
+  { href: "/faq", label: "FAQs" },
   { href: "/contact", label: "Contact" },
 ];
 

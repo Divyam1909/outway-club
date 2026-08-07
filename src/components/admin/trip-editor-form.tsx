@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { ImageUploader } from "@/components/admin/image-uploader";
 import { slugify } from "@/lib/utils";
 import type { Category, Destination, Difficulty, TripType, TripWithDetails } from "@/lib/types";
 
@@ -68,7 +69,7 @@ export function TripEditorForm({
   const [shortDescription, setShortDescription] = useState(initialTrip?.short_description ?? "");
   const [description, setDescription] = useState(initialTrip?.description ?? "");
   const [heroImage, setHeroImage] = useState(initialTrip?.hero_image ?? "");
-  const [galleryText, setGalleryText] = useState(fromLines(initialTrip?.gallery));
+  const [gallery, setGallery] = useState<string[]>(initialTrip?.gallery ?? []);
   const [highlightsText, setHighlightsText] = useState(fromLines(initialTrip?.highlights));
   const [inclusionsText, setInclusionsText] = useState(fromLines(initialTrip?.inclusions));
   const [exclusionsText, setExclusionsText] = useState(fromLines(initialTrip?.exclusions));
@@ -152,6 +153,10 @@ export function TripEditorForm({
       setError("Select a destination.");
       return;
     }
+    if (!heroImage) {
+      setError("Upload a hero image — it's what the trip card and link previews use.");
+      return;
+    }
 
     setSaving(true);
     const supabase = createClient();
@@ -173,7 +178,7 @@ export function TripEditorForm({
       short_description: shortDescription,
       description,
       hero_image: heroImage,
-      gallery: toLines(galleryText),
+      gallery,
       highlights: toLines(highlightsText),
       inclusions: toLines(inclusionsText),
       exclusions: toLines(exclusionsText),
@@ -373,14 +378,19 @@ export function TripEditorForm({
             <label className={LABEL}>Full description</label>
             <textarea className={INPUT} rows={4} value={description} onChange={(e) => setDescription(e.target.value)} required />
           </div>
-          <div>
-            <label className={LABEL}>Hero image URL</label>
-            <input className={INPUT} value={heroImage} onChange={(e) => setHeroImage(e.target.value)} required />
-          </div>
-          <div>
-            <label className={LABEL}>Gallery image URLs (one per line)</label>
-            <textarea className={INPUT} rows={3} value={galleryText} onChange={(e) => setGalleryText(e.target.value)} />
-          </div>
+          <ImageUploader
+            label="Hero image"
+            hint="Shown at the top of the trip page, on cards and in link previews. Landscape, at least 1600px wide."
+            value={heroImage ? [heroImage] : []}
+            onChange={(next) => setHeroImage(next[0] ?? "")}
+          />
+          <ImageUploader
+            label="Gallery"
+            hint="Four to six photos. The first one sits next to the hero — drag order matters."
+            value={gallery}
+            onChange={setGallery}
+            multiple
+          />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className={LABEL}>Highlights (one per line)</label>

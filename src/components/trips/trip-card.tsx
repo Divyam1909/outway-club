@@ -1,34 +1,36 @@
-import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { RatingStars } from "@/components/ui/rating-stars";
+import { SmartImage } from "@/components/ui/smart-image";
 import { formatINR, CATEGORY_LABELS } from "@/lib/utils";
 import type { Trip } from "@/lib/types";
 
 export function TripCard({ trip }: { trip: Trip }) {
-  const hasDiscount = trip.discounted_price && trip.discounted_price < trip.price_per_person;
+  const hasDiscount = Boolean(trip.discounted_price && trip.discounted_price < trip.price_per_person);
+  const hasReviews = trip.review_count > 0;
 
   return (
     <Link
       href={`/trips/${trip.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-card"
+      className="card-lift group flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-soft"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden">
-        <Image
+        <SmartImage
           src={trip.hero_image}
           alt={trip.title}
           fill
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:group-hover:scale-100"
+          fallbackLabel={trip.destination?.name}
         />
-        <div className="absolute left-3 top-3 flex gap-2">
+        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           <Badge tone="pine" className="bg-white/95 text-pine-600 shadow-soft">
             {CATEGORY_LABELS[trip.category] ?? trip.category}
           </Badge>
           {trip.is_group_trip && (
             <Badge tone="gold" className="bg-white/95 shadow-soft">
-              Group trip
+              Small group
             </Badge>
           )}
         </div>
@@ -58,16 +60,18 @@ export function TripCard({ trip }: { trip: Trip }) {
           <span className="capitalize">{trip.difficulty}</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <RatingStars rating={trip.rating} />
-          <span className="text-xs text-ink-400">
-            {trip.rating.toFixed(1)} ({trip.review_count})
-          </span>
-        </div>
+        {hasReviews && (
+          <div className="flex items-center gap-2">
+            <RatingStars rating={trip.rating} />
+            <span className="text-xs text-ink-400">
+              {trip.rating.toFixed(1)} ({trip.review_count})
+            </span>
+          </div>
+        )}
 
         <div className="mt-auto flex items-end justify-between border-t border-border pt-3">
           <div>
-            <p className="text-xs text-ink-400">Starts from</p>
+            <p className="text-xs text-ink-400">From</p>
             <div className="flex items-baseline gap-2">
               <span className="font-display text-xl font-semibold text-ink">
                 {formatINR(trip.discounted_price ?? trip.price_per_person)}

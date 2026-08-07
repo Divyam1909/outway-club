@@ -2,33 +2,42 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { Eye, EyeOff, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+const MIN_PASSWORD_LENGTH = 8;
 
 export function SignupForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [reveal, setReveal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     setError(null);
 
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Use at least ${MIN_PASSWORD_LENGTH} characters for your password.`);
+      return;
+    }
+
+    setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
-      email,
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: email.trim(),
       password,
       options: {
-        data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: { full_name: fullName.trim() },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
       },
     });
 
-    if (error) {
-      setError(error.message);
+    if (signUpError) {
+      setError(signUpError.message);
       setLoading(false);
       return;
     }
@@ -39,9 +48,13 @@ export function SignupForm() {
 
   if (done) {
     return (
-      <div className="rounded-2xl border border-pine-100 bg-pine-50 p-5 text-sm text-pine-600">
-        Almost there — check <strong>{email}</strong> for a confirmation link to activate your
-        account.
+      <div className="rounded-2xl border border-pine-100 bg-pine-50 p-6">
+        <MailCheck className="mb-3 text-pine" size={26} />
+        <p className="font-display text-lg font-semibold text-pine-600">Almost there</p>
+        <p className="mt-2 text-sm leading-relaxed text-pine-600/85">
+          Check <strong>{email}</strong> for a confirmation link to activate your account. It can
+          take a minute to arrive — check spam if it doesn&apos;t.
+        </p>
       </div>
     );
   }
@@ -49,45 +62,85 @@ export function SignupForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-ink-700">Full name</label>
+        <label htmlFor="signup-name" className="field-label">
+          Full name
+        </label>
         <input
+          id="signup-name"
           type="text"
           required
+          autoComplete="name"
           value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-pine focus:outline-none"
-          placeholder="Ananya Iyer"
-        />
-      </div>
-      <div>
-        <label className="mb-1.5 block text-sm font-medium text-ink-700">Email</label>
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-pine focus:outline-none"
-          placeholder="you@email.com"
-        />
-      </div>
-      <div>
-        <label className="mb-1.5 block text-sm font-medium text-ink-700">Password</label>
-        <input
-          type="password"
-          required
-          minLength={6}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-pine focus:outline-none"
-          placeholder="At least 6 characters"
+          onChange={(event) => setFullName(event.target.value)}
+          className="field"
+          placeholder="As it appears on your ID"
         />
       </div>
 
-      {error && <p className="text-sm text-clay-600">{error}</p>}
+      <div>
+        <label htmlFor="signup-email" className="field-label">
+          Email
+        </label>
+        <input
+          id="signup-email"
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          className="field"
+          placeholder="you@email.com"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="signup-password" className="field-label">
+          Password
+        </label>
+        <div className="relative">
+          <input
+            id="signup-password"
+            type={reveal ? "text" : "password"}
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="field pr-11"
+            placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+          />
+          <button
+            type="button"
+            onClick={() => setReveal((value) => !value)}
+            aria-label={reveal ? "Hide password" : "Show password"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700"
+          >
+            {reveal ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <p role="alert" className="rounded-xl bg-clay-50 px-4 py-3 text-sm text-clay-600">
+          {error}
+        </p>
+      )}
 
       <button type="submit" disabled={loading} className="btn-primary w-full py-3">
         {loading ? "Creating account…" : "Create account"}
       </button>
+
+      <p className="text-center text-xs leading-relaxed text-ink-400">
+        By creating an account you agree to our{" "}
+        <Link href="/terms" className="text-ink-500 underline underline-offset-2 hover:text-pine">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="text-ink-500 underline underline-offset-2 hover:text-pine">
+          Privacy Policy
+        </Link>
+        .
+      </p>
 
       <p className="text-center text-sm text-ink-500">
         Already have an account?{" "}

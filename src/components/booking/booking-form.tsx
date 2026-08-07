@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
 import { loadRazorpayScript } from "@/lib/load-razorpay-script";
 import { formatINR } from "@/lib/utils";
 
@@ -42,7 +44,9 @@ export function BookingForm({
       gender: "",
     }))
   );
+  const [contactPhone, setContactPhone] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +58,15 @@ export function BookingForm({
     setError(null);
 
     if (travelers.some((t) => !t.full_name.trim())) {
-      setError("Please enter a name for every traveler.");
+      setError("Please enter a name for every traveller, exactly as it appears on their ID.");
+      return;
+    }
+    if (contactPhone.replace(/\D/g, "").length < 10) {
+      setError("Please add a phone number your trip captain can reach you on.");
+      return;
+    }
+    if (!acceptedTerms) {
+      setError("Please confirm you've read the terms and the cancellation policy.");
       return;
     }
 
@@ -109,6 +121,7 @@ export function BookingForm({
                 gender: t.gender || undefined,
               })),
               specialRequests,
+              contactPhone,
             }),
           });
           const verifyData = await verifyRes.json();
@@ -136,32 +149,40 @@ export function BookingForm({
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="mb-4 font-display text-xl font-semibold text-ink">Traveler details</h2>
+        <h2 className="mb-1 font-display text-xl font-semibold text-ink">Traveller details</h2>
+        <p className="mb-4 text-sm text-ink-500">
+          Names must match the government photo ID each person will carry — hotels record it at
+          check-in and we can&apos;t get a room without it.
+        </p>
         <div className="space-y-4">
           {travelers.map((traveler, i) => (
             <div key={i} className="rounded-2xl border border-border p-4">
               <p className="mb-3 text-sm font-semibold text-ink-700">
-                Traveler {i + 1} {i === 0 && <span className="text-ink-400">(primary)</span>}
+                Traveller {i + 1} {i === 0 && <span className="font-normal text-ink-400">(primary)</span>}
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <input
+                  aria-label={`Traveller ${i + 1} full name`}
                   placeholder="Full name"
                   value={traveler.full_name}
                   onChange={(e) => updateTraveler(i, "full_name", e.target.value)}
-                  className="rounded-xl border border-border px-3 py-2 text-sm focus:border-pine focus:outline-none sm:col-span-1"
+                  className="field sm:col-span-1"
                 />
                 <input
+                  aria-label={`Traveller ${i + 1} age`}
                   placeholder="Age"
                   type="number"
                   min={0}
+                  max={120}
                   value={traveler.age}
                   onChange={(e) => updateTraveler(i, "age", e.target.value)}
-                  className="rounded-xl border border-border px-3 py-2 text-sm focus:border-pine focus:outline-none"
+                  className="field"
                 />
                 <select
+                  aria-label={`Traveller ${i + 1} gender`}
                   value={traveler.gender}
                   onChange={(e) => updateTraveler(i, "gender", e.target.value)}
-                  className="rounded-xl border border-border px-3 py-2 text-sm focus:border-pine focus:outline-none"
+                  className="field"
                 >
                   <option value="">Gender</option>
                   <option value="female">Female</option>
@@ -175,28 +196,75 @@ export function BookingForm({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-ink-700">
-          Special requests <span className="text-ink-400">(optional)</span>
+        <label htmlFor="contact-phone" className="field-label">
+          Phone number
+        </label>
+        <input
+          id="contact-phone"
+          type="tel"
+          autoComplete="tel"
+          value={contactPhone}
+          onChange={(e) => setContactPhone(e.target.value)}
+          placeholder="+91 98765 43210"
+          className="field"
+        />
+        <p className="mt-1.5 text-xs text-ink-400">
+          Your trip captain uses this on the day — and it&apos;s how we reach you if anything
+          changes before departure.
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="special-requests" className="field-label">
+          Anything we should know? <span className="font-normal text-ink-400">(optional)</span>
         </label>
         <textarea
+          id="special-requests"
           value={specialRequests}
           onChange={(e) => setSpecialRequests(e.target.value)}
           rows={3}
-          placeholder="Dietary restrictions, room preferences, anything we should know…"
-          className="w-full rounded-xl border border-border px-4 py-3 text-sm focus:border-pine focus:outline-none"
+          placeholder="Dietary needs, a medical condition, who you'd like to share a room with, anything at all."
+          className="field"
         />
       </div>
 
+      <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-cream-300/60 p-4">
+        <input
+          type="checkbox"
+          checked={acceptedTerms}
+          onChange={(e) => setAcceptedTerms(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-pine"
+        />
+        <span className="text-sm leading-relaxed text-ink-700">
+          I&apos;ve read the{" "}
+          <Link href="/terms" target="_blank" className="font-medium text-pine underline underline-offset-2">
+            Terms of Service
+          </Link>{" "}
+          and the{" "}
+          <Link
+            href="/refund-policy"
+            target="_blank"
+            className="font-medium text-pine underline underline-offset-2"
+          >
+            cancellation policy
+          </Link>
+          , and every traveller above will carry original government photo ID.
+        </span>
+      </label>
+
       {error && (
-        <p className="rounded-xl bg-clay-50 px-4 py-3 text-sm text-clay-600">{error}</p>
+        <p role="alert" className="rounded-xl bg-clay-50 px-4 py-3 text-sm text-clay-600">
+          {error}
+        </p>
       )}
 
-      <button onClick={handlePayment} disabled={loading} className="btn-accent w-full py-3.5 text-base">
+      <button onClick={handlePayment} disabled={loading} className="btn-accent w-full py-4 text-base">
         {loading ? "Opening secure checkout…" : `Pay ${formatINR(pricePerPerson * travelersCount)}`}
       </button>
-      <p className="text-center text-xs text-ink-400">
-        You&apos;ll be redirected to Razorpay&apos;s secure checkout. Booking for{" "}
-        <span className="font-medium text-ink-500">{tripTitle}</span>.
+
+      <p className="flex items-center justify-center gap-1.5 text-center text-xs text-ink-400">
+        <ShieldCheck size={13} className="text-pine" />
+        Secure checkout by Razorpay · UPI, cards and netbanking · we never see your card details
       </p>
     </div>
   );

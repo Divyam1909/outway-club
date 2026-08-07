@@ -5,10 +5,12 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-cream-200 text-ink font-sans antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   h1,
@@ -16,6 +18,16 @@
   h3,
   h4 {
     @apply font-display;
+    text-wrap: balance;
+  }
+
+  /* Visible, on-brand focus ring for keyboard users only. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-clay ring-offset-2 ring-offset-cream-200;
+  }
+
+  ::selection {
+    @apply bg-clay/20 text-ink;
   }
 }
 
@@ -25,19 +37,20 @@
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold tracking-wide transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold tracking-wide
+           transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
   }
 
   .btn-primary {
-    @apply btn bg-pine text-cream-100 hover:bg-pine-600;
+    @apply btn bg-pine text-cream-100 shadow-soft hover:bg-pine-600 hover:shadow-card;
   }
 
   .btn-accent {
-    @apply btn bg-clay text-cream-100 hover:bg-clay-600;
+    @apply btn bg-clay text-cream-100 shadow-soft hover:bg-clay-600 hover:shadow-card;
   }
 
   .btn-outline {
-    @apply btn border border-ink/15 bg-transparent text-ink hover:border-pine hover:text-pine;
+    @apply btn border border-ink/15 bg-transparent text-ink hover:border-pine hover:bg-pine-50/60 hover:text-pine;
   }
 
   .btn-ghost {
@@ -46,5 +59,158 @@
 
   .badge {
     @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-ink
+           transition-colors placeholder:text-ink-300 focus:border-pine focus:outline-none focus:ring-2 focus:ring-pine/15;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-ink-700;
+  }
+
+  /* Honeypot: off-screen for bots to find, invisible and unreachable for people. */
+  .honeypot {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .card-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card motion-reduce:hover:translate-y-0;
+  }
+
+  /* Long-form legal / editorial copy. */
+  .legal-prose {
+    @apply text-[15px] leading-[1.75] text-ink-500;
+  }
+  .legal-prose section + section {
+    @apply mt-11;
+  }
+  .legal-prose h2 {
+    @apply mb-4 font-display text-2xl font-semibold text-ink;
+  }
+  .legal-prose h3 {
+    @apply mb-2 mt-6 text-base font-semibold text-ink-700;
+  }
+  .legal-prose p {
+    @apply mb-4;
+  }
+  .legal-prose ul {
+    @apply mb-4 space-y-2.5 pl-1;
+  }
+  .legal-prose ul > li {
+    @apply relative pl-5;
+  }
+  .legal-prose ul > li::before {
+    content: "";
+    @apply absolute left-0 top-[0.6em] h-1.5 w-1.5 rounded-full bg-clay/70;
+  }
+  .legal-prose ol {
+    @apply mb-4 list-decimal space-y-2.5 pl-5 marker:font-semibold marker:text-clay;
+  }
+  .legal-prose strong {
+    @apply font-semibold text-ink;
+  }
+  .legal-prose a {
+    @apply font-medium text-pine underline decoration-pine/30 underline-offset-2 transition-colors hover:decoration-pine;
+  }
+  /* Tables and cards inside legal copy carry their own utility classes and
+     must not inherit the paragraph/list rules above. */
+  .legal-prose .not-prose p,
+  .legal-prose .not-prose ul,
+  .legal-prose .not-prose li {
+    all: unset;
+  }
+}
+
+@layer utilities {
+  /* Scroll-reveal, driven by src/components/ui/reveal.tsx */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal[data-visible="true"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out both;
+  }
+
+  .text-shadow-hero {
+    text-shadow: 0 2px 24px rgb(16 32 25 / 0.45);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slow-zoom {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.animate-slow-zoom {
+  animation: slow-zoom 14s ease-out both;
+}
+
+/* Anyone who has asked their OS for less motion gets none of it. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
   }
 }

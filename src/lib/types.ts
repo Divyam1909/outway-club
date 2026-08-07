@@ -13,7 +13,7 @@ export type Difficulty = "easy" | "moderate" | "challenging";
 export type TripType = "group" | "private" | "customizable";
 export type DepartureStatus = "open" | "filling_fast" | "sold_out" | "closed";
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
-export type PaymentStatus = "unpaid" | "paid" | "refunded" | "failed";
+export type PaymentStatus = "unpaid" | "paid" | "refund_pending" | "refunded" | "failed";
 
 export interface Destination {
   id: string;
@@ -63,10 +63,13 @@ export interface Review {
   id: string;
   trip_id: string;
   user_id: string | null;
+  booking_id: string | null;
   author_name: string;
   rating: number;
   title: string | null;
   body: string;
+  /** Optional link to a video testimonial (YouTube, Vimeo or a direct file). */
+  video_url: string | null;
   trip_month: string | null;
   is_approved: boolean;
   created_at: string;
@@ -119,6 +122,7 @@ export interface TripWithDepartures extends Trip {
 export interface Profile {
   id: string;
   full_name: string | null;
+  email: string | null;
   phone: string | null;
   avatar_url: string | null;
   role: "customer" | "admin";
@@ -147,11 +151,37 @@ export interface Booking {
   payment_status: PaymentStatus;
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
+  razorpay_refund_id: string | null;
   special_requests: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  refund_amount: number | null;
   created_at: string;
   trip?: Trip;
   departure?: Departure;
   travelers?: Traveler[];
+}
+
+export interface Enquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  trip_id: string | null;
+  message: string;
+  status: "new" | "contacted" | "closed";
+  created_at: string;
+  trip?: Pick<Trip, "title" | "slug"> | null;
+}
+
+export interface Subscriber {
+  id: string;
+  email: string;
+  name: string | null;
+  source: string;
+  created_at: string;
 }
 
 export interface TripFilters {
