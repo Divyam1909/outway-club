@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { NETWORK_ERROR, friendlyError } from "@/lib/error-messages";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -16,22 +17,31 @@ export function ForgotPasswordForm() {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    });
+    try {
+      const supabase = createClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      });
 
-    // Deliberately don't surface "no such user" — that would let anyone probe
-    // which email addresses have accounts. Rate limiting is handled upstream
-    // by Supabase Auth.
-    if (resetError && !/user not found/i.test(resetError.message)) {
-      setError(resetError.message);
+      // Deliberately don't surface "no such user" — that would let anyone probe
+      // which email addresses have accounts. Rate limiting is handled upstream
+      // by Supabase Auth.
+      if (resetError && !/user not found/i.test(resetError.message)) {
+        setError(
+          friendlyError(resetError, "account", "We couldn't send that link. Please try again.")
+        );
+        setLoading(false);
+        return;
+      }
+
+      setSent(true);
       setLoading(false);
-      return;
+    } catch (caught) {
+      // Rejects on both a dead connection and a rate limit — let friendlyError
+      // tell them apart rather than always blaming the network.
+      setError(friendlyError(caught, "account", NETWORK_ERROR));
+      setLoading(false);
     }
-
-    setSent(true);
-    setLoading(false);
   }
 
   if (sent) {

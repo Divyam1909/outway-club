@@ -343,6 +343,32 @@ export function waitlistWelcomeEmail(data: { email: string; name?: string | null
   };
 }
 
+export function newBlogCommentAlertEmail(data: {
+  authorName: string;
+  postTitle: string;
+  postSlug: string;
+  rating: number | null;
+  body: string;
+}) {
+  return {
+    subject: `New blog comment awaiting approval — ${data.postTitle}`,
+    html: layout({
+      preheader: data.body.slice(0, 120),
+      heading: "New comment on the journal",
+      body: [
+        detailRows([
+          ["From", data.authorName],
+          ["Post", data.postTitle],
+          ["Rating", data.rating ? `${data.rating} / 5` : "No rating given"],
+        ]),
+        paragraph(escapeHtml(data.body).replace(/\n/g, "<br>")),
+        paragraph(`It stays hidden until you approve it.`),
+        button(`${site.url}/admin/blog/comments`, "Moderate comments"),
+      ].join(""),
+    }),
+  };
+}
+
 export function newReviewAlertEmail(data: {
   authorName: string;
   tripTitle: string;

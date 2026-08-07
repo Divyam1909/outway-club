@@ -18,6 +18,7 @@ const COLUMNS = [
   {
     title: "Outway",
     links: [
+      { href: "/blog", label: "The Journal" },
       { href: "/about", label: "About us" },
       { href: "/contact", label: "Contact" },
       { href: "/faq", label: "FAQs" },
@@ -44,7 +45,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2" aria-label="Outway Club — home">
               <Image
-                src="/logo.png"
+                src="/brand/logo.png"
                 alt="Outway Club"
                 width={48}
                 height={48}

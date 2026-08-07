@@ -37,6 +37,12 @@ await admin.from("enquiries").delete().or(
 
 await admin.from("newsletter_subscribers").delete().like("email", "pw-%@example.com");
 
+// Journal posts and destinations the suite creates carry a fixed slug prefix.
+// Comments cascade with their post; anything orphaned is caught by email.
+await admin.from("blog_comments").delete().like("author_email", "pw-%@example.com");
+await admin.from("blog_posts").delete().like("slug", "pw-test-%");
+await admin.from("destinations").delete().like("slug", "pw-test-%");
+
 // Rate-limit counters are ephemeral; clearing them resets the test budget.
 await admin.from("rate_limits").delete().neq("key", "");
 
@@ -48,6 +54,11 @@ const { count: subscribers } = await admin
   .from("newsletter_subscribers")
   .select("*", { count: "exact", head: true });
 
+const { count: posts } = await admin
+  .from("blog_posts")
+  .select("*", { count: "exact", head: true });
+
 console.log(`enquiries   ${enquiriesBefore} -> ${enquiriesAfter}`);
 console.log(`subscribers ${subscribers} remaining`);
+console.log(`blog posts  ${posts} remaining`);
 console.log("rate limits cleared");

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, MessageSquare, Star } from "lucide-react";
+import { ArrowRight, MessageSquare, Newspaper, Star } from "lucide-react";
 import { getAdminStats, getAllBookingsForAdmin } from "@/lib/data";
 import { formatDate, formatINR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,9 @@ export default async function AdminDashboardPage() {
     <div>
       <h1 className="mb-1 font-display text-3xl font-semibold text-ink">Dashboard</h1>
       <p className="mb-7 text-sm text-ink-500">
-        {stats.publishedCount} of {stats.tripCount} trips published.
+        {stats.publishedCount} of {stats.tripCount} trips published across {stats.destinationCount}{" "}
+        destination{stats.destinationCount === 1 ? "" : "s"} · {stats.publishedPostCount} of{" "}
+        {stats.postCount} journal post{stats.postCount === 1 ? "" : "s"} live.
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -38,7 +40,9 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      {(stats.newEnquiryCount > 0 || stats.pendingReviewCount > 0) && (
+      {(stats.newEnquiryCount > 0 ||
+        stats.pendingReviewCount > 0 ||
+        stats.pendingCommentCount > 0) && (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {stats.newEnquiryCount > 0 && (
             <ActionCard
@@ -54,6 +58,14 @@ export default async function AdminDashboardPage() {
               href="/admin/reviews"
               title={`${stats.pendingReviewCount} review${stats.pendingReviewCount === 1 ? "" : "s"} to moderate`}
               body="Hidden from the site until approved."
+            />
+          )}
+          {stats.pendingCommentCount > 0 && (
+            <ActionCard
+              icon={<Newspaper size={18} />}
+              href="/admin/blog/comments"
+              title={`${stats.pendingCommentCount} journal comment${stats.pendingCommentCount === 1 ? "" : "s"} to moderate`}
+              body="Readers are waiting to see their comment go up."
             />
           )}
         </div>

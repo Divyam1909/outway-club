@@ -49,13 +49,13 @@ export const metadata: Metadata = {
     siteName: site.name,
     title: "Outway Club — Escape 001: Udaipur × Mount Abu",
     description: site.description,
-    images: [{ url: "/logo.png", width: 512, height: 512, alt: site.name }],
+    images: [{ url: "/brand/og-default.png", width: 1200, height: 630, alt: site.name }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Outway Club — Escape 001: Udaipur × Mount Abu",
     description: site.description,
-    images: ["/logo.png"],
+    images: ["/brand/og-default.png"],
   },
   robots: {
     index: true,

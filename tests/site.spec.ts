@@ -7,6 +7,7 @@ const PUBLIC_ROUTES = [
   { path: "/trips", heading: /Escapes/i },
   { path: `/trips/${TRIP_SLUG}`, heading: /Escape 001/i },
   { path: "/upcoming", heading: /meaningful journeys/i },
+  { path: "/blog", heading: /Field notes/i },
   { path: "/testimonials", heading: /.+/ },
   { path: "/destinations", heading: /Where we go/i },
   { path: "/destinations/udaipur", heading: /Udaipur/i },
@@ -118,7 +119,7 @@ test.describe("navigation", () => {
     }
 
     const nav = page.getByRole("navigation", { name: isMobile ? "Mobile" : "Main" });
-    for (const label of ["Escapes", "What's next", "Reviews", "About", "FAQs", "Contact"]) {
+    for (const label of ["Escapes", "What's next", "Journal", "Reviews", "About", "FAQs", "Contact"]) {
       await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
   });

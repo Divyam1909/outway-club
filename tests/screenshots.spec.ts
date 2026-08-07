@@ -10,6 +10,7 @@ const PAGES = [
   ["trips", "/trips"],
   ["trip-detail", "/trips/escape-001-udaipur-mount-abu"],
   ["upcoming", "/upcoming"],
+  ["blog", "/blog"],
   ["testimonials", "/testimonials"],
   ["about", "/about"],
   ["contact", "/contact"],

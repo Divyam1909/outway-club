@@ -1,5 +1,5 @@
 import { site } from "@/config/site";
-import type { Departure, TripWithDetails } from "@/lib/types";
+import type { BlogPost, Departure, TripWithDetails } from "@/lib/types";
 
 /**
  * Renders a JSON-LD block. Next.js strips `<script>` children unless they go
@@ -27,8 +27,8 @@ export function OrganizationJsonLd() {
         legalName: site.legalName,
         description: site.description,
         url: site.url,
-        logo: `${site.url}/logo.png`,
-        image: `${site.url}/logo.png`,
+        logo: `${site.url}/brand/logo.png`,
+        image: `${site.url}/brand/logo.png`,
         email: site.email,
         ...(site.phoneDisplay ? { telephone: site.phoneDisplay } : {}),
         address: {
@@ -90,6 +90,39 @@ export function FaqJsonLd({ faqs }: { faqs: { q: string; a: string }[] }) {
           name: faq.q,
           acceptedAnswer: { "@type": "Answer", text: faq.a },
         })),
+      }}
+    />
+  );
+}
+
+export function BlogPostJsonLd({ post }: { post: BlogPost }) {
+  const url = `${site.url}/blog/${post.slug}`;
+  const image = post.cover_image
+    ? post.cover_image.startsWith("http")
+      ? post.cover_image
+      : `${site.url}${post.cover_image}`
+    : `${site.url}/brand/logo.png`;
+
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "@id": `${url}#post`,
+        headline: post.title,
+        ...(post.subtitle ? { alternativeHeadline: post.subtitle } : {}),
+        description: post.seo_description || post.excerpt,
+        url,
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        image: [image],
+        datePublished: post.published_at ?? post.created_at,
+        dateModified: post.updated_at,
+        author: { "@type": "Person", name: post.author_name },
+        publisher: { "@id": `${site.url}/#organization` },
+        inLanguage: "en-IN",
+        ...(post.tags.length > 0 ? { keywords: post.tags.join(", ") } : {}),
+        // Only claim a rating when readers have actually left one.
+        ...(post.comment_count > 0 ? { commentCount: post.comment_count } : {}),
       }}
     />
   );

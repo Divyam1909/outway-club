@@ -49,6 +49,11 @@ test.describe("admin console", () => {
     const sections: [string, RegExp][] = [
       ["/admin/bookings", /^Bookings$/],
       ["/admin/trips", /Trips/],
+      ["/admin/destinations", /^Destinations$/],
+      ["/admin/blog", /^Journal$/],
+      ["/admin/blog/new", /^Write a post$/],
+      ["/admin/blog/comments", /^Comments$/],
+      ["/admin/destinations/new", /^New destination$/],
       ["/admin/users", /^Users$/],
       ["/admin/reviews", /^Reviews$/],
       ["/admin/enquiries", /^Enquiries$/],
@@ -102,7 +107,17 @@ test.describe("admin console", () => {
   test("admin nav badges surface pending work", async ({ page }) => {
     await page.goto("/admin");
     const nav = page.getByRole("navigation", { name: "Admin sections" });
-    for (const label of ["Dashboard", "Bookings", "Trips", "Users", "Reviews", "Enquiries", "Waitlist"]) {
+    for (const label of [
+      "Dashboard",
+      "Bookings",
+      "Trips",
+      "Destinations",
+      "Journal",
+      "Users",
+      "Reviews",
+      "Enquiries",
+      "Waitlist",
+    ]) {
       await expect(nav.getByRole("link", { name: new RegExp(label) })).toBeVisible();
     }
   });

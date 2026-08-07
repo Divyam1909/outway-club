@@ -22,7 +22,7 @@ export function SetupRequired() {
     <div className="flex min-h-screen items-center justify-center bg-cream-200 px-6 py-16">
       <div className="w-full max-w-2xl rounded-3xl border border-border bg-white p-8 shadow-card sm:p-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="Outway Club" className="mb-4 h-12 w-12 rounded-full" />
+        <img src="/brand/logo.png" alt="Outway Club" className="mb-4 h-12 w-12 rounded-full" />
         <h1 className="mb-3 font-display text-3xl font-semibold text-ink sm:text-4xl">
           Connect Supabase to continue
         </h1>

@@ -33,7 +33,7 @@ export async function generateMetadata({
 
   const image = trip.hero_image?.startsWith("http")
     ? trip.hero_image
-    : `${site.url}${trip.hero_image || "/logo.png"}`;
+    : `${site.url}${trip.hero_image || "/brand/og-default.png"}`;
 
   return {
     title: trip.title,

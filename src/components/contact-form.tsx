@@ -3,6 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { HONEYPOT_FIELD } from "@/lib/rate-limit";
+import { messageFromResponse } from "@/lib/error-messages";
 import { site } from "@/config/site";
 
 export function ContactForm({ tripId, tripTitle }: { tripId?: string; tripTitle?: string }) {
@@ -38,17 +39,22 @@ export function ContactForm({ tripId, tripTitle }: { tripId?: string; tripTitle?
         }),
       });
 
-      const data = await response.json().catch(() => ({}));
-
       if (!response.ok) {
-        setError(data.error ?? "Something went wrong — please try again.");
+        setError(
+          await messageFromResponse(
+            response,
+            `We couldn't send that just now. Please try again, or email us directly at ${site.email}.`
+          )
+        );
         setStatus("idle");
         return;
       }
 
       setStatus("done");
     } catch {
-      setError("We couldn't reach the server. Check your connection and try again.");
+      setError(
+        `We couldn't reach the server. Check your connection and try again — or email us directly at ${site.email}.`
+      );
       setStatus("idle");
     }
   }

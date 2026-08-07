@@ -13,6 +13,7 @@ const STATIC_ROUTES: {
   { path: "/", priority: 1, changeFrequency: "daily" },
   { path: "/trips", priority: 0.9, changeFrequency: "daily" },
   { path: "/upcoming", priority: 0.8, changeFrequency: "weekly" },
+  { path: "/blog", priority: 0.8, changeFrequency: "weekly" },
   { path: "/testimonials", priority: 0.7, changeFrequency: "weekly" },
   { path: "/destinations", priority: 0.6, changeFrequency: "weekly" },
   { path: "/about", priority: 0.6, changeFrequency: "monthly" },
@@ -45,9 +46,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   try {
-    const [{ data: trips }, { data: destinations }] = await Promise.all([
+    const [{ data: trips }, { data: destinations }, { data: posts }] = await Promise.all([
       supabase.from("trips").select("slug, created_at").eq("is_published", true),
       supabase.from("destinations").select("slug, created_at"),
+      supabase
+        .from("blog_posts")
+        .select("slug, updated_at")
+        .eq("status", "published"),
     ]);
 
     for (const trip of trips ?? []) {
@@ -65,6 +70,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(destination.created_at),
         changeFrequency: "monthly",
         priority: 0.5,
+      });
+    }
+
+    for (const post of posts ?? []) {
+      entries.push({
+        url: `${site.url}/blog/${post.slug}`,
+        lastModified: new Date(post.updated_at),
+        changeFrequency: "monthly",
+        priority: 0.7,
       });
     }
   } catch (error) {

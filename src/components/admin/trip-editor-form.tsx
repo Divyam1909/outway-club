@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ImageUploader } from "@/components/admin/image-uploader";
+import { friendlyError, networkError } from "@/lib/error-messages";
 import { slugify } from "@/lib/utils";
 import type { Category, Destination, Difficulty, TripType, TripWithDetails } from "@/lib/types";
 
@@ -190,65 +191,123 @@ export function TripEditorForm({
 
     let tripId = initialTrip?.id;
 
-    if (isEdit && tripId) {
-      const { error: updateError } = await supabase.from("trips").update(tripPayload).eq("id", tripId);
-      if (updateError) {
-        setError(updateError.message);
-        setSaving(false);
-        return;
+    try {
+      if (isEdit && tripId) {
+        const { error: updateError } = await supabase.from("trips").update(tripPayload).eq("id", tripId);
+        if (updateError) {
+          setError(friendlyError(updateError, "trip", "Couldn't save the trip. Please try again."));
+          setSaving(false);
+          return;
+        }
+      } else {
+        const { data, error: insertError } = await supabase.from("trips").insert(tripPayload).select("id").single();
+        if (insertError || !data) {
+          setError(friendlyError(insertError, "trip", "Couldn't create the trip. Please try again."));
+          setSaving(false);
+          return;
+        }
+        tripId = data.id;
       }
-    } else {
-      const { data, error: insertError } = await supabase.from("trips").insert(tripPayload).select("id").single();
-      if (insertError || !data) {
-        setError(insertError?.message ?? "Could not create trip.");
-        setSaving(false);
-        return;
-      }
-      tripId = data.id;
-    }
 
-    await supabase.from("itinerary_days").delete().eq("trip_id", tripId);
-    if (days.length > 0) {
-      const { error: daysError } = await supabase.from("itinerary_days").insert(
-        days.map((d) => ({
-          trip_id: tripId,
-          day_number: d.day_number,
-          title: d.title,
-          description: d.description,
-          activities: toLines(d.activitiesText),
-          meals: { breakfast: d.breakfast, lunch: d.lunch, dinner: d.dinner },
-          accommodation: d.accommodation || null,
-        }))
-      );
-      if (daysError) {
-        setError(daysError.message);
+      // The itinerary is replaced wholesale, so a failed delete must stop the
+      // insert — otherwise the old days survive alongside the new ones and the
+      // trip silently shows a duplicated schedule.
+      const { error: clearDaysError } = await supabase
+        .from("itinerary_days")
+        .delete()
+        .eq("trip_id", tripId);
+
+      if (clearDaysError) {
+        setError(
+          friendlyError(
+            clearDaysError,
+            "itinerary",
+            "The trip saved, but we couldn't clear the old itinerary. Reopen this trip and check the days before publishing."
+          )
+        );
         setSaving(false);
         return;
       }
-    }
 
-    await supabase.from("departures").delete().eq("trip_id", tripId);
-    const validDepartures = departures.filter((d) => d.start_date && d.end_date);
-    if (validDepartures.length > 0) {
-      const { error: departuresError } = await supabase.from("departures").insert(
-        validDepartures.map((d) => ({
-          trip_id: tripId,
-          start_date: d.start_date,
-          end_date: d.end_date,
-          total_seats: d.total_seats,
-          price_override: d.price_override === "" ? null : Number(d.price_override),
-        }))
-      );
-      if (departuresError) {
-        setError(departuresError.message);
+      if (days.length > 0) {
+        const { error: daysError } = await supabase.from("itinerary_days").insert(
+          days.map((d) => ({
+            trip_id: tripId,
+            day_number: d.day_number,
+            title: d.title,
+            description: d.description,
+            activities: toLines(d.activitiesText),
+            meals: { breakfast: d.breakfast, lunch: d.lunch, dinner: d.dinner },
+            accommodation: d.accommodation || null,
+          }))
+        );
+        if (daysError) {
+          setError(
+            friendlyError(
+              daysError,
+              "itinerary",
+              "The trip saved, but the itinerary didn't. Reopen this trip and add the days again."
+            )
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
+      const { error: clearDeparturesError } = await supabase
+        .from("departures")
+        .delete()
+        .eq("trip_id", tripId);
+
+      if (clearDeparturesError) {
+        setError(
+          // A departure with bookings is protected by a foreign key, and that
+          // is worth spelling out — it is the one failure here an admin sees
+          // repeatedly and can't otherwise explain.
+          clearDeparturesError.code === "23503"
+            ? "The trip saved, but the dates couldn't be replaced — one of the existing departures already has bookings against it. Edit that departure instead of removing it."
+            : friendlyError(
+                clearDeparturesError,
+                "departure",
+                "The trip saved, but we couldn't update the dates. Reopen this trip and check them."
+              )
+        );
         setSaving(false);
         return;
       }
-    }
 
-    setSaving(false);
-    router.push("/admin/trips");
-    router.refresh();
+      const validDepartures = departures.filter((d) => d.start_date && d.end_date);
+      if (validDepartures.length > 0) {
+        const { error: departuresError } = await supabase.from("departures").insert(
+          validDepartures.map((d) => ({
+            trip_id: tripId,
+            start_date: d.start_date,
+            end_date: d.end_date,
+            total_seats: d.total_seats,
+            price_override: d.price_override === "" ? null : Number(d.price_override),
+          }))
+        );
+        if (departuresError) {
+          setError(
+            friendlyError(
+              departuresError,
+              "departure",
+              "The trip saved, but the departure dates didn't. Reopen this trip and add them again."
+            )
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
+      setSaving(false);
+      router.push("/admin/trips");
+      router.refresh();
+    } catch (caught) {
+      console.error("[trip-editor] save failed:", caught);
+      setError(networkError());
+      setSaving(false);
+    }
   }
 
   return (

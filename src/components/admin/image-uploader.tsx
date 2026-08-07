@@ -5,8 +5,8 @@ import { GripVertical, ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-re
 import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import { SmartImage } from "@/components/ui/smart-image";
+import { friendlyError } from "@/lib/error-messages";
 
-const BUCKET = "trip-images";
 const MAX_BYTES = 8 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
@@ -22,6 +22,7 @@ export function ImageUploader({
   value,
   onChange,
   multiple = false,
+  bucket = "trip-images",
 }: {
   label: string;
   hint?: string;
@@ -29,6 +30,8 @@ export function ImageUploader({
   value: string[];
   onChange: (next: string[]) => void;
   multiple?: boolean;
+  /** Storage bucket to upload into. Editorial photography lives separately. */
+  bucket?: "trip-images" | "blog-images";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -36,6 +39,12 @@ export function ImageUploader({
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
 
+  /**
+   * Uploads are per-file, so a batch can partly succeed. Each rejection is
+   * collected rather than overwriting the last one — dropping in six photos
+   * and being told about only the sixth failure is how you end up with a
+   * gallery that's quietly missing images.
+   */
   async function uploadFiles(files: FileList | File[]) {
     const list = Array.from(files);
     if (list.length === 0) return;
@@ -45,14 +54,17 @@ export function ImageUploader({
 
     const supabase = createClient();
     const uploaded: string[] = [];
+    const failures: string[] = [];
 
     for (const [index, file] of list.entries()) {
       if (!ACCEPTED.includes(file.type)) {
-        setError(`${file.name}: only JPG, PNG, WebP or AVIF are accepted.`);
+        failures.push(`${file.name} — not a JPG, PNG, WebP or AVIF.`);
         continue;
       }
       if (file.size > MAX_BYTES) {
-        setError(`${file.name} is ${(file.size / 1024 / 1024).toFixed(1)}MB — the limit is 8MB.`);
+        failures.push(
+          `${file.name} — ${(file.size / 1024 / 1024).toFixed(1)}MB, over the 8MB limit. Resize it and try again.`
+        );
         continue;
       }
 
@@ -61,19 +73,26 @@ export function ImageUploader({
       const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
       const path = `${new Date().getFullYear()}/${crypto.randomUUID()}.${extension}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { cacheControl: "31536000", upsert: false });
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(path, file, { cacheControl: "31536000", upsert: false });
 
-      if (uploadError) {
-        setError(`${file.name}: ${uploadError.message}`);
-        continue;
+        if (uploadError) {
+          failures.push(
+            `${file.name} — ${friendlyError(uploadError, "image", "upload failed, please try again.")}`
+          );
+          continue;
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from(bucket).getPublicUrl(path);
+        uploaded.push(publicUrl);
+      } catch (caught) {
+        console.error("[image-uploader] upload threw:", caught);
+        failures.push(`${file.name} — the connection dropped during upload.`);
       }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      uploaded.push(publicUrl);
     }
 
     setProgress(null);
@@ -82,6 +101,17 @@ export function ImageUploader({
     if (uploaded.length > 0) {
       onChange(multiple ? [...value, ...uploaded] : [uploaded[uploaded.length - 1]]);
     }
+
+    if (failures.length > 0) {
+      const summary =
+        uploaded.length > 0
+          ? `${uploaded.length} uploaded, ${failures.length} didn't:`
+          : failures.length === 1
+            ? "This image didn't upload:"
+            : "None of these uploaded:";
+      setError(`${summary}\n${failures.map((line) => `• ${line}`).join("\n")}`);
+    }
+
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -159,7 +189,10 @@ export function ImageUploader({
       {hint && <p className="mt-1.5 text-xs text-ink-400">{hint}</p>}
 
       {error && (
-        <p role="alert" className="mt-2 rounded-lg bg-clay-50 px-3 py-2 text-xs text-clay-600">
+        <p
+          role="alert"
+          className="mt-2 whitespace-pre-line rounded-lg bg-clay-50 px-3 py-2 text-xs leading-relaxed text-clay-600"
+        >
           {error}
         </p>
       )}

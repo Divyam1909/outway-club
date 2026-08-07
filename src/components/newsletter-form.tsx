@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { clsx } from "clsx";
 import { Check } from "lucide-react";
 import { HONEYPOT_FIELD } from "@/lib/rate-limit";
+import { messageFromResponse, networkError } from "@/lib/error-messages";
 
 /**
  * Signup for "tell me when the next escape opens".
@@ -16,7 +17,7 @@ export function NewsletterForm({
   variant = "dark",
   buttonLabel = "Notify me",
 }: {
-  source?: "footer" | "upcoming" | "trip" | "home";
+  source?: "footer" | "upcoming" | "trip" | "home" | "blog";
   variant?: "dark" | "light";
   buttonLabel?: string;
 }) {
@@ -47,10 +48,8 @@ export function NewsletterForm({
         }),
       });
 
-      const data = await response.json().catch(() => ({}));
-
       if (!response.ok) {
-        setError(data.error ?? "Something went wrong — try again.");
+        setError(await messageFromResponse(response, "We couldn't add you just now — try again."));
         setStatus("idle");
         return;
       }
@@ -58,7 +57,7 @@ export function NewsletterForm({
       setStatus("done");
       setEmail("");
     } catch {
-      setError("Couldn't reach the server. Try again in a moment.");
+      setError(networkError());
       setStatus("idle");
     }
   }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, ShieldOff } from "lucide-react";
+import { messageFromResponse, networkError } from "@/lib/error-messages";
 
 /**
  * Replaces the old "run an UPDATE against profiles by hand" step.
@@ -43,10 +44,8 @@ export function RoleToggle({
         body: JSON.stringify({ userId, role: nextRole }),
       });
 
-      const data = await response.json().catch(() => ({}));
-
       if (!response.ok) {
-        setError(data.error ?? "Couldn't update that user.");
+        setError(await messageFromResponse(response, "Couldn't update that user's access."));
         setLoading(false);
         return;
       }
@@ -54,7 +53,7 @@ export function RoleToggle({
       router.refresh();
       setLoading(false);
     } catch {
-      setError("Couldn't reach the server.");
+      setError(networkError());
       setLoading(false);
     }
   }

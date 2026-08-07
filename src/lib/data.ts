@@ -156,6 +156,57 @@ export async function getAllTripsForAdmin(): Promise<Trip[]> {
   return (data as Trip[]) ?? [];
 }
 
+export type DestinationWithUsage = Destination & {
+  trip_count: number;
+  published_trip_count: number;
+};
+
+/**
+ * Destinations with the number of trips pointing at each.
+ *
+ * The count matters operationally: trips.destination_id is ON DELETE RESTRICT,
+ * so a destination with trips attached cannot be removed — the admin list
+ * says so up front rather than letting someone hit a database error.
+ */
+export async function getDestinationsForAdmin(): Promise<DestinationWithUsage[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+
+  const [{ data: destinations, error }, { data: trips }] = await Promise.all([
+    supabase.from("destinations").select("*").order("name"),
+    supabase.from("trips").select("destination_id, is_published"),
+  ]);
+
+  if (error) throw error;
+
+  const counts = new Map<string, { total: number; published: number }>();
+  for (const trip of trips ?? []) {
+    const entry = counts.get(trip.destination_id) ?? { total: 0, published: 0 };
+    entry.total += 1;
+    if (trip.is_published) entry.published += 1;
+    counts.set(trip.destination_id, entry);
+  }
+
+  return ((destinations as Destination[]) ?? []).map((destination) => ({
+    ...destination,
+    trip_count: counts.get(destination.id)?.total ?? 0,
+    published_trip_count: counts.get(destination.id)?.published ?? 0,
+  }));
+}
+
+export async function getDestinationByIdForAdmin(id: string): Promise<Destination | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("destinations")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as Destination | null;
+}
+
 export async function getAllBookingsForAdmin(): Promise<Booking[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = await createClient();
@@ -182,6 +233,10 @@ const EMPTY_ADMIN_STATS = {
   subscriberCount: 0,
   seatsSold: 0,
   seatsTotal: 0,
+  destinationCount: 0,
+  postCount: 0,
+  publishedPostCount: 0,
+  pendingCommentCount: 0,
 };
 
 export type AdminStats = typeof EMPTY_ADMIN_STATS;
@@ -199,6 +254,10 @@ export async function getAdminStats(): Promise<AdminStats> {
     { count: pendingReviewCount },
     { count: subscriberCount },
     { data: departures },
+    { count: destinationCount },
+    { count: postCount },
+    { count: publishedPostCount },
+    { count: pendingCommentCount },
   ] = await Promise.all([
     supabase.from("trips").select("*", { count: "exact", head: true }),
     supabase.from("trips").select("*", { count: "exact", head: true }).eq("is_published", true),
@@ -208,6 +267,10 @@ export async function getAdminStats(): Promise<AdminStats> {
     supabase.from("reviews").select("*", { count: "exact", head: true }).eq("is_approved", false),
     supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
     supabase.from("departures").select("total_seats, seats_booked"),
+    supabase.from("destinations").select("*", { count: "exact", head: true }),
+    supabase.from("blog_posts").select("*", { count: "exact", head: true }),
+    supabase.from("blog_posts").select("*", { count: "exact", head: true }).eq("status", "published"),
+    supabase.from("blog_comments").select("*", { count: "exact", head: true }).eq("is_approved", false),
   ]);
 
   const rows = bookings ?? [];
@@ -229,6 +292,10 @@ export async function getAdminStats(): Promise<AdminStats> {
     subscriberCount: subscriberCount ?? 0,
     seatsSold: (departures ?? []).reduce((sum, d) => sum + Number(d.seats_booked ?? 0), 0),
     seatsTotal: (departures ?? []).reduce((sum, d) => sum + Number(d.total_seats ?? 0), 0),
+    destinationCount: destinationCount ?? 0,
+    postCount: postCount ?? 0,
+    publishedPostCount: publishedPostCount ?? 0,
+    pendingCommentCount: pendingCommentCount ?? 0,
   };
 }
 

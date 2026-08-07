@@ -11,6 +11,11 @@ test("admin screenshots", async ({ page }, testInfo) => {
 
   for (const [name, path] of [
     ["dashboard", "/admin"],
+    ["destinations", "/admin/destinations"],
+    ["destination-new", "/admin/destinations/new"],
+    ["blog", "/admin/blog"],
+    ["blog-new", "/admin/blog/new"],
+    ["blog-comments", "/admin/blog/comments"],
     ["users", "/admin/users"],
     ["bookings", "/admin/bookings"],
     ["reviews", "/admin/reviews"],

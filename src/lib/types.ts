@@ -184,6 +184,56 @@ export interface Subscriber {
   created_at: string;
 }
 
+export type PostStatus = "draft" | "published";
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  excerpt: string;
+  /** Sanitised article body. See src/lib/sanitize-html.ts. */
+  content_html: string;
+  cover_image: string | null;
+  cover_caption: string | null;
+  author_id: string | null;
+  author_name: string;
+  author_role: string | null;
+  tags: string[];
+  destination_id: string | null;
+  trip_id: string | null;
+  reading_minutes: number;
+  status: PostStatus;
+  published_at: string | null;
+  is_featured: boolean;
+  seo_title: string | null;
+  seo_description: string | null;
+  rating: number;
+  comment_count: number;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+  destination?: Pick<Destination, "name" | "slug"> | null;
+  trip?: Pick<Trip, "title" | "slug" | "hero_image"> | null;
+}
+
+export interface BlogComment {
+  id: string;
+  post_id: string;
+  user_id: string | null;
+  author_name: string;
+  author_email: string | null;
+  /** Null when the reader left a comment without a star rating. */
+  rating: number | null;
+  body: string;
+  is_approved: boolean;
+  created_at: string;
+}
+
+export type BlogCommentWithPost = BlogComment & {
+  post: Pick<BlogPost, "title" | "slug"> | null;
+};
+
 export interface TripFilters {
   category?: Category;
   destinationSlug?: string;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, EyeOff, Trash2 } from "lucide-react";
+import { messageFromResponse, networkError } from "@/lib/error-messages";
 
 export function ReviewModeration({ reviewId, isApproved }: { reviewId: string; isApproved: boolean }) {
   const router = useRouter();
@@ -20,15 +21,19 @@ export function ReviewModeration({ reviewId, isApproved }: { reviewId: string; i
         body: JSON.stringify({ isApproved: next }),
       });
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        setError(data.error ?? "Couldn't update that review.");
+        setError(
+          await messageFromResponse(
+            response,
+            next ? "Couldn't publish that review." : "Couldn't unpublish that review."
+          )
+        );
         setLoading(false);
         return;
       }
       router.refresh();
       setLoading(false);
     } catch {
-      setError("Couldn't reach the server.");
+      setError(networkError());
       setLoading(false);
     }
   }
@@ -43,17 +48,19 @@ export function ReviewModeration({ reviewId, isApproved }: { reviewId: string; i
     }
 
     setLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`/api/admin/reviews/${reviewId}`, { method: "DELETE" });
       if (!response.ok) {
-        setError("Couldn't delete that review.");
+        setError(await messageFromResponse(response, "Couldn't delete that review."));
         setLoading(false);
         return;
       }
       router.refresh();
       setLoading(false);
     } catch {
-      setError("Couldn't reach the server.");
+      setError(networkError());
       setLoading(false);
     }
   }

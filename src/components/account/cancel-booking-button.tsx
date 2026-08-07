@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, X } from "lucide-react";
+import { messageFromResponse } from "@/lib/error-messages";
 import { formatINR } from "@/lib/utils";
 
 /**
@@ -43,10 +44,13 @@ export function CancelBookingButton({
         body: JSON.stringify({ reason }),
       });
 
-      const data = await response.json().catch(() => ({}));
-
       if (!response.ok) {
-        setError(data.error ?? "We couldn't cancel that. Please email us.");
+        setError(
+          await messageFromResponse(
+            response,
+            "We couldn't cancel that just now. Nothing has changed — please try again, or email us."
+          )
+        );
         setLoading(false);
         return;
       }
@@ -54,7 +58,12 @@ export function CancelBookingButton({
       setOpen(false);
       router.refresh();
     } catch {
-      setError("Couldn't reach the server. Please try again.");
+      // The request may or may not have reached the server. Say so honestly —
+      // "try again" alone risks a second cancellation being attempted on a
+      // booking that was already cancelled.
+      setError(
+        "We couldn't reach the server, so we can't confirm whether the cancellation went through. Refresh this page to check before trying again."
+      );
       setLoading(false);
     }
   }

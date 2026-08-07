@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { NETWORK_ERROR, friendlyError } from "@/lib/error-messages";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -26,24 +27,34 @@ export function SignupForm() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: { full_name: fullName.trim() },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
-      },
-    });
 
-    if (signUpError) {
-      setError(signUpError.message);
+    try {
+      const supabase = createClient();
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: { full_name: fullName.trim() },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
+        },
+      });
+
+      if (signUpError) {
+        setError(
+          friendlyError(signUpError, "account", "We couldn't create your account. Please try again.")
+        );
+        setLoading(false);
+        return;
+      }
+
+      setDone(true);
       setLoading(false);
-      return;
+    } catch (caught) {
+      // Rejects on both a dead connection and a rate limit — let friendlyError
+      // tell them apart rather than always blaming the network.
+      setError(friendlyError(caught, "account", NETWORK_ERROR));
+      setLoading(false);
     }
-
-    setDone(true);
-    setLoading(false);
   }
 
   if (done) {

@@ -24,6 +24,7 @@ export const RATE_LIMITS = {
   createOrder: { bucket: "create_order", limit: 8, windowSeconds: 600 },
   review: { bucket: "review", limit: 5, windowSeconds: 3600 },
   cancelBooking: { bucket: "cancel_booking", limit: 5, windowSeconds: 3600 },
+  blogComment: { bucket: "blog_comment", limit: 4, windowSeconds: 900 },
 } as const satisfies Record<string, RateLimitRule>;
 
 /**

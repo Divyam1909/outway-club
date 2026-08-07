@@ -59,7 +59,7 @@ export function NavbarClient({
       <div className="container-outway flex h-20 items-center justify-between gap-4 py-3">
         <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Outway Club — home">
           <Image
-            src="/logo.png"
+            src="/brand/logo.png"
             alt="Outway Club"
             width={56}
             height={56}

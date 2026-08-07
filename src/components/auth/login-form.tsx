@@ -5,12 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { NETWORK_ERROR, friendlyError } from "@/lib/error-messages";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = safeRedirect(searchParams.get("redirect"));
-  const linkError = searchParams.get("error");
+  const linkError = safeLinkMessage(searchParams.get("error"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,24 +24,31 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    try {
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    if (signInError) {
-      setError(
-        /invalid login credentials/i.test(signInError.message)
-          ? "That email and password don't match an account."
-          : signInError.message
-      );
+      if (signInError) {
+        setError(
+          friendlyError(signInError, "account", "We couldn't sign you in. Please try again.")
+        );
+        setLoading(false);
+        return;
+      }
+
+      router.push(redirect);
+      router.refresh();
+    } catch (caught) {
+      // signInWithPassword rejects rather than returning an error for network
+      // failures *and* for rate limiting. Without this the button would sit on
+      // "Signing in…" forever; friendlyError then tells the two apart, so a
+      // throttled sign-in isn't blamed on the user's connection.
+      setError(friendlyError(caught, "account", NETWORK_ERROR));
       setLoading(false);
-      return;
     }
-
-    router.push(redirect);
-    router.refresh();
   }
 
   return (
@@ -125,4 +133,28 @@ export function LoginForm() {
 function safeRedirect(value: string | null): string {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return "/account";
   return value;
+}
+
+/**
+ * `?error=` is written by /auth/callback, which already translates provider
+ * wording into our own copy. But anyone can craft that URL, and whatever it
+ * says appears above a password field wearing our styling — prime real estate
+ * for "call this number to verify your account".
+ *
+ * React escapes the text so there's no injection risk; the risk is social. A
+ * length cap keeps it to a sentence, and anything with a link or a phone
+ * number in it is replaced rather than shown.
+ */
+function safeLinkMessage(value: string | null): string | null {
+  if (!value) return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const looksLikeLure = /https?:\/\/|www\.|@|\+?\d[\d\s().-]{7,}/i.test(trimmed);
+  if (looksLikeLure || trimmed.length > 200) {
+    return "That link didn't work. Please sign in below, or request a new one.";
+  }
+
+  return trimmed;
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { NETWORK_ERROR, friendlyError } from "@/lib/error-messages";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -23,9 +24,15 @@ export function ResetPasswordForm() {
   // session to update, so say that plainly instead of failing on submit.
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
-      setSessionState(data.session ? "valid" : "invalid");
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSessionState(data.session ? "valid" : "invalid");
+      })
+      // An unhandled rejection here would leave the page on "Checking your
+      // reset link…" indefinitely. Treat an unreadable session as no session:
+      // the invalid branch tells them what to do and offers a fresh link.
+      .catch(() => setSessionState("invalid"));
   }, []);
 
   async function handleSubmit(event: FormEvent) {
@@ -42,18 +49,28 @@ export function ResetPasswordForm() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({ password });
 
-    if (updateError) {
-      setError(updateError.message);
+    try {
+      const supabase = createClient();
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+
+      if (updateError) {
+        setError(
+          friendlyError(updateError, "account", "We couldn't update your password. Please try again.")
+        );
+        setLoading(false);
+        return;
+      }
+
+      setDone(true);
       setLoading(false);
-      return;
+      router.refresh();
+    } catch (caught) {
+      // Rejects on both a dead connection and a rate limit — let friendlyError
+      // tell them apart rather than always blaming the network.
+      setError(friendlyError(caught, "account", NETWORK_ERROR));
+      setLoading(false);
     }
-
-    setDone(true);
-    setLoading(false);
-    router.refresh();
   }
 
   if (sessionState === "checking") {

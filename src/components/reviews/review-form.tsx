@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { CheckCircle2, Star, Video } from "lucide-react";
 import { clsx } from "clsx";
+import { messageFromResponse, networkError } from "@/lib/error-messages";
 
 const RATING_LABELS = ["", "Not good", "Could be better", "Fine", "Really good", "Genuinely great"];
 
@@ -45,17 +46,17 @@ export function ReviewForm({
         body: JSON.stringify({ tripId, rating, authorName, title, body, videoUrl }),
       });
 
-      const data = await response.json().catch(() => ({}));
-
       if (!response.ok) {
-        setError(data.error ?? "Couldn't save your review. Please try again.");
+        setError(
+          await messageFromResponse(response, "Couldn't save your review. Please try again.")
+        );
         setStatus("idle");
         return;
       }
 
       setStatus("done");
     } catch {
-      setError("We couldn't reach the server. Check your connection and try again.");
+      setError(networkError());
       setStatus("idle");
     }
   }

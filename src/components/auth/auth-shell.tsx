@@ -24,7 +24,7 @@ export function AuthShell({
         <div className="w-full max-w-sm animate-fade-up">
           <Link href="/" className="mb-8 inline-flex items-center gap-2">
             <Image
-              src="/logo.png"
+              src="/brand/logo.png"
               alt="Outway Club"
               width={56}
               height={56}

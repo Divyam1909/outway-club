@@ -1,8 +1,10 @@
 import Link from "next/link";
 import {
+  Globe2,
   LayoutDashboard,
   MapPinned,
   MessageSquare,
+  Newspaper,
   Receipt,
   Star,
   Users,
@@ -16,6 +18,8 @@ const LINKS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, badge: null },
   { href: "/admin/bookings", label: "Bookings", icon: Receipt, badge: null },
   { href: "/admin/trips", label: "Trips", icon: MapPinned, badge: null },
+  { href: "/admin/destinations", label: "Destinations", icon: Globe2, badge: null },
+  { href: "/admin/blog", label: "Journal", icon: Newspaper, badge: "pendingCommentCount" },
   { href: "/admin/users", label: "Users", icon: Users, badge: null },
   { href: "/admin/reviews", label: "Reviews", icon: Star, badge: "pendingReviewCount" },
   { href: "/admin/enquiries", label: "Enquiries", icon: MessageSquare, badge: "newEnquiryCount" },
