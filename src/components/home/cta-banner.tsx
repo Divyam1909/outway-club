@@ -5,7 +5,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { site, whatsappLink } from "@/config/site";
 
 export function CtaBanner() {
-  const whatsapp = whatsappLink("Hi — I have a question about Escape 001 (Udaipur × Mount Abu).");
+  const whatsapp = whatsappLink("Hi Outway, I have a question about one of your escapes.");
 
   return (
     <section className="py-20 sm:py-24">

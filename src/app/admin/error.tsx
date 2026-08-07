@@ -33,7 +33,7 @@ export default function AdminError({
       <h1 className="font-display text-2xl font-semibold text-ink">This screen didn&apos;t load</h1>
 
       <p className="mt-3 text-sm leading-relaxed text-ink-500">
-        The console couldn&apos;t read from the database. Nothing has been changed or deleted —
+        The console couldn&apos;t read from the database. Nothing has been changed or deleted,
         this is a read failure, not a write one.
       </p>
 

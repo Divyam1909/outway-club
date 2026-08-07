@@ -32,7 +32,7 @@ export function DeleteTripButton({ tripId, tripTitle }: { tripId: string; tripTi
       if (deleteError) {
         setError(
           deleteError.code === "23503"
-            ? "This trip has bookings against it, so it can't be deleted. Unpublish it instead — that hides it from the site and keeps the booking history intact."
+            ? "This trip has bookings against it, so it can't be deleted. Unpublish it instead, that hides it from the site and keeps the booking history intact."
             : friendlyError(deleteError, "trip", "Couldn't delete that trip. Please try again.")
         );
         setDeleting(false);

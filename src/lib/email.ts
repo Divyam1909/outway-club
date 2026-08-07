@@ -31,7 +31,7 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailInput):
   const from = process.env.EMAIL_FROM || `${site.name} <${site.email}>`;
 
   if (!apiKey) {
-    console.warn(`[email] RESEND_API_KEY not set — skipped "${subject}" to ${String(to)}`);
+    console.warn(`[email] RESEND_API_KEY not set, skipped "${subject}" to ${String(to)}`);
     return false;
   }
 
@@ -155,13 +155,13 @@ export interface BookingEmailData {
 
 export function bookingConfirmationEmail(data: BookingEmailData) {
   return {
-    subject: `Booking confirmed — ${data.tripTitle} (${data.bookingRef})`,
+    subject: `Booking confirmed: ${data.tripTitle} (${data.bookingRef})`,
     html: layout({
       preheader: `Your seat on ${data.tripTitle} is confirmed. Reference ${data.bookingRef}.`,
       heading: `You're in, ${data.customerName.split(" ")[0] || "traveller"}.`,
       body: [
         paragraph(
-          `Your seat on <strong style="color:${COLORS.ink};">${escapeHtml(data.tripTitle)}</strong> is confirmed and paid. Keep this email — the reference below is what we'll ask for.`
+          `Your seat on <strong style="color:${COLORS.ink};">${escapeHtml(data.tripTitle)}</strong> is confirmed and paid. Keep this email, the reference below is what we'll ask for.`
         ),
         detailRows([
           ["Booking reference", data.bookingRef],
@@ -175,7 +175,7 @@ export function bookingConfirmationEmail(data: BookingEmailData) {
           ? paragraph(`<strong style="color:${COLORS.ink};">Your note to us:</strong> ${escapeHtml(data.specialRequests)}`)
           : "",
         paragraph(
-          `We'll email the full joining instructions — pickup point, timings, what to pack and your trip captain's number — closer to departure. Carry an original government photo ID; it's mandatory at check-in.`
+          `We'll email the full joining instructions (pickup point, timings, what to pack and your trip captain's number) closer to departure. Carry an original government photo ID; it's mandatory at check-in.`
         ),
         button(`${site.url}/booking/confirmation/${data.bookingId}`, "View your booking"),
         paragraph(
@@ -188,7 +188,7 @@ export function bookingConfirmationEmail(data: BookingEmailData) {
 
 export function newBookingAlertEmail(data: BookingEmailData) {
   return {
-    subject: `New booking — ${data.tripTitle} · ${data.numTravelers} traveller${data.numTravelers > 1 ? "s" : ""} · ${data.totalAmount}`,
+    subject: `New booking: ${data.tripTitle} · ${data.numTravelers} traveller${data.numTravelers > 1 ? "s" : ""} · ${data.totalAmount}`,
     html: layout({
       preheader: `${data.customerName} booked ${data.tripTitle}.`,
       heading: "New booking received",
@@ -227,7 +227,7 @@ export interface CancellationEmailData {
 export function cancellationEmail(data: CancellationEmailData) {
   const refunded = data.refundPercent > 0;
   return {
-    subject: `Booking cancelled — ${data.tripTitle} (${data.bookingRef})`,
+    subject: `Booking cancelled: ${data.tripTitle} (${data.bookingRef})`,
     html: layout({
       preheader: refunded
         ? `${data.refundAmount} will be refunded to your original payment method.`
@@ -244,7 +244,7 @@ export function cancellationEmail(data: CancellationEmailData) {
         ]),
         refunded
           ? paragraph(
-              `The refund has been initiated to your original payment method. Banks typically take 5–7 working days to post it, and it will appear against the original transaction rather than as a new credit.`
+              `The refund has been initiated to your original payment method. Banks typically take 5 to 7 working days to post it, and it will appear against the original transaction rather than as a new credit.`
             )
           : paragraph(
               `This cancellation falls inside the no-refund window in our <a href="${site.url}/refund-policy" style="color:${COLORS.pine};">cancellation policy</a>, so no refund is due. If you believe there are exceptional circumstances here, reply to this email and we'll look at it properly.`
@@ -259,7 +259,7 @@ export function cancellationEmail(data: CancellationEmailData) {
 
 export function cancellationAlertEmail(data: CancellationEmailData & { bookingId: string }) {
   return {
-    subject: `Cancellation — ${data.tripTitle} (${data.bookingRef}) · refund ${data.refundAmount}`,
+    subject: `Cancellation: ${data.tripTitle} (${data.bookingRef}) · refund ${data.refundAmount}`,
     html: layout({
       preheader: `${data.customerName} cancelled ${data.bookingRef}.`,
       heading: "Booking cancelled",
@@ -289,7 +289,7 @@ export interface EnquiryEmailData {
 
 export function enquiryAlertEmail(data: EnquiryEmailData) {
   return {
-    subject: `New enquiry — ${data.name}${data.tripTitle ? ` · ${data.tripTitle}` : ""}`,
+    subject: `New enquiry: ${data.name}${data.tripTitle ? ` · ${data.tripTitle}` : ""}`,
     html: layout({
       preheader: data.message.slice(0, 120),
       heading: "New enquiry",
@@ -308,7 +308,7 @@ export function enquiryAlertEmail(data: EnquiryEmailData) {
 
 export function enquiryAcknowledgementEmail(data: EnquiryEmailData) {
   return {
-    subject: `We've got your message — ${site.name}`,
+    subject: `We've got your message: ${site.name}`,
     html: layout({
       preheader: `Thanks for writing in. We reply within ${site.responseTime}.`,
       heading: `Thanks for writing in, ${data.name.split(" ")[0]}.`,
@@ -326,7 +326,7 @@ export function enquiryAcknowledgementEmail(data: EnquiryEmailData) {
 
 export function waitlistWelcomeEmail(data: { email: string; name?: string | null }) {
   return {
-    subject: `You're on the list — ${site.name}`,
+    subject: `You're on the list: ${site.name}`,
     html: layout({
       preheader: "We'll email you first when Escape 002 opens.",
       heading: data.name ? `You're on the list, ${data.name.split(" ")[0]}.` : "You're on the list.",
@@ -351,7 +351,7 @@ export function newBlogCommentAlertEmail(data: {
   body: string;
 }) {
   return {
-    subject: `New blog comment awaiting approval — ${data.postTitle}`,
+    subject: `New blog comment awaiting approval: ${data.postTitle}`,
     html: layout({
       preheader: data.body.slice(0, 120),
       heading: "New comment on the journal",
@@ -377,7 +377,7 @@ export function newReviewAlertEmail(data: {
   hasVideo: boolean;
 }) {
   return {
-    subject: `New review awaiting approval — ${data.rating}★ from ${data.authorName}`,
+    subject: `New review awaiting approval: ${data.rating}★ from ${data.authorName}`,
     html: layout({
       preheader: data.body.slice(0, 120),
       heading: "New review submitted",

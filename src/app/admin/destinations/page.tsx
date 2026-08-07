@@ -32,7 +32,7 @@ export default async function AdminDestinationsPage() {
           </span>
           <h2 className="font-display text-xl font-semibold text-ink">No destinations yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
-            Add a place before you add a trip to it — a trip can&apos;t be saved without one.
+            Add a place before you add a trip to it, a trip can&apos;t be saved without one.
           </p>
           <Link href="/admin/destinations/new" className="btn-accent mt-6">
             <Plus size={16} /> Add the first destination

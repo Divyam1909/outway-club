@@ -49,7 +49,7 @@ export default function BookingNotFound() {
         <strong className="font-semibold text-ink-700">
           If you&apos;ve just paid, your money is safe.
         </strong>{" "}
-        A payment and its booking record are never lost together — the charge is with Razorpay
+        A payment and its booking record are never lost together, the charge is with Razorpay
         regardless of what this page shows.
       </p>
       <p className="mt-3">
@@ -57,7 +57,7 @@ export default function BookingNotFound() {
         <Link href="/account" className="font-medium text-pine underline underline-offset-2">
           your bookings
         </Link>{" "}
-        first — if it isn&apos;t listed there, send us the payment ID from your bank or UPI app and
+        first. If it isn&apos;t listed there, send us the payment ID from your bank or UPI app and
         we&apos;ll sort it out.
       </p>
     </MessagePage>

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   }
   if (reviewBody.length < 20) {
     return NextResponse.json(
-      { error: "Please write at least a couple of sentences — it's more useful to the next traveller." },
+      { error: "Please write at least a couple of sentences, it's more useful to the next traveller." },
       { status: 400 }
     );
   }
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: hasFutureBooking
-          ? "You can leave a review once you're back — this page unlocks the day after your trip ends."
+          ? "You can leave a review once you're back. This page unlocks the day after your trip ends."
           : "Reviews are open to travellers who've been on this trip. We couldn't find a completed booking on your account.",
       },
       { status: 403 }

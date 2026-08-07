@@ -57,7 +57,7 @@ export default function GlobalError({
           </h1>
 
           <p style={{ margin: "1rem 0 0", fontSize: "0.9375rem", lineHeight: 1.7, color: "#5C5A54" }}>
-            Something failed before the page could start. This is on our side — reloading usually
+            Something failed before the page could start. This is on our side, reloading usually
             fixes it. No booking or payment is affected.
           </p>
 

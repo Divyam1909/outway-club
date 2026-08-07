@@ -1,185 +1,207 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Check, Clock, MapPin, Users } from "lucide-react";
+import { Suspense } from "react";
+import { ArrowRight, CalendarDays, Compass, Mountain, Sailboat, Tent } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { Badge } from "@/components/ui/badge";
-import { SmartImage } from "@/components/ui/smart-image";
 import { Reveal } from "@/components/ui/reveal";
+import { NewsletterForm } from "@/components/newsletter-form";
 import { TripCard } from "@/components/trips/trip-card";
-import { getAllTrips, getTripBySlug } from "@/lib/data";
-import { LAUNCH_TRIP_SLUG } from "@/config/site";
-import { formatDateRange, formatINR, seatsLeft } from "@/lib/utils";
+import { CatalogueFilters } from "@/components/trips/catalogue-filters";
+import { getCatalogueTrips, getCatalogueFacets } from "@/lib/data";
+import { PIPELINE, type PipelineEntry } from "@/config/pipeline";
+import type { Category, Difficulty, DurationBucket, TripSort } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Escapes",
   description:
-    "Every Outway Club escape. Right now that's one: Escape 001 — Udaipur × Mount Abu, 15–17 August, capped at 18 travellers.",
+    "Every Outway Club escape: small-group departures across India, each one planned end to end and capped tight. Filter by month, region, theme or budget.",
   alternates: { canonical: "/trips" },
 };
 
+const PIPELINE_ICONS = {
+  mountain: Mountain,
+  sailboat: Sailboat,
+  tent: Tent,
+  compass: Compass,
+} satisfies Record<PipelineEntry["icon"], typeof Compass>;
+
 export const revalidate = 300;
 
-export default async function TripsPage() {
-  const [trips, featured] = await Promise.all([
-    getAllTrips(),
-    getTripBySlug(LAUNCH_TRIP_SLUG),
+const DURATION_VALUES: DurationBucket[] = ["short", "medium", "long"];
+const SORT_VALUES: TripSort[] = ["soonest", "popular", "price_low", "price_high", "duration"];
+
+/** Query strings are user input — anything unrecognised is dropped, not trusted. */
+function one(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function TripsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+
+  const duration = one(params.duration);
+  const sort = one(params.sort);
+  const maxPrice = Number(one(params.maxPrice));
+
+  const filters = {
+    month: one(params.month),
+    region: one(params.region),
+    category: one(params.category) as Category | undefined,
+    difficulty: one(params.difficulty) as Difficulty | undefined,
+    duration: DURATION_VALUES.includes(duration as DurationBucket)
+      ? (duration as DurationBucket)
+      : undefined,
+    maxPrice: Number.isFinite(maxPrice) && maxPrice > 0 ? maxPrice : undefined,
+    sort: SORT_VALUES.includes(sort as TripSort) ? (sort as TripSort) : undefined,
+  };
+
+  const [trips, facets] = await Promise.all([
+    getCatalogueTrips(filters),
+    getCatalogueFacets(),
   ]);
 
-  const others = trips.filter((trip) => trip.slug !== LAUNCH_TRIP_SLUG);
-  const departure = featured?.departures[0] ?? null;
-  const remaining = departure ? seatsLeft(departure.total_seats, departure.seats_booked) : null;
-  const price = featured ? (featured.discounted_price ?? featured.price_per_person) : null;
+  const bookable = trips.filter((trip) => trip.departures.length > 0);
+  const waitlist = trips.filter((trip) => trip.departures.length === 0);
 
   return (
     <div className="py-14 sm:py-16">
       <Container>
-        <div className="mb-10 max-w-2xl">
+        <div className="mb-8 max-w-2xl">
           <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
-            {trips.length === 1 ? "One escape, running now" : `${trips.length} escapes`}
+            Small groups, fixed departures
           </p>
           <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">Escapes</h1>
           <p className="mt-4 text-lg leading-relaxed text-ink-500">
-            We run one at a time. It keeps the planning obsessive and the group small, and it means
-            nothing on this page is a placeholder waiting for someone to fill in the details.
+            Each of these was planned end to end before it went on sale: every night, every
+            transfer, every meal already booked. Nothing on this page is a placeholder waiting for
+            someone to fill in the details.
           </p>
         </div>
 
-        {featured ? (
-          <Reveal>
-            <article className="overflow-hidden rounded-3xl border border-border bg-white shadow-card">
-              <div className="grid grid-cols-1 lg:grid-cols-2">
-                <Link
-                  href={`/trips/${featured.slug}`}
-                  className="group relative aspect-[16/11] overflow-hidden lg:aspect-auto lg:min-h-[26rem]"
-                >
-                  <SmartImage
-                    src={featured.hero_image}
-                    alt={featured.title}
-                    fill
-                    priority
-                    sizes="(min-width: 1024px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:group-hover:scale-100"
-                    fallbackLabel="Escape 001"
-                  />
-                  <span className="absolute left-4 top-4 flex gap-2">
-                    <Badge tone="gold" className="bg-gold text-pine-700 shadow-soft">
-                      Escape 001
-                    </Badge>
-                    {remaining !== null && remaining > 0 && remaining <= 6 && (
-                      <Badge tone="clay" className="bg-clay text-cream-100 shadow-soft">
-                        {remaining} seats left
-                      </Badge>
-                    )}
-                  </span>
-                </Link>
+        {/* useSearchParams needs a Suspense boundary to keep the route static. */}
+        <Suspense fallback={<div className="h-40 rounded-2xl bg-cream-300/40" />}>
+          <CatalogueFilters facets={facets} resultCount={trips.length} />
+        </Suspense>
 
-                <div className="flex flex-col justify-center p-7 sm:p-10">
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink-500">
-                    <span className="flex items-center gap-1.5">
-                      <MapPin size={14} /> {featured.destination.name}, {featured.destination.region}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock size={14} /> {featured.duration_days}D / {featured.duration_nights}N
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Users size={14} /> Max {featured.group_size_max}
-                    </span>
-                  </div>
-
-                  <h2 className="mt-3 font-display text-3xl font-semibold leading-tight text-ink">
-                    {featured.title}
-                  </h2>
-
-                  {departure && (
-                    <p className="mt-2 text-sm font-semibold text-clay">
-                      {formatDateRange(departure.start_date, departure.end_date)}
-                      {remaining !== null && ` · ${remaining} of ${departure.total_seats} seats left`}
-                    </p>
-                  )}
-
-                  <p className="mt-4 leading-relaxed text-ink-500">{featured.short_description}</p>
-
-                  <ul className="mt-6 space-y-2.5">
-                    {featured.highlights.slice(0, 3).map((highlight) => (
-                      <li key={highlight} className="flex gap-2.5 text-sm text-ink-700">
-                        <Check size={15} className="mt-0.5 shrink-0 text-pine" strokeWidth={3} />
-                        {highlight}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-8 flex flex-wrap items-center gap-5 border-t border-border pt-6">
-                    {price !== null && (
-                      <div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-display text-3xl font-semibold text-ink">
-                            {formatINR(price)}
-                          </span>
-                          {featured.discounted_price && (
-                            <span className="text-ink-300 line-through">
-                              {formatINR(featured.price_per_person)}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-ink-400">per person · taxes included</p>
-                      </div>
-                    )}
-                    <Link href={`/trips/${featured.slug}`} className="btn-accent ml-auto px-7 py-3.5">
-                      See the itinerary <ArrowRight size={17} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </Reveal>
-        ) : (
-          <div className="rounded-3xl border border-dashed border-border bg-white/60 p-14 text-center">
+        {trips.length === 0 ? (
+          <div className="mt-10 rounded-3xl border border-dashed border-border bg-white/60 p-14 text-center">
             <p className="font-display text-2xl font-semibold text-ink">
-              Between escapes right now
+              Nothing matches that combination
             </p>
             <p className="mx-auto mt-3 max-w-md text-ink-500">
-              The next one is being finalised. Join the list and you&apos;ll get the dates before
-              they go public.
+              Clear a filter or two, or tell us where you&apos;d like to go, we plan the calendar
+              around what people actually ask for.
             </p>
-            <Link href="/upcoming" className="btn-accent mt-7">
-              Get notified <ArrowRight size={16} />
-            </Link>
-          </div>
-        )}
-
-        {others.length > 0 && (
-          <div className="mt-16">
-            <h2 className="mb-6 font-display text-2xl font-semibold text-ink">Also running</h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {others.map((trip) => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Coming soon rail */}
-        <Reveal>
-          <section className="mt-16 overflow-hidden rounded-3xl bg-cream-300/60 px-8 py-12 sm:px-12">
-            <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-clay">
-                  Escape 002 · Coming soon
-                </p>
-                <h2 className="mt-2 max-w-lg font-display text-2xl font-semibold text-ink sm:text-3xl">
-                  We&apos;re building more meaningful journeys for you.
-                </h2>
-                <p className="mt-3 max-w-lg leading-relaxed text-ink-500">
-                  The next escape goes on sale only once every night, transfer and meal is actually
-                  booked. Put your email down and you&apos;ll hear before anyone else.
-                </p>
-              </div>
-              <Link href="/upcoming" className="btn-outline shrink-0 px-7 py-3.5">
-                See what&apos;s in the works <ArrowRight size={16} />
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link href="/trips" className="btn-outline px-6 py-3">
+                Clear filters
+              </Link>
+              <Link href="#notify" className="btn-accent px-6 py-3">
+                Get notified <ArrowRight size={16} />
               </Link>
             </div>
+          </div>
+        ) : (
+          <>
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {bookable.map((trip, index) => (
+                <Reveal key={trip.id} delay={Math.min(index, 5) * 70}>
+                  <TripCard trip={trip} />
+                </Reveal>
+              ))}
+            </div>
+
+            {waitlist.length > 0 && (
+              <div className="mt-14">
+                <div className="mb-6 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-ink-400">
+                  <CalendarDays size={15} />
+                  Between dates
+                </div>
+                <p className="mb-6 max-w-xl text-ink-500">
+                  These have run before and will run again, we just haven&apos;t published the
+                  next date yet. Open one to join its waitlist.
+                </p>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {waitlist.map((trip) => (
+                    <TripCard key={trip.id} trip={trip} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* --- Notify me -------------------------------------------------------- */}
+        <section id="notify" className="mt-16 scroll-mt-24">
+          <Reveal>
+            <div className="overflow-hidden rounded-3xl bg-pine-700 px-8 py-12 text-cream-100 sm:px-12 sm:py-14">
+              <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
+                <div className="max-w-lg">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+                    What&apos;s next
+                  </p>
+                  <h2 className="mt-2 font-display text-2xl font-semibold sm:text-3xl">
+                    Be told before anyone else.
+                  </h2>
+                  <p className="mt-3 leading-relaxed text-cream-100/75">
+                    A new escape goes on sale only once every night, transfer and meal is actually
+                    booked. Put your email down and you&apos;ll hear before it&apos;s announced
+                    anywhere else.
+                  </p>
+                </div>
+                <div className="w-full shrink-0 sm:max-w-sm">
+                  <NewsletterForm source="trips" buttonLabel="Notify me" />
+                  <p className="mt-3 text-xs leading-relaxed text-cream-100/50">
+                    One email per escape. No newsletter, no drip sequence, unsubscribe in one
+                    click.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        {/* --- What's in the works ----------------------------------------------- */}
+        {PIPELINE.length > 0 && (
+          <section className="mt-16">
+            <div className="mx-auto mb-10 max-w-2xl text-center">
+              <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+                What&apos;s in the works
+              </h2>
+              <p className="mt-3 leading-relaxed text-ink-500">
+                Not bookable, not dated, and deliberately vague about where. We won&apos;t name a
+                destination until it&apos;s confirmed, because half of these will change.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              {PIPELINE.map((entry, index) => {
+                const Icon = PIPELINE_ICONS[entry.icon];
+                return (
+                  <Reveal key={entry.theme} delay={index * 90}>
+                    <article className="flex h-full flex-col rounded-3xl border border-border bg-white p-7">
+                      <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-pine-50 text-pine">
+                        <Icon size={21} />
+                      </span>
+                      <h3 className="font-display text-xl font-semibold text-ink">
+                        {entry.theme}
+                      </h3>
+                      <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-500">
+                        {entry.body}
+                      </p>
+                      <p className="mt-6 border-t border-border pt-4 text-xs font-medium uppercase tracking-wider text-ink-400">
+                        {entry.status}
+                      </p>
+                    </article>
+                  </Reveal>
+                );
+              })}
+            </div>
           </section>
-        </Reveal>
+        )}
       </Container>
     </div>
   );

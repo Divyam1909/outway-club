@@ -48,7 +48,7 @@ export function CancelBookingButton({
         setError(
           await messageFromResponse(
             response,
-            "We couldn't cancel that just now. Nothing has changed — please try again, or email us."
+            "We couldn't cancel that just now. Nothing has changed, please try again, or email us."
           )
         );
         setLoading(false);
@@ -142,7 +142,7 @@ export function CancelBookingButton({
 
               <p className="mt-4 text-xs leading-relaxed text-ink-400">
                 {refundAmount > 0
-                  ? "We initiate the refund to your original payment method within 2 working days. Your bank then takes 5–7 working days to post it."
+                  ? "We initiate the refund to your original payment method within 2 working days. Your bank then takes 5 to 7 working days to post it."
                   : "This cancellation falls inside the no-refund window in our cancellation policy. If there are exceptional circumstances, email us instead of cancelling here."}
               </p>
 

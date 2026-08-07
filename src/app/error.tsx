@@ -67,7 +67,7 @@ export default function Error({
         the time this clears on a retry.
       </p>
       <p className="mt-3">
-        If you were in the middle of a booking, no payment has been taken — check{" "}
+        If you were in the middle of a booking, no payment has been taken, check{" "}
         <Link href="/account" className="font-medium text-pine underline underline-offset-2">
           your bookings
         </Link>{" "}

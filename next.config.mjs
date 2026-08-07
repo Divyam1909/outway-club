@@ -21,6 +21,13 @@ const nextConfig = {
       { source: "/group-trips", destination: "/trips", permanent: true },
       { source: "/escapes", destination: "/trips", permanent: true },
       { source: "/reviews", destination: "/testimonials", permanent: true },
+      // Slugs moved from edition-numbered to destination-led when the site
+      // became a catalogue — nobody searches "escape 001".
+      {
+        source: "/trips/escape-001-udaipur-mount-abu",
+        destination: "/trips/udaipur-mount-abu",
+        permanent: true,
+      },
       { source: "/cancellation-policy", destination: "/refund-policy", permanent: true },
       { source: "/privacy-policy", destination: "/privacy", permanent: true },
     ];

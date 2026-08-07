@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   }
   if (!isValidEmail(authorEmail)) {
     return NextResponse.json(
-      { error: "Please add a valid email. It's never published — we only use it to reply." },
+      { error: "Please add a valid email. It's never published, we only use it to reply." },
       { status: 400 }
     );
   }

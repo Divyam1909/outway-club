@@ -49,7 +49,7 @@ export default async function AdminBlogPage() {
           <h2 className="font-display text-xl font-semibold text-ink">Nothing written yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
             A destination guide or an honest write-up of an escape does more for search than any
-            amount of keyword stuffing — and it&apos;s the only thing on this site people forward
+            amount of keyword stuffing, and it&apos;s the only thing on this site people forward
             to a friend.
           </p>
           <Link href="/admin/blog/new" className="btn-accent mt-6">
@@ -89,7 +89,7 @@ export default async function AdminBlogPage() {
                     </div>
                   </td>
                   <td className="px-5 py-4 text-ink-500">
-                    {post.published_at ? formatDate(post.published_at) : "—"}
+                    {post.published_at ? formatDate(post.published_at) : "N/A"}
                   </td>
                   <td className="px-5 py-4 text-ink-500">
                     <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">

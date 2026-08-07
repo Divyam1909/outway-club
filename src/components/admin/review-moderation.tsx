@@ -41,7 +41,7 @@ export function ReviewModeration({ reviewId, isApproved }: { reviewId: string; i
   async function handleDelete() {
     if (
       !window.confirm(
-        "Delete this review permanently? Only do this for spam or abuse — never because a review is critical."
+        "Delete this review permanently? Only do this for spam or abuse, never because a review is critical."
       )
     ) {
       return;

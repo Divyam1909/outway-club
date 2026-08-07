@@ -65,7 +65,7 @@ export function ReviewForm({
     return (
       <div className="rounded-3xl border border-pine-100 bg-pine-50 p-8 text-center">
         <CheckCircle2 className="mx-auto mb-4 text-pine" size={34} />
-        <h2 className="font-display text-2xl font-semibold text-pine-600">Thank you — genuinely.</h2>
+        <h2 className="font-display text-2xl font-semibold text-pine-600">Thank you, genuinely.</h2>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-pine-600/85">
           Your review is with us. We read every one before it goes live, which usually takes a day,
           and we publish it exactly as you wrote it. We never edit a review to be kinder.
@@ -159,7 +159,7 @@ export function ReviewForm({
           value={body}
           onChange={(event) => setBody(event.target.value)}
           className="field"
-          placeholder="What was actually good? What would you tell a friend to expect? Be honest — a critical review is more useful to us than a polite one."
+          placeholder="What was actually good? What would you tell a friend to expect? Be honest, a critical review is more useful to us than a polite one."
         />
         <p className="mt-1.5 text-xs text-ink-400">{body.length} / 4000</p>
       </div>
@@ -180,7 +180,7 @@ export function ReviewForm({
           placeholder="https://youtube.com/watch?v=…"
         />
         <p className="mt-1.5 text-xs text-ink-400">
-          Shot something on the trip? Upload it to YouTube or Vimeo and paste the link — we&apos;ll
+          Shot something on the trip? Upload it to YouTube or Vimeo and paste the link, we&apos;ll
           feature it on the testimonials page.
         </p>
       </div>

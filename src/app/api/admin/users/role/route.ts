@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     if ((count ?? 0) <= 1) {
       return NextResponse.json(
-        { error: "You're the only admin — promote someone else before stepping down." },
+        { error: "You're the only admin, promote someone else before stepping down." },
         { status: 409 }
       );
     }

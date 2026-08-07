@@ -48,7 +48,7 @@ export function ShareButtons({ url, title }: { url: string; title: string }) {
       </button>
 
       <a
-        href={`https://wa.me/?text=${encodeURIComponent(`${title} — ${url}`)}`}
+        href={`https://wa.me/?text=${encodeURIComponent(`${title}: ${url}`)}`}
         target="_blank"
         rel="noopener noreferrer"
         className={base}

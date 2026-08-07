@@ -13,7 +13,7 @@
 
 /** Generic last resort. Used when nothing more specific is known. */
 export const GENERIC_ERROR =
-  "Something went wrong on our end. Please try again — if it keeps happening, email us.";
+  "Something went wrong on our end. Please try again, if it keeps happening, email us.";
 
 /** Shown when fetch itself rejects: no response ever arrived. */
 export const NETWORK_ERROR =
@@ -44,7 +44,7 @@ function postgresMessage(code: string, subject: string): string | null {
     case "23514": // check_violation
       return "One of the values isn't allowed. Check the numbers and dates, then try again.";
     case "22P02": // invalid_text_representation
-      return "One of the fields has the wrong kind of value in it — check any number or date fields.";
+      return "One of the fields has the wrong kind of value in it. Check any number or date fields.";
     case "22001": // string_data_right_truncation
       return "One of the fields is longer than we can store. Shorten it and try again.";
     case "42501": // insufficient_privilege
@@ -53,7 +53,7 @@ function postgresMessage(code: string, subject: string): string | null {
     case "PGRST302":
       return "Your session expired. Refresh the page and sign in again.";
     case "PGRST116": // no rows returned where one was required
-      return "We couldn't find that any more — it may have been deleted in another tab.";
+      return "We couldn't find that any more, it may have been deleted in another tab.";
     default:
       return null;
   }
@@ -93,7 +93,7 @@ function authMessage(raw: string): string | null {
     message.includes("invalid or has expired") ||
     message.includes("otp_expired")
   ) {
-    return "That link has expired. Links are valid for one hour and can only be used once — request a fresh one.";
+    return "That link has expired. Links are valid for one hour and can only be used once, request a fresh one.";
   }
   if (message.includes("signups not allowed") || message.includes("signup is disabled")) {
     return "New accounts are closed at the moment. Email us and we'll sort you out.";

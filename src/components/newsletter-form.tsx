@@ -10,14 +10,14 @@ import { messageFromResponse, networkError } from "@/lib/error-messages";
  * Signup for "tell me when the next escape opens".
  *
  * `variant="dark"` is the footer treatment on pine; `variant="light"` is used
- * on cream sections such as the upcoming-escapes page.
+ * on cream sections such as the escapes page notify strip.
  */
 export function NewsletterForm({
   source = "footer",
   variant = "dark",
   buttonLabel = "Notify me",
 }: {
-  source?: "footer" | "upcoming" | "trip" | "home" | "blog";
+  source?: "footer" | "trips" | "trip" | "home" | "blog" | "coming-soon";
   variant?: "dark" | "light";
   buttonLabel?: string;
 }) {
@@ -49,7 +49,7 @@ export function NewsletterForm({
       });
 
       if (!response.ok) {
-        setError(await messageFromResponse(response, "We couldn't add you just now — try again."));
+        setError(await messageFromResponse(response, "We couldn't add you just now, try again."));
         setStatus("idle");
         return;
       }
@@ -70,7 +70,7 @@ export function NewsletterForm({
           dark ? "text-gold" : "text-pine"
         )}
       >
-        <Check size={16} /> You&apos;re on the list — we&apos;ll write before anyone else hears.
+        <Check size={16} /> You&apos;re on the list. We&apos;ll write before anyone else hears.
       </p>
     );
   }

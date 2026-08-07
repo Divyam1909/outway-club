@@ -98,7 +98,7 @@ export default async function AdminDashboardPage() {
                     {booking.id.slice(0, 8)}
                   </span>
                   <span className="flex-1 text-sm font-medium text-ink">
-                    {booking.trip?.title ?? "—"}
+                    {booking.trip?.title ?? "N/A"}
                   </span>
                   <span className="text-xs text-ink-400">{formatDate(booking.created_at)}</span>
                   <Badge

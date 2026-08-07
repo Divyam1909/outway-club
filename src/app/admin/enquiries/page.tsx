@@ -49,7 +49,7 @@ export default async function AdminEnquiriesPage() {
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                     <a
-                      href={`mailto:${enquiry.email}?subject=${encodeURIComponent("Re: your enquiry — Outway Club")}`}
+                      href={`mailto:${enquiry.email}?subject=${encodeURIComponent("Re: your enquiry, Outway Club")}`}
                       className="flex items-center gap-1.5 text-pine hover:underline"
                     >
                       <Mail size={13} /> {enquiry.email}

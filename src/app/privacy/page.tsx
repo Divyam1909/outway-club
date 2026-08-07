@@ -15,7 +15,7 @@ export default function PrivacyPage() {
     <LegalPage
       eyebrow="Legal"
       title="Privacy Policy"
-      intro="This explains exactly what personal data we hold about you, why we hold it, who else sees it, and how to make us delete it. We collect the minimum needed to run a trip — nothing is sold, and there is no advertising tracking on this site."
+      intro="This explains exactly what personal data we hold about you, why we hold it, who else sees it, and how to make us delete it. We collect the minimum needed to run a trip: nothing is sold, and there is no advertising tracking on this site."
       lastUpdated="6 August 2026"
     >
       <LegalSection id="controller" title="1. Who controls your data">
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
         <h3>When you create an account</h3>
         <ul>
           <li>Your name and email address</li>
-          <li>A password, stored only as a salted hash by our authentication provider — we never see it</li>
+          <li>A password, stored only as a salted hash by our authentication provider: we never see it</li>
         </ul>
 
         <h3>When you make a booking</h3>
@@ -80,26 +80,26 @@ export default function PrivacyPage() {
       <LegalSection id="why" title="3. Why we hold it, and on what basis">
         <ul>
           <li>
-            <strong>To deliver a trip you booked</strong> — performance of our contract with you.
+            <strong>To deliver a trip you booked</strong>: performance of our contract with you.
             Traveller names go to hotels; group counts go to transport operators.
           </li>
           <li>
-            <strong>To take payment and issue refunds</strong> — performance of contract, and legal
+            <strong>To take payment and issue refunds</strong>: performance of contract, and legal
             obligation for tax records.
           </li>
           <li>
-            <strong>To reply to enquiries</strong> — your consent, given by writing to us.
+            <strong>To reply to enquiries</strong>: your consent, given by writing to us.
           </li>
           <li>
-            <strong>To email you about a future escape</strong> — your consent, given by subscribing.
+            <strong>To email you about a future escape</strong>: your consent, given by subscribing.
             One click unsubscribes and we never add you without an action from you.
           </li>
           <li>
-            <strong>To prevent spam and fraud on our forms and checkout</strong> — our legitimate
+            <strong>To prevent spam and fraud on our forms and checkout</strong>: our legitimate
             interest in keeping the service usable and secure.
           </li>
           <li>
-            <strong>To publish a review you submitted</strong> — your consent, revocable at any time.
+            <strong>To publish a review you submitted</strong>: your consent, revocable at any time.
           </li>
         </ul>
       </LegalSection>
@@ -108,27 +108,27 @@ export default function PrivacyPage() {
         <p>We share the minimum necessary with these categories of recipient, and no one else:</p>
         <ul>
           <li>
-            <strong>Supabase</strong> — database, authentication and file storage. Your account and
+            <strong>Supabase</strong>: database, authentication and file storage. Your account and
             booking records live here.
           </li>
           <li>
-            <strong>Razorpay</strong> — payment processing and refunds. Receives your name, email and
+            <strong>Razorpay</strong>: payment processing and refunds. Receives your name, email and
             payment instrument details directly.
           </li>
           <li>
-            <strong>Resend</strong> — sends our transactional email. Receives your email address and
+            <strong>Resend</strong>: sends our transactional email. Receives your email address and
             the content of the message being sent.
           </li>
           <li>
-            <strong>Vercel</strong> — hosts and serves this website.
+            <strong>Vercel</strong>: hosts and serves this website.
           </li>
           <li>
-            <strong>Trip suppliers</strong> — the specific hotels, transport operators and activity
+            <strong>Trip suppliers</strong>: the specific hotels, transport operators and activity
             providers on your itinerary receive the traveller names and, where relevant, the dietary
             or accessibility information you gave us.
           </li>
           <li>
-            <strong>Authorities</strong> — where we are legally required to disclose, for example
+            <strong>Authorities</strong>: where we are legally required to disclose, for example
             hotel ID records mandated under Indian law.
           </li>
         </ul>
@@ -141,20 +141,20 @@ export default function PrivacyPage() {
       <LegalSection id="retention" title="5. How long we keep it">
         <ul>
           <li>
-            <strong>Booking and payment records</strong> — 8 years from the end of the financial
+            <strong>Booking and payment records</strong>: 8 years from the end of the financial
             year, as required by Indian tax and accounting law.
           </li>
           <li>
-            <strong>Account data</strong> — until you ask us to delete the account.
+            <strong>Account data</strong>: until you ask us to delete the account.
           </li>
           <li>
-            <strong>Enquiries</strong> — 24 months from your last contact with us.
+            <strong>Enquiries</strong>: 24 months from your last contact with us.
           </li>
           <li>
-            <strong>Marketing subscriptions</strong> — until you unsubscribe.
+            <strong>Marketing subscriptions</strong>: until you unsubscribe.
           </li>
           <li>
-            <strong>Rate-limit records</strong> — automatically deleted after 24 hours.
+            <strong>Rate-limit records</strong>: automatically deleted after 24 hours.
           </li>
         </ul>
       </LegalSection>

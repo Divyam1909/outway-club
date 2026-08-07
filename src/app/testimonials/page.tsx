@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarClock, Play, Quote, ShieldCheck } from "lucide-react";
+import { CalendarClock, Play, ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Reveal } from "@/components/ui/reveal";
-import { getApprovedReviews } from "@/lib/data";
-import { formatDate } from "@/lib/utils";
+import { ReviewStack } from "@/components/reviews/review-stack";
+import { getApprovedReviews, type ReviewWithTrip } from "@/lib/data";
+import { formatMonth } from "@/lib/utils";
 import { site } from "@/config/site";
 
 export const metadata: Metadata = {
   title: "Traveller reviews",
   description:
-    "Unedited reviews and video testimonials from people who actually travelled with Outway Club. No seeded content, no bought reviews.",
+    "Unedited reviews and video testimonials from people who actually travelled with Outway Club, grouped by destination. No seeded content, no bought reviews.",
   alternates: { canonical: "/testimonials" },
 };
 
@@ -32,16 +33,47 @@ const PROMISES = [
   },
 ];
 
+type DestinationGroup = {
+  name: string;
+  slug: string | null;
+  reviews: ReviewWithTrip[];
+};
+
+function groupByDestination(reviews: ReviewWithTrip[]): DestinationGroup[] {
+  const map = new Map<string, DestinationGroup>();
+  for (const review of reviews) {
+    const name = review.trip?.destination?.name ?? "Other trips";
+    if (!map.has(name)) {
+      map.set(name, { name, slug: review.trip?.destination?.slug ?? null, reviews: [] });
+    }
+    map.get(name)!.reviews.push(review);
+  }
+  return [...map.values()].sort((a, b) => b.reviews.length - a.reviews.length);
+}
+
+/** Reviews arrive newest first, so grouping by month preserves that order. */
+function groupByMonth(reviews: ReviewWithTrip[]): [string, ReviewWithTrip[]][] {
+  const map = new Map<string, ReviewWithTrip[]>();
+  for (const review of reviews) {
+    const key = review.created_at.slice(0, 7);
+    map.set(key, [...(map.get(key) ?? []), review]);
+  }
+  return [...map.entries()];
+}
+
 export default async function TestimonialsPage() {
   const reviews = await getApprovedReviews();
-
-  const videoReviews = reviews.filter((review) => review.video_url);
-  const textReviews = reviews.filter((review) => !review.video_url);
 
   const average =
     reviews.length > 0
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
       : 0;
+
+  const featured = [...reviews]
+    .sort((a, b) => b.rating - a.rating || +new Date(b.created_at) - +new Date(a.created_at))
+    .slice(0, 5);
+
+  const destinationGroups = groupByDestination(reviews);
 
   return (
     <div className="pb-20 sm:pb-24">
@@ -51,7 +83,7 @@ export default async function TestimonialsPage() {
             Traveller reviews
           </p>
           <h1 className="font-display text-4xl font-semibold leading-tight text-ink sm:text-5xl">
-            {reviews.length > 0 ? "What people said afterwards" : "Nothing here yet — and that's the point"}
+            {reviews.length > 0 ? "What people said afterwards" : "Nothing here yet, and that's the point"}
           </h1>
 
           {reviews.length > 0 ? (
@@ -68,88 +100,62 @@ export default async function TestimonialsPage() {
             </div>
           ) : (
             <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-500">
-              Escape 001 runs 15–17 August. Until people come back from it, there is genuinely
-              nothing to put on this page — so we&apos;ve left it empty rather than filling it with
-              stock quotes and invented names.
+              Until people come back from a trip with us, there is genuinely nothing to put on this
+              page, so we&apos;ve left it empty rather than filling it with stock quotes and
+              invented names.
             </p>
           )}
         </Container>
       </section>
 
-      {/* --- Video testimonials --------------------------------------------- */}
-      {videoReviews.length > 0 && (
+      {/* --- Best of, stacked -------------------------------------------------- */}
+      {featured.length > 0 && (
         <section className="py-16">
           <Container>
-            <h2 className="mb-8 font-display text-2xl font-semibold text-ink">On camera</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {videoReviews.map((review, index) => (
-                <Reveal key={review.id} delay={index * 80}>
-                  <figure className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-soft">
-                    <a
-                      href={review.video_url ?? "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group relative flex aspect-video items-center justify-center bg-pine-700"
-                    >
-                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-cream-100/90 text-pine transition-transform group-hover:scale-110 motion-reduce:group-hover:scale-100">
-                        <Play size={22} className="ml-0.5 fill-pine" />
-                      </span>
-                      <span className="absolute bottom-3 left-3 rounded-full bg-ink/60 px-3 py-1 text-xs font-medium text-cream-100">
-                        Watch {review.author_name}&apos;s video
-                      </span>
-                    </a>
-                    <figcaption className="flex flex-1 flex-col p-5">
-                      <RatingStars rating={review.rating} size={14} />
-                      {review.title && (
-                        <p className="mt-2 font-semibold text-ink">{review.title}</p>
-                      )}
-                      <blockquote className="mt-1.5 flex-1 text-sm leading-relaxed text-ink-500">
-                        {review.body}
-                      </blockquote>
-                      <p className="mt-4 text-xs font-medium text-ink-400">
-                        {review.author_name}
-                        {review.trip ? ` · ${review.trip.title}` : ""}
-                      </p>
-                    </figcaption>
-                  </figure>
-                </Reveal>
-              ))}
-            </div>
+            <p className="mb-1 text-center text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+              Start here
+            </p>
+            <h2 className="mb-10 text-center font-display text-2xl font-semibold text-ink sm:text-3xl">
+              The highest-rated, in the travellers&apos; own words
+            </h2>
+            <Reveal>
+              <ReviewStack reviews={featured} />
+            </Reveal>
           </Container>
         </section>
       )}
 
-      {/* --- Written reviews ------------------------------------------------- */}
-      {textReviews.length > 0 && (
-        <section className="py-16">
+      {/* --- Grouped by destination, then by month ----------------------------- */}
+      {destinationGroups.length > 0 && (
+        <section className="py-6">
           <Container>
-            {videoReviews.length > 0 && (
-              <h2 className="mb-8 font-display text-2xl font-semibold text-ink">In writing</h2>
-            )}
-            <div className="columns-1 gap-6 md:columns-2 lg:columns-3">
-              {textReviews.map((review) => (
-                <figure
-                  key={review.id}
-                  className="mb-6 break-inside-avoid rounded-2xl border border-border bg-white p-6 shadow-soft"
-                >
-                  <Quote className="mb-3 text-clay" size={20} aria-hidden="true" />
-                  <RatingStars rating={review.rating} size={14} />
-                  {review.title && (
-                    <p className="mt-3 font-display text-lg font-semibold text-ink">
-                      {review.title}
-                    </p>
-                  )}
-                  <blockquote className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-500">
-                    {review.body}
-                  </blockquote>
-                  <figcaption className="mt-5 border-t border-border pt-4">
-                    <span className="block text-sm font-semibold text-ink">{review.author_name}</span>
-                    <span className="block text-xs text-ink-400">
-                      {review.trip_month ? `Travelled ${review.trip_month}` : formatDate(review.created_at)}
-                      {review.trip ? ` · ${review.trip.title}` : ""}
+            <div className="space-y-16">
+              {destinationGroups.map((group) => (
+                <div key={group.name}>
+                  <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
+                    <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+                      {group.name}
+                    </h2>
+                    <span className="text-sm text-ink-400">
+                      {group.reviews.length} review{group.reviews.length === 1 ? "" : "s"}
                     </span>
-                  </figcaption>
-                </figure>
+                  </div>
+
+                  <div className="space-y-10">
+                    {groupByMonth(group.reviews).map(([monthKey, monthReviews]) => (
+                      <div key={monthKey}>
+                        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-clay">
+                          {formatMonth(monthKey)}
+                        </p>
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                          {monthReviews.map((review) => (
+                            <ReviewTile key={review.id} review={review} />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </Container>
@@ -165,10 +171,10 @@ export default async function TestimonialsPage() {
                 <CalendarClock size={22} />
               </span>
               <h2 className="font-display text-2xl font-semibold text-ink">
-                First reviews land 18 August
+                Reviews land the week after each trip
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
-                Everyone on Escape 001 gets a link to this form the morning after the trip ends.
+                Everyone on a departure gets a link to this form the morning after it ends.
                 Whatever they write goes up as they wrote it.
               </p>
               <Link href="/trips" className="btn-accent mt-7">
@@ -212,5 +218,36 @@ export default async function TestimonialsPage() {
         </Container>
       </section>
     </div>
+  );
+}
+
+function ReviewTile({ review }: { review: ReviewWithTrip }) {
+  return (
+    <figure className="flex h-full flex-col rounded-2xl border border-border bg-white p-5 shadow-soft">
+      <RatingStars rating={review.rating} size={13} />
+      {review.title && <p className="mt-2 font-semibold text-ink">{review.title}</p>}
+      <blockquote className="mt-1.5 flex-1 whitespace-pre-line text-sm leading-relaxed text-ink-500">
+        {review.body}
+      </blockquote>
+
+      {review.video_url && (
+        <a
+          href={review.video_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-clay hover:underline"
+        >
+          <Play size={12} className="fill-clay" /> Watch their video
+        </a>
+      )}
+
+      <figcaption className="mt-4 border-t border-border pt-3">
+        <span className="block text-sm font-semibold text-ink">{review.author_name}</span>
+        <span className="block text-xs text-ink-400">
+          {review.trip_month ? `Travelled ${review.trip_month}` : ""}
+          {review.trip ? `${review.trip_month ? " · " : ""}${review.trip.title}` : ""}
+        </span>
+      </figcaption>
+    </figure>
   );
 }

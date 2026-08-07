@@ -3,7 +3,6 @@ import { NavbarClient } from "./navbar-client";
 
 export const NAV_LINKS = [
   { href: "/trips", label: "Escapes" },
-  { href: "/upcoming", label: "What's next" },
   { href: "/blog", label: "Journal" },
   { href: "/testimonials", label: "Reviews" },
   { href: "/about", label: "About" },

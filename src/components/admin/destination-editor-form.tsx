@@ -53,7 +53,7 @@ export function DestinationEditorForm({
     setError(null);
 
     if (!heroImage) {
-      setError("Upload a hero image — the destination card and page header both need one.");
+      setError("Upload a hero image, the destination card and page header both need one.");
       return;
     }
 
@@ -200,7 +200,7 @@ export function DestinationEditorForm({
               className={INPUT}
               value={bestTime}
               onChange={(event) => setBestTime(event.target.value)}
-              placeholder="September – March"
+              placeholder="September to March"
             />
           </div>
         </div>

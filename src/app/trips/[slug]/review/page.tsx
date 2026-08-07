@@ -83,7 +83,7 @@ export default async function WriteReviewPage({
               body={
                 existingReview.is_approved
                   ? "It's live on the trip page and on our testimonials page. Thank you."
-                  : "It's with us and will be published once we've read it — usually within a day."
+                  : "It's with us and will be published once we've read it, usually within a day."
               }
               action={{ href: "/testimonials", label: "See all testimonials" }}
             />
@@ -97,7 +97,7 @@ export default async function WriteReviewPage({
             <Notice
               icon={<CalendarClock size={24} className="text-clay" />}
               title="Not quite yet"
-              body={`Your trip hasn't run yet — this page unlocks the day after you get back. We'll email you a link on ${formatDate(
+              body={`Your trip hasn't run yet. This page unlocks the day after you get back. We'll email you a link on ${formatDate(
                 upcoming.departureRow?.end_date ?? new Date().toISOString()
               )}.`}
               action={{ href: "/account", label: "View my booking" }}
@@ -106,7 +106,7 @@ export default async function WriteReviewPage({
             <Notice
               icon={<Lock size={24} className="text-ink-400" />}
               title="Reviews are for travellers only"
-              body="We couldn't find a completed booking for this trip on your account. That's deliberate — it's the only way we can promise every review here is real. If you did travel with us and this looks wrong, email us and we'll fix it."
+              body="We couldn't find a completed booking for this trip on your account. That's deliberate, it's the only way we can promise every review here is real. If you did travel with us and this looks wrong, email us and we'll fix it."
               action={{ href: `/trips/${slug}`, label: "Back to the trip" }}
             />
           )}

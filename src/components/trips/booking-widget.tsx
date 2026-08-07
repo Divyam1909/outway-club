@@ -119,7 +119,7 @@ export function BookingWidget({
       {noDepartures ? (
         <>
           <p className="mb-3 text-sm text-ink-500">
-            No upcoming departures right now — enquire and we&apos;ll let you know as soon as new
+            No upcoming departures right now. Enquire and we&apos;ll let you know as soon as new
             dates open.
           </p>
           <button onClick={() => router.push(`/contact?trip=${trip.slug}`)} className="btn-accent w-full">

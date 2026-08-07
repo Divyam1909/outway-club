@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Container } from "@/components/ui/container";
+import { Reveal } from "@/components/ui/reveal";
 import { ContactForm } from "@/components/contact-form";
 import { getTripBySlug } from "@/lib/data";
 import { site, whatsappLink } from "@/config/site";
@@ -9,7 +10,7 @@ import { site, whatsappLink } from "@/config/site";
 export const metadata: Metadata = {
   title: "Contact us",
   description:
-    "Questions about Escape 001, room sharing, custom dates or an existing booking — write to Outway Club and a person replies within one business day.",
+    "Questions about a departure, room sharing, custom dates or an existing booking. Write to Outway Club and a person replies within one business day.",
   alternates: { canonical: "/contact" },
 };
 
@@ -20,13 +21,19 @@ export default async function ContactPage({
 }) {
   const { trip: tripSlug } = await searchParams;
   const trip = tripSlug ? await getTripBySlug(tripSlug) : null;
-  const whatsapp = whatsappLink("Hi Outway — I have a question about Escape 001.");
+  // Deep-linked from a trip page (?trip=slug), the WhatsApp draft names that
+  // trip; otherwise it stays generic.
+  const whatsapp = whatsappLink(
+    trip
+      ? `Hi Outway, I have a question about ${trip.title}.`
+      : "Hi Outway, I have a question about one of your escapes."
+  );
 
   return (
     <div className="py-14 sm:py-20">
       <Container>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.25fr] lg:gap-16">
-          <div>
+          <Reveal>
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
               Get in touch
             </p>
@@ -35,7 +42,7 @@ export default async function ContactPage({
             </h1>
             <p className="mt-4 max-w-md text-lg leading-relaxed text-ink-500">
               Room sharing, dietary needs, whether the monsoon drive is rough, changing an existing
-              booking — a real person reads every message and replies within {site.responseTime}.
+              booking: a real person reads every message and replies within {site.responseTime}.
             </p>
 
             <dl className="mt-10 space-y-5">
@@ -90,11 +97,13 @@ export default async function ContactPage({
                 . It shows the exact refund before you confirm anything.
               </p>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="rounded-3xl border border-border bg-white p-6 shadow-card sm:p-8">
-            <ContactForm tripId={trip?.id} tripTitle={trip?.title} />
-          </div>
+          <Reveal delay={100}>
+            <div className="rounded-3xl border border-border bg-white p-6 shadow-card sm:p-8">
+              <ContactForm tripId={trip?.id} tripTitle={trip?.title} />
+            </div>
+          </Reveal>
         </div>
       </Container>
     </div>

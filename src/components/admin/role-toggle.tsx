@@ -30,7 +30,7 @@ export function RoleToggle({
     const message =
       nextRole === "admin"
         ? `Give ${name} full admin access? They'll be able to see every booking, customer and payment.`
-        : `Remove admin access from ${name}${isSelf ? " — that's you" : ""}?`;
+        : `Remove admin access from ${name}${isSelf ? " (that's you)" : ""}?`;
 
     if (!window.confirm(message)) return;
 

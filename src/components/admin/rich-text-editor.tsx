@@ -252,7 +252,7 @@ export function RichTextEditor({
       return;
     }
     if (file.size > MAX_BYTES) {
-      setUploadError(`${file.name} is ${(file.size / 1024 / 1024).toFixed(1)}MB — the limit is 8MB.`);
+      setUploadError(`${file.name} is ${(file.size / 1024 / 1024).toFixed(1)}MB, the limit is 8MB.`);
       return;
     }
 

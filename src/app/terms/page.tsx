@@ -6,7 +6,7 @@ import { site } from "@/config/site";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "The terms that govern bookings made with Outway Club — what we commit to, what we ask of you, and how liability works.",
+    "The terms that govern bookings made with Outway Club: what we commit to, what we ask of you, and how liability works.",
   alternates: { canonical: "/terms" },
 };
 
@@ -50,7 +50,7 @@ export default function TermsPage() {
         <p>
           We sell a place on an organised group trip. Each trip page lists a full day-by-day
           itinerary, an explicit inclusions list and an explicit exclusions list. Those three lists
-          are the definition of what you are buying — if something is not in the inclusions list, it
+          are the definition of what you are buying: if something is not in the inclusions list, it
           is not included, regardless of what may be implied elsewhere on the site.
         </p>
         <p>
@@ -87,8 +87,8 @@ export default function TermsPage() {
           purchase.
         </p>
         <p>
-          Detailed joining instructions — reporting point, timings, your trip captain&apos;s contact
-          number and final packing notes — are emailed separately in the days before departure.
+          Detailed joining instructions (reporting point, timings, your trip captain&apos;s contact
+          number and final packing notes) are emailed separately in the days before departure.
         </p>
       </LegalSection>
 
@@ -131,12 +131,12 @@ export default function TermsPage() {
           of comparable standard and will tell you why.
         </p>
         <p>
-          <strong>Minor changes</strong> — a reordered day, a substituted viewpoint, a different
-          restaurant of similar standard — do not entitle you to a refund.
+          <strong>Minor changes</strong> (a reordered day, a substituted viewpoint, a different
+          restaurant of similar standard) do not entitle you to a refund.
         </p>
         <p>
-          <strong>Significant changes</strong> — a change of departure date, a reduction in trip
-          length, or a change of accommodation to a materially lower standard — entitle you to
+          <strong>Significant changes</strong> (a change of departure date, a reduction in trip
+          length, or a change of accommodation to a materially lower standard) entitle you to
           choose between accepting the change, moving to another departure, or cancelling with a full
           refund of what you paid us.
         </p>

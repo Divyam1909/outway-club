@@ -31,7 +31,7 @@ export function TripGallery({
             <div key={`${src}-${index}`} className="relative aspect-square sm:aspect-auto">
               <SmartImage
                 src={src}
-                alt={`${title} — photo ${index + 1}`}
+                alt={`${title}, photo ${index + 1}`}
                 fill
                 sizes="(min-width: 640px) 20vw, 50vw"
                 className="object-cover"

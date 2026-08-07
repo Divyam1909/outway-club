@@ -10,7 +10,7 @@ import { site } from "@/config/site";
 export const metadata: Metadata = {
   title: "About us",
   description:
-    "Outway Club runs one small-group escape at a time across India — planned end to end, capped at 18 travellers, priced with taxes in.",
+    "Outway Club runs one small-group escape at a time across India, planned end to end, capped at 18 travellers, priced with taxes in.",
   alternates: { canonical: "/about" },
 };
 
@@ -73,24 +73,25 @@ export default function AboutPage() {
             <div className="mt-8 space-y-4 leading-relaxed text-ink-500">
               <p>
                 Outway Club started as a reaction to that. The first thing we wrote wasn&apos;t a
-                brand or a website — it was a three-day itinerary for Udaipur and Mount Abu, hour by
+                brand or a website, it was a three-day itinerary for Udaipur and Mount Abu, hour by
                 hour, with the stays already booked and every cost written down. Then we worked
                 backwards and built a company that could sell exactly that and nothing more.
               </p>
               <p>
-                Escape 001 is that itinerary. It runs 15–17 August, it takes eighteen people, and
-                it is the only thing we are selling. When it&apos;s done we&apos;ll take what we
-                learned, publish the reviews unedited — including the bad ones — and start on
-                Escape 002.
+                Escape 001 was that itinerary. Everything we&apos;ve added since gets built the
+                same way: walked, driven and eaten before it goes on sale, then run small enough
+                that we can actually stand behind it. After each one we publish the reviews
+                unedited, including the bad ones, and start on the next.
               </p>
               <p>
                 That&apos;s the entire plan. No franchise, no thirty-destination catalogue, no
-                &ldquo;packages starting from&rdquo;. One trip, run properly, then the next one.
+                &ldquo;packages starting from&rdquo;. A handful of trips a year, each one run
+                properly.
               </p>
             </div>
 
             <Link href="/trips" className="btn-accent mt-9 px-7 py-3.5">
-              See Escape 001 <ArrowRight size={17} />
+              See every escape <ArrowRight size={17} />
             </Link>
           </div>
 
@@ -137,23 +138,25 @@ export default function AboutPage() {
       </section>
 
       <Container className="py-16 sm:py-20">
-        <div className="mx-auto max-w-2xl rounded-3xl border border-border bg-white p-8 text-center shadow-soft sm:p-10">
-          <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-            Want to know something we haven&apos;t said here?
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
-            Ask us anything about how we operate, who we book with, or where the money goes.
-            We&apos;ll answer straight.
-          </p>
-          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/contact" className="btn-accent">
-              Get in touch
-            </Link>
-            <a href={`mailto:${site.email}`} className="btn-outline">
-              {site.email}
-            </a>
+        <Reveal>
+          <div className="mx-auto max-w-2xl rounded-3xl border border-border bg-white p-8 text-center shadow-soft sm:p-10">
+            <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+              Want to know something we haven&apos;t said here?
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
+              Ask us anything about how we operate, who we book with, or where the money goes.
+              We&apos;ll answer straight.
+            </p>
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/contact" className="btn-accent">
+                Get in touch
+              </Link>
+              <a href={`mailto:${site.email}`} className="btn-outline">
+                {site.email}
+              </a>
+            </div>
           </div>
-        </div>
+        </Reveal>
       </Container>
     </div>
   );

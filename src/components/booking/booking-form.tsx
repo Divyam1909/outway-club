@@ -44,21 +44,21 @@ function paymentFailureMessage(payload: RazorpayFailure): string {
   const { code, description, reason } = payload.error ?? {};
 
   if (code === "BAD_REQUEST_ERROR" && reason === "payment_cancelled") {
-    return "The payment was cancelled before it completed. Nothing has been charged — you can try again.";
+    return "The payment was cancelled before it completed. Nothing has been charged, you can try again.";
   }
   if (reason === "payment_failed" || code === "GATEWAY_ERROR") {
     return (
       description ||
-      "Your bank declined the payment. Nothing has been charged — try a different card or UPI app."
+      "Your bank declined the payment. Nothing has been charged, try a different card or UPI app."
     );
   }
   if (code === "NETWORK_ERROR") {
-    return "The connection dropped during payment. Check your bank app before retrying — if money left your account, email us instead of paying again.";
+    return "The connection dropped during payment. Check your bank app before retrying. If money left your account, email us instead of paying again.";
   }
 
   return (
     description ||
-    "The payment didn't go through. Nothing has been charged — please try again, or use a different method."
+    "The payment didn't go through. Nothing has been charged, please try again, or use a different method."
   );
 }
 
@@ -152,7 +152,7 @@ export function BookingForm({
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded || !window.Razorpay) {
         setError(
-          "We couldn't load the secure checkout. Check your connection — an ad or script blocker can also stop it — then try again."
+          "We couldn't load the secure checkout. Check your connection (an ad or script blocker can also stop it) then try again."
         );
         setLoading(false);
         return;
@@ -250,7 +250,7 @@ export function BookingForm({
       // Nothing has been charged at this point — the failure happened before
       // or while opening checkout, so retrying is safe to suggest.
       setError(
-        "We couldn't open the secure checkout. Nothing has been charged — please try again in a moment."
+        "We couldn't open the secure checkout. Nothing has been charged, please try again in a moment."
       );
       setLoading(false);
     }
@@ -267,7 +267,7 @@ export function BookingForm({
         </span>
 
         <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-          Your payment went through — the booking needs a manual check
+          Your payment went through, the booking needs a manual check
         </h2>
 
         <p className="mt-3 text-sm leading-relaxed text-ink-700">{paidButUnconfirmed.message}</p>
@@ -292,7 +292,7 @@ export function BookingForm({
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <a
             href={`mailto:${site.email}?subject=${encodeURIComponent(
-              `Payment ${paidButUnconfirmed.paymentId} — booking not confirmed`
+              `Payment ${paidButUnconfirmed.paymentId}: booking not confirmed`
             )}&body=${encodeURIComponent(
               `Hi Outway Club,\n\nMy payment succeeded but the booking wasn't confirmed.\n\nPayment ID: ${paidButUnconfirmed.paymentId}\nTrip: ${tripTitle}\nTravellers: ${travelersCount}\n\nThanks,\n${prefillName || ""}`
             )}`}
@@ -306,7 +306,7 @@ export function BookingForm({
         </div>
 
         <p className="mt-4 text-center text-xs text-ink-400">
-          It&apos;s worth checking your bookings first — sometimes the booking saved and only the
+          It&apos;s worth checking your bookings first, sometimes the booking saved and only the
           confirmation screen failed.
         </p>
       </div>
@@ -318,7 +318,7 @@ export function BookingForm({
       <div>
         <h2 className="mb-1 font-display text-xl font-semibold text-ink">Traveller details</h2>
         <p className="mb-4 text-sm text-ink-500">
-          Names must match the government photo ID each person will carry — hotels record it at
+          Names must match the government photo ID each person will carry, hotels record it at
           check-in and we can&apos;t get a room without it.
         </p>
         <div className="space-y-4">
@@ -376,7 +376,7 @@ export function BookingForm({
           className="field"
         />
         <p className="mt-1.5 text-xs text-ink-400">
-          Your trip captain uses this on the day — and it&apos;s how we reach you if anything
+          Your trip captain uses this on the day, and it&apos;s how we reach you if anything
           changes before departure.
         </p>
       </div>

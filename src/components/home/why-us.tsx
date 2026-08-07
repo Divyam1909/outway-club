@@ -6,18 +6,18 @@ import { Reveal } from "@/components/ui/reveal";
 const POINTS = [
   {
     icon: Route,
-    title: "One escape at a time",
-    body: "We don't run a catalogue. We build one trip properly, run it, then start on the next. Escape 001 is the only thing we're selling right now, and it's the only thing we're thinking about.",
+    title: "Built one at a time",
+    body: "We don't buy itineraries off a wholesaler. Every escape is walked, driven and eaten before it goes on sale, and it doesn't go on sale until it's finished.",
   },
   {
     icon: Users2,
-    title: "Eighteen people, hard cap",
-    body: "Not 'small group' as a marketing word. Eighteen seats, one vehicle, one table at dinner. When they're gone the departure closes rather than growing.",
+    title: "Small group, hard cap",
+    body: "Not 'small group' as a marketing word. One vehicle, one table at dinner. When the seats are gone the departure closes rather than growing.",
   },
   {
     icon: CalendarCheck,
     title: "Booked before you book",
-    body: "Hotels, transport and permits are confirmed before a seat goes on sale. Your booking isn't a promise we'll try to arrange something — it's a seat on a trip that already exists.",
+    body: "Hotels, transport and permits are confirmed before a seat goes on sale. Your booking isn't a promise we'll try to arrange something, it's a seat on a trip that already exists.",
   },
   {
     icon: Wallet,

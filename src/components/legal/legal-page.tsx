@@ -38,7 +38,7 @@ export function LegalPage({
             <a href={`mailto:${site.email}`} className="font-medium text-pine hover:underline">
               {site.email}
             </a>{" "}
-            and a person will answer — usually within {site.responseTime}.
+            and a person will answer, usually within {site.responseTime}.
           </p>
           <div className="mt-5 flex flex-wrap gap-2 text-sm">
             <Link href="/terms" className="btn-outline !px-4 !py-2 text-xs">

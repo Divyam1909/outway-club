@@ -118,7 +118,7 @@ export default async function TripDetailPage({
                 <Mountain size={15} /> {DIFFICULTY_LABELS[trip.difficulty]}
               </span>
               <span className="flex items-center gap-1.5">
-                <Users size={15} /> {trip.group_size_min}–{trip.group_size_max} travellers
+                <Users size={15} /> {trip.group_size_min} to {trip.group_size_max} travellers
               </span>
               {hasReviews && (
                 <span className="flex items-center gap-1.5">
@@ -163,7 +163,7 @@ export default async function TripDetailPage({
             <Reveal>
               <section className="mt-12">
                 <h2 className="mb-6 font-display text-xl font-semibold text-ink">
-                  Full itinerary — day by day
+                  Full itinerary, day by day
                 </h2>
                 <ItineraryTimeline days={trip.itinerary_days} />
               </section>
@@ -207,8 +207,8 @@ export default async function TripDetailPage({
                 <ShieldCheck size={19} className="text-pine" /> Cancelling, if you need to
               </h2>
               <p className="mt-2.5 text-sm leading-relaxed text-ink-500">
-                Cancel 15 or more days before departure and you get 90% back. 7–14 days, 50%. Inside
-                7 days, no refund — that&apos;s when our suppliers stop refunding us. If{" "}
+                Cancel 15 or more days before departure and you get 90% back. 7 to 14 days, 50%.
+                Inside 7 days, no refund. That&apos;s when our suppliers stop refunding us. If{" "}
                 <em>we</em> cancel for any reason, you get 100% back, no exceptions.{" "}
                 <Link href="/refund-policy" className="font-medium text-pine underline underline-offset-2">
                   Read the full policy

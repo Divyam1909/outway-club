@@ -85,11 +85,11 @@ export default async function AccountPage() {
           <div className="flex flex-col items-center rounded-3xl border border-dashed border-border bg-white/50 py-16 text-center">
             <p className="font-display text-xl font-semibold text-ink">No bookings yet</p>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
-              Once you book, your itinerary, traveller list and payment details live here — along
+              Once you book, your itinerary, traveller list and payment details live here, along
               with a one-click cancel that shows the exact refund before you confirm.
             </p>
             <Link href="/trips" className="btn-primary mt-6">
-              See Escape 001
+              Browse escapes
             </Link>
           </div>
         )}

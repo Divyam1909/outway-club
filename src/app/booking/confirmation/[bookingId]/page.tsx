@@ -99,7 +99,7 @@ export default async function BookingConfirmationPage({
           <div className="mt-7 rounded-2xl bg-cream-300/70 p-5">
             <p className="text-sm font-semibold text-ink">What happens next</p>
             <ol className="mt-2.5 space-y-2 text-sm leading-relaxed text-ink-500">
-              <li>1. Keep this reference — it&apos;s what we&apos;ll ask for.</li>
+              <li>1. Keep this reference, it&apos;s what we&apos;ll ask for.</li>
               <li>
                 2. A few days before departure we&apos;ll email the reporting point, timings and
                 your trip captain&apos;s number.

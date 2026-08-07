@@ -28,7 +28,7 @@ export function CopyEmails({ emails }: { emails: string[] }) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Your browser blocked clipboard access. Use the CSV button instead — same list.");
+      setError("Your browser blocked clipboard access. Use the CSV button instead, same list.");
     }
   }
 

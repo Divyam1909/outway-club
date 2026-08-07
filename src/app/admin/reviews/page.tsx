@@ -19,7 +19,7 @@ export default async function AdminReviewsPage() {
     <div>
       <h1 className="font-display text-3xl font-semibold text-ink">Reviews</h1>
       <p className="mb-7 mt-1 max-w-2xl text-sm leading-relaxed text-ink-500">
-        Every review here came from a verified booking on a departure that has already run — the
+        Every review here came from a verified booking on a departure that has already run. The
         API enforces that, so nothing else can get in. Moderate for authenticity and abuse only:
         publishing a filtered set of only-positive reviews is both dishonest and against consumer
         law.
@@ -37,7 +37,7 @@ export default async function AdminReviewsPage() {
           <ReviewGroup
             title={`Awaiting moderation (${pending.length})`}
             reviews={pending}
-            emptyLabel="Nothing waiting — you're all caught up."
+            emptyLabel="Nothing waiting, you're all caught up."
           />
           <ReviewGroup
             title={`Published (${published.length})`}

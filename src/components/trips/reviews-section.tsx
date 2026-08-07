@@ -21,7 +21,7 @@ export function ReviewsSection({
         <p className="font-display text-lg font-semibold text-ink">No reviews yet</p>
         <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-500">
           Nobody has been on this departure yet, so there is nothing honest to put here. We
-          don&apos;t seed reviews, buy them, or carry them over from other trips — only travellers
+          don&apos;t seed reviews, buy them, or carry them over from other trips. Only travellers
           with a paid booking on a departure that has already run can post one.
         </p>
         <Link

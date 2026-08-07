@@ -77,7 +77,7 @@ export function CommentForm({
         <CheckCircle2 className="mx-auto mb-3 text-pine" size={30} />
         <h3 className="font-display text-xl font-semibold text-pine-600">Thanks for reading properly.</h3>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-pine-600/85">
-          Your comment is with us. We read every one before it goes up — usually within a day — and
+          Your comment is with us. We read every one before it goes up (usually within a day) and
           we publish it as you wrote it.
         </p>
       </div>
@@ -181,7 +181,7 @@ export function CommentForm({
           value={body}
           onChange={(event) => setBody(event.target.value)}
           className="field"
-          placeholder="Been to this place? Disagree with something here? Say so — we'd rather know."
+          placeholder="Been to this place? Disagree with something here? Say so, we'd rather know."
         />
         <p className="mt-1.5 text-xs text-ink-400">{body.length} / 3000</p>
       </div>

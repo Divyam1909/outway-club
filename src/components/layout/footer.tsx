@@ -9,10 +9,9 @@ const COLUMNS = [
   {
     title: "Travel",
     links: [
-      { href: "/trips", label: "Escape 001" },
-      { href: "/upcoming", label: "Upcoming escapes" },
+      { href: "/trips", label: "All escapes" },
+      { href: "/trips#notify", label: "Notify me" },
       { href: "/testimonials", label: "Traveller reviews" },
-      { href: "/destinations", label: "Destinations" },
     ],
   },
   {
@@ -22,7 +21,7 @@ const COLUMNS = [
       { href: "/about", label: "About us" },
       { href: "/contact", label: "Contact" },
       { href: "/faq", label: "FAQs" },
-      { href: "/account", label: "My bookings" },
+      { href: "/account", label: "My Bookings" },
     ],
   },
   {
@@ -36,14 +35,14 @@ const COLUMNS = [
 ];
 
 export function Footer() {
-  const whatsapp = whatsappLink("Hi Outway — I have a question.");
+  const whatsapp = whatsappLink("Hi Outway, I have a question.");
 
   return (
     <footer className="border-t border-border bg-pine-700 text-cream-100">
       <Container className="py-14 sm:py-16">
         <div className="grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:grid-cols-[1.6fr_1fr_1fr_1fr_1.4fr]">
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2" aria-label="Outway Club — home">
+            <Link href="/" className="inline-flex items-center gap-2" aria-label="Outway Club, home">
               <Image
                 src="/brand/logo.png"
                 alt="Outway Club"
@@ -53,8 +52,8 @@ export function Footer() {
               />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream-100/70">
-              One escape at a time, planned end to end and capped at eighteen people. Currently
-              running Escape 001 — Udaipur × Mount Abu, 15–17 August.
+              Small-group escapes across India, each one planned end to end and capped tight
+              enough that you&apos;ll know everyone&apos;s name by the second evening.
             </p>
 
             <div className="mt-5 flex gap-3">

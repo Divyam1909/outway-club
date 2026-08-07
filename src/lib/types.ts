@@ -103,6 +103,13 @@ export interface Trip {
   is_featured: boolean;
   is_group_trip: boolean;
   is_published: boolean;
+  /** The "001" in "Escape 001". Null for trips that aren't numbered editions. */
+  edition_number: number | null;
+  /**
+   * Homepage ordering. Lowest non-null rank with a live departure becomes the
+   * hero; the rest fill the "running now" rail. Null = catalogue only.
+   */
+  spotlight_rank: number | null;
   created_at: string;
   destination?: Destination;
 }
@@ -234,11 +241,26 @@ export type BlogCommentWithPost = BlogComment & {
   post: Pick<BlogPost, "title" | "slug"> | null;
 };
 
+export type DurationBucket = "short" | "medium" | "long";
+export type TripSort = "soonest" | "popular" | "price_low" | "price_high" | "duration";
+
 export interface TripFilters {
   category?: Category;
   destinationSlug?: string;
+  /** Matches destinations.region, so "Himalayas" spans several destinations. */
+  region?: string;
   difficulty?: Difficulty;
   tripType?: TripType;
   maxPrice?: number;
-  sort?: "popular" | "price_low" | "price_high" | "duration";
+  minPrice?: number;
+  /** "short" = 2-3 days, "medium" = 4-6, "long" = 7+. */
+  duration?: DurationBucket;
+  /** ISO month, e.g. "2026-10". Keeps only trips with a departure that month. */
+  month?: string;
+  sort?: TripSort;
+}
+
+/** A single dated departure joined back to the trip it belongs to. */
+export interface DepartureWithTrip extends Departure {
+  trip: Trip & { destination: Destination };
 }

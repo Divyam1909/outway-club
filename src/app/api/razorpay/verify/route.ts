@@ -164,7 +164,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Your payment went through but we couldn't save the booking. Please email us with your payment ID and we'll confirm it manually — you will not be charged again.",
+          "Your payment went through but we couldn't save the booking. Please email us with your payment ID and we'll confirm it manually, you will not be charged again.",
       },
       { status: 500 }
     );
@@ -204,7 +204,7 @@ export async function POST(request: Request) {
     dateRange: departure ? formatDateRange(departure.start_date, departure.end_date) : null,
     numTravelers,
     totalAmount: formatINR(totalAmount),
-    travelerNames: travelerNames.length ? travelerNames : ["—"],
+    travelerNames: travelerNames.length ? travelerNames : ["Not provided"],
     specialRequests: cleanRequests,
     paymentId: razorpay_payment_id,
   };

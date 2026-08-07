@@ -15,7 +15,7 @@ export default function RefundPolicyPage() {
     <LegalPage
       eyebrow="Legal"
       title="Cancellation &amp; Refund Policy"
-      intro="Plans change. Here is exactly what you get back and when, with no interpretation required. These same percentages are what our system applies automatically when you cancel — the page and the code read from one shared source."
+      intro="Plans change. Here is exactly what you get back and when, with no interpretation required. These same percentages are what our system applies automatically when you cancel: the page and the code read from one shared source."
       lastUpdated="6 August 2026"
     >
       <LegalSection id="tiers" title="1. If you cancel">
@@ -58,7 +58,7 @@ export default function RefundPolicyPage() {
         </div>
 
         <p>
-          The retained portion is not a penalty — it covers the hotel, transport and permit deposits
+          The retained portion is not a penalty: it covers the hotel, transport and permit deposits
           we have already committed on your behalf, which suppliers do not return to us at short
           notice.
         </p>
@@ -83,7 +83,7 @@ export default function RefundPolicyPage() {
         <p>
           You can also email <a href={`mailto:${site.email}`}>{site.email}</a> from the address on
           your booking. The cancellation takes effect from the time your email reaches us, not from
-          when we reply — so send it, and don&apos;t wait for us before your tier changes.
+          when we reply, so send it, and don&apos;t wait for us before your tier changes.
         </p>
       </LegalSection>
 
@@ -98,7 +98,7 @@ export default function RefundPolicyPage() {
             confirmed.
           </li>
           <li>
-            Your bank then takes a further <strong>5–7 working days</strong> to post it. That leg is
+            Your bank then takes a further <strong>5 to 7 working days</strong> to post it. That leg is
             outside our control.
           </li>
           <li>
@@ -115,8 +115,8 @@ export default function RefundPolicyPage() {
 
       <LegalSection id="we-cancel" title="4. If we cancel or significantly change a trip">
         <p>
-          If we cancel a departure for any reason — including not reaching the minimum group size,
-          which we will confirm no later than 15 days before departure — you choose between:
+          If we cancel a departure for any reason (including not reaching the minimum group size,
+          which we will confirm no later than 15 days before departure) you choose between:
         </p>
         <ul>
           <li>
@@ -155,9 +155,9 @@ export default function RefundPolicyPage() {
 
       <LegalSection id="force-majeure" title="6. Events outside anyone's control">
         <p>
-          Where a trip cannot run because of an event outside our reasonable control — extreme
+          Where a trip cannot run because of an event outside our reasonable control (extreme
           weather, natural disaster, epidemic, civil unrest, road closure or a government or
-          administrative order — we will refund every amount we are able to recover from our
+          administrative order) we will refund every amount we are able to recover from our
           suppliers, and will offer a credit note valid for 12 months for any portion that suppliers
           retain. We will show you exactly what was recovered and what was retained. We do not profit
           from a cancelled trip in any circumstance.
@@ -166,8 +166,8 @@ export default function RefundPolicyPage() {
 
       <LegalSection id="unused" title="7. Unused services and mid-trip departure">
         <p>
-          No refund is due for any part of a trip you choose not to use — a meal you skip, a night you
-          spend elsewhere, an activity you sit out — or if you leave a trip early for personal
+          No refund is due for any part of a trip you choose not to use (a meal you skip, a night you
+          spend elsewhere, an activity you sit out) or if you leave a trip early for personal
           reasons. Where you leave early on medical grounds, tell your trip captain, keep the
           documentation, and claim through your travel insurance.
         </p>
@@ -177,7 +177,7 @@ export default function RefundPolicyPage() {
         <p>
           Email <a href={`mailto:${site.email}`}>{site.email}</a> with your booking reference and what
           you think is wrong. We will give you a written answer within {site.responseTime}, and if we
-          got it wrong we will fix it — including reopening a refund that has already been processed.
+          got it wrong we will fix it, including reopening a refund that has already been processed.
           Escalation routes are set out in our <Link href="/terms">Terms of Service</Link>.
         </p>
       </LegalSection>

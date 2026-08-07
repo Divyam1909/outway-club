@@ -58,7 +58,7 @@ export async function GET(request: Request) {
 
   return redirectWithMessage(
     origin,
-    "That link is no longer valid. Password and confirmation links work once and expire after an hour — request a new one below."
+    "That link is no longer valid. Password and confirmation links work once and expire after an hour, request a new one below."
   );
 }
 

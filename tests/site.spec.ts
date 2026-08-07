@@ -1,15 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const TRIP_SLUG = "escape-001-udaipur-mount-abu";
+const TRIP_SLUG = "udaipur-mount-abu";
 
 const PUBLIC_ROUTES = [
   { path: "/", heading: /Udaipur/i },
   { path: "/trips", heading: /Escapes/i },
-  { path: `/trips/${TRIP_SLUG}`, heading: /Escape 001/i },
-  { path: "/upcoming", heading: /meaningful journeys/i },
+  { path: `/trips/${TRIP_SLUG}`, heading: /Udaipur/i },
   { path: "/blog", heading: /Field notes/i },
   { path: "/testimonials", heading: /.+/ },
-  { path: "/destinations", heading: /Where we go/i },
   { path: "/destinations/udaipur", heading: /Udaipur/i },
   { path: "/about", heading: /vague itineraries/i },
   { path: "/contact", heading: /Ask us anything/i },
@@ -119,7 +117,7 @@ test.describe("navigation", () => {
     }
 
     const nav = page.getByRole("navigation", { name: isMobile ? "Mobile" : "Main" });
-    for (const label of ["Escapes", "What's next", "Journal", "Reviews", "About", "FAQs", "Contact"]) {
+    for (const label of ["Escapes", "Journal", "Reviews", "About", "FAQs", "Contact"]) {
       await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
   });
@@ -155,8 +153,8 @@ test.describe("the launch escape", () => {
   test("trip page shows dates, price and full itinerary", async ({ page }) => {
     await page.goto(`/trips/${TRIP_SLUG}`, { waitUntil: "networkidle" });
 
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Escape 001");
-    await expect(page.getByText(/15\s*–\s*17 Aug/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Udaipur");
+    await expect(page.getByText(/15\s*to\s*17 Aug/i).first()).toBeVisible();
     await expect(page.getByText("₹12,499").first()).toBeVisible();
 
     // Three itinerary days, each with a heading.
@@ -187,7 +185,7 @@ test.describe("the launch escape", () => {
     const trip = blocks.map((b) => JSON.parse(b)).find((d) => d["@type"] === "TouristTrip");
 
     expect(trip).toBeTruthy();
-    expect(trip.name).toContain("Escape 001");
+    expect(trip.name).toContain("Udaipur");
     expect(trip.offers.priceCurrency).toBe("INR");
     // No approved reviews yet, so no aggregateRating may be claimed.
     expect(trip.aggregateRating).toBeUndefined();
@@ -256,13 +254,13 @@ test.describe("forms", () => {
     expect(response.status()).toBe(200);
   });
 
-  test("newsletter signup works from the upcoming page", async ({ page }) => {
-    await page.goto("/upcoming");
+  test("newsletter signup works from the trips page", async ({ page }) => {
+    await page.goto("/trips#notify");
 
     // The footer carries the same form, so scope to the page body.
     const form = page.locator("#main");
     const email = `pw-${Date.now()}@example.com`;
-    await form.locator("#upcoming-newsletter-email").fill(email);
+    await form.locator("#trips-newsletter-email").fill(email);
     await form.getByRole("button", { name: /Notify me/i }).click();
 
     // 5 signups per hour per IP, shared across the desktop and mobile projects.
@@ -348,7 +346,6 @@ test.describe("SEO", () => {
 
     const xml = await response.text();
     expect(xml).toContain(`/trips/${TRIP_SLUG}`);
-    expect(xml).toContain("/upcoming");
     expect(xml).toContain("/testimonials");
   });
 

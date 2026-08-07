@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { SetupRequired } from "@/components/setup-required";
@@ -8,10 +8,10 @@ import { Footer } from "@/components/layout/footer";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
 import { site } from "@/config/site";
 
-const fraunces = Fraunces({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-fraunces",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-playfair",
+  weight: ["400", "500", "600", "700", "800"],
   style: ["normal", "italic"],
   display: "swap",
 });
@@ -23,20 +23,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  // Brand-level, not trip-level: per-trip titles come from the trip record in
+  // generateMetadata on /trips/[slug], so retiring an escape can never leave a
+  // dead trip name in the site-wide <title>.
   title: {
-    default: "Outway Club — Escape 001: Udaipur × Mount Abu, 15–17 August",
+    default: `${site.name}: ${site.tagline}`,
     template: "%s · Outway Club",
   },
   description: site.description,
   metadataBase: new URL(site.url),
   applicationName: site.name,
   keywords: [
-    "Udaipur trip",
-    "Mount Abu trip",
     "small group travel India",
-    "Rajasthan monsoon trip",
-    "Independence Day weekend trip",
-    "Udaipur Mount Abu itinerary",
+    "group trips India",
+    "fixed departure trips",
+    "curated travel India",
+    "weekend escapes India",
   ],
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
@@ -47,13 +49,13 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: site.url,
     siteName: site.name,
-    title: "Outway Club — Escape 001: Udaipur × Mount Abu",
+    title: `${site.name}: ${site.tagline}`,
     description: site.description,
     images: [{ url: "/brand/og-default.png", width: 1200, height: 630, alt: site.name }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Outway Club — Escape 001: Udaipur × Mount Abu",
+    title: `${site.name}: ${site.tagline}`,
     description: site.description,
     images: ["/brand/og-default.png"],
   },
@@ -76,8 +78,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const configured = isSupabaseConfigured();
 
   return (
-    <html lang="en-IN" className={`${fraunces.variable} ${inter.variable}`}>
-      <body>
+    <html lang="en-IN" className={`${playfair.variable} ${inter.variable}`}>
+      {/* Browser extensions (e.g. Grammarly) inject attributes on <body> before
+          React hydrates, which would otherwise trigger a hydration mismatch. */}
+      <body suppressHydrationWarning>
         {configured ? (
           <>
             <a

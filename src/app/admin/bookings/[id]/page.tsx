@@ -134,8 +134,8 @@ export default async function AdminBookingDetailPage({
             <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
               <Field label="Amount" value={formatINR(booking.total_amount)} />
               <Field label="Status" value={booking.payment_status.replace("_", " ")} />
-              <Field label="Razorpay order" value={booking.razorpay_order_id ?? "—"} mono />
-              <Field label="Razorpay payment" value={booking.razorpay_payment_id ?? "—"} mono />
+              <Field label="Razorpay order" value={booking.razorpay_order_id ?? "N/A"} mono />
+              <Field label="Razorpay payment" value={booking.razorpay_payment_id ?? "N/A"} mono />
               {booking.razorpay_refund_id && (
                 <Field label="Razorpay refund" value={booking.razorpay_refund_id} mono />
               )}
@@ -150,7 +150,7 @@ export default async function AdminBookingDetailPage({
               <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
                 <Field
                   label="Cancelled on"
-                  value={booking.cancelled_at ? formatDate(booking.cancelled_at) : "—"}
+                  value={booking.cancelled_at ? formatDate(booking.cancelled_at) : "N/A"}
                 />
                 <Field
                   label="Refund"
@@ -164,7 +164,7 @@ export default async function AdminBookingDetailPage({
               )}
               {booking.payment_status === "refund_pending" && (
                 <p className="mt-4 rounded-xl bg-clay-50 p-4 text-sm text-clay-700">
-                  The automatic refund didn&apos;t go through — issue it manually in the Razorpay
+                  The automatic refund didn&apos;t go through, issue it manually in the Razorpay
                   dashboard against payment{" "}
                   <span className="font-mono">{booking.razorpay_payment_id}</span>, then mark this
                   booking refunded.

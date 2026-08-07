@@ -53,7 +53,7 @@ export function ContactForm({ tripId, tripTitle }: { tripId?: string; tripTitle?
       setStatus("done");
     } catch {
       setError(
-        `We couldn't reach the server. Check your connection and try again — or email us directly at ${site.email}.`
+        `We couldn't reach the server. Check your connection and try again, or email us directly at ${site.email}.`
       );
       setStatus("idle");
     }
@@ -64,7 +64,7 @@ export function ContactForm({ tripId, tripTitle }: { tripId?: string; tripTitle?
       <div className="rounded-2xl border border-pine-100 bg-pine-50 p-6">
         <CheckCircle2 className="mb-3 text-pine" size={26} />
         <p className="font-display text-lg font-semibold text-pine-600">
-          Thanks — we&apos;ve got your message.
+          Thanks, we&apos;ve got your message.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-pine-600/85">
           A confirmation is on its way to <strong>{email}</strong>. A real person reads every

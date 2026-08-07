@@ -24,7 +24,7 @@ export default function TripNotFound() {
           <Link href="/trips" className="btn-primary">
             See what&apos;s running
           </Link>
-          <Link href="/upcoming" className="btn-outline">
+          <Link href="/trips#notify" className="btn-outline">
             Join the waitlist
           </Link>
         </>
@@ -38,7 +38,7 @@ export default function TripNotFound() {
     >
       <p>
         We couldn&apos;t find this escape. It may have already run, or been taken down while we
-        rework the dates — we only ever have a handful open at once.
+        rework the dates. We only ever have a handful open at once.
       </p>
     </MessagePage>
   );

@@ -78,6 +78,12 @@ export function TripEditorForm({
   const [isFeatured, setIsFeatured] = useState(initialTrip?.is_featured ?? false);
   const [isGroupTrip, setIsGroupTrip] = useState(initialTrip?.is_group_trip ?? true);
   const [isPublished, setIsPublished] = useState(initialTrip?.is_published ?? true);
+  const [editionNumber, setEditionNumber] = useState<number | "">(
+    initialTrip?.edition_number ?? ""
+  );
+  const [spotlightRank, setSpotlightRank] = useState<number | "">(
+    initialTrip?.spotlight_rank ?? ""
+  );
 
   const [days, setDays] = useState<DayDraft[]>(
     initialTrip?.itinerary_days.map((d) => ({
@@ -155,7 +161,7 @@ export function TripEditorForm({
       return;
     }
     if (!heroImage) {
-      setError("Upload a hero image — it's what the trip card and link previews use.");
+      setError("Upload a hero image, it's what the trip card and link previews use.");
       return;
     }
 
@@ -187,6 +193,8 @@ export function TripEditorForm({
       is_featured: isFeatured,
       is_group_trip: isGroupTrip,
       is_published: isPublished,
+      edition_number: editionNumber === "" ? null : Number(editionNumber),
+      spotlight_rank: spotlightRank === "" ? null : Number(spotlightRank),
     };
 
     let tripId = initialTrip?.id;
@@ -265,7 +273,7 @@ export function TripEditorForm({
           // is worth spelling out — it is the one failure here an admin sees
           // repeatedly and can't otherwise explain.
           clearDeparturesError.code === "23503"
-            ? "The trip saved, but the dates couldn't be replaced — one of the existing departures already has bookings against it. Edit that departure instead of removing it."
+            ? "The trip saved, but the dates couldn't be replaced. One of the existing departures already has bookings against it. Edit that departure instead of removing it."
             : friendlyError(
                 clearDeparturesError,
                 "departure",
@@ -424,6 +432,42 @@ export function TripEditorForm({
             <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} /> Published
           </label>
         </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-5 sm:grid-cols-2">
+          <div>
+            <label className={LABEL} htmlFor="edition-number">
+              Edition number
+            </label>
+            <input
+              id="edition-number"
+              type="number"
+              min={1}
+              className={INPUT}
+              value={editionNumber}
+              onChange={(e) => setEditionNumber(e.target.value === "" ? "" : Number(e.target.value))}
+            />
+            <p className="mt-1.5 text-xs text-ink-400">
+              Renders as the &ldquo;Escape 001&rdquo; badge. Leave blank for an unnumbered trip.
+            </p>
+          </div>
+
+          <div>
+            <label className={LABEL} htmlFor="spotlight-rank">
+              Spotlight rank
+            </label>
+            <input
+              id="spotlight-rank"
+              type="number"
+              min={1}
+              className={INPUT}
+              value={spotlightRank}
+              onChange={(e) => setSpotlightRank(e.target.value === "" ? "" : Number(e.target.value))}
+            />
+            <p className="mt-1.5 text-xs text-ink-400">
+              1 puts this trip in the homepage hero. Blank keeps it catalogue-only.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-border bg-white p-6">
@@ -445,7 +489,7 @@ export function TripEditorForm({
           />
           <ImageUploader
             label="Gallery"
-            hint="Four to six photos. The first one sits next to the hero — drag order matters."
+            hint="Four to six photos. The first one sits next to the hero, drag order matters."
             value={gallery}
             onChange={setGallery}
             multiple

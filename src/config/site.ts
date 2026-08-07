@@ -18,7 +18,7 @@ export const site = {
   legalName: env("NEXT_PUBLIC_LEGAL_NAME", "Outway Club"),
   tagline: "Journeys, not tour packages.",
   description:
-    "Outway Club runs small-group escapes across India — one at a time, planned end to end, capped at 18 travellers. Escape 001: Udaipur × Mount Abu, 15–17 August.",
+    "Outway Club runs small-group escapes across India, each one planned end to end, capped tight, and on sale only once every night and transfer is booked.",
 
   url: env("NEXT_PUBLIC_SITE_URL", "http://localhost:3000").replace(/\/$/, ""),
 
@@ -66,6 +66,3 @@ export function refundPercentFor(daysBeforeDeparture: number): number {
   const tier = REFUND_TIERS.find((t) => daysBeforeDeparture >= t.minDaysBefore);
   return tier?.refundPercent ?? 0;
 }
-
-/** The single live escape. Used for launch-specific routing and copy. */
-export const LAUNCH_TRIP_SLUG = "escape-001-udaipur-mount-abu";

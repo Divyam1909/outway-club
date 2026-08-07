@@ -20,7 +20,7 @@ export function Testimonials({ reviews }: { reviews: ReviewWithTrip[] }) {
           description={
             hasReviews
               ? "Every review below was written by someone who paid for a seat and travelled with us. We publish them unedited, including the critical ones."
-              : "Escape 001 hasn't run yet, so nobody has anything to say about it. We'd rather show you nothing than invent a quote — this fills up from 18 August."
+              : "Nobody has come back from a trip with us yet. We'd rather show you nothing than invent a quote. This page fills up the week after our first departure returns."
           }
         />
 

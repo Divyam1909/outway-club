@@ -76,7 +76,7 @@ export default async function AdminBookingsPage() {
                       {formatDate(booking.created_at)}
                     </td>
                     <td className="px-5 py-4">
-                      <span className="block font-medium text-ink">{booking.trip?.title ?? "—"}</span>
+                      <span className="block font-medium text-ink">{booking.trip?.title ?? "N/A"}</span>
                       {booking.departure && (
                         <span className="block text-xs text-ink-400">
                           {formatDateRange(booking.departure.start_date, booking.departure.end_date)}
@@ -121,7 +121,7 @@ export default async function AdminBookingsPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-ink">{booking.trip?.title ?? "—"}</p>
+                      <p className="truncate font-medium text-ink">{booking.trip?.title ?? "N/A"}</p>
                       <p className="mt-0.5 font-mono text-xs uppercase text-ink-400">
                         {booking.id.slice(0, 8)} · {formatDate(booking.created_at)}
                       </p>

@@ -23,7 +23,7 @@ export default function BookingTripNotFound() {
           <Link href="/trips" className="btn-primary">
             See what&apos;s running
           </Link>
-          <Link href="/upcoming" className="btn-outline">
+          <Link href="/trips#notify" className="btn-outline">
             Join the waitlist
           </Link>
         </>

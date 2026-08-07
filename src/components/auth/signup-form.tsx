@@ -64,7 +64,7 @@ export function SignupForm() {
         <p className="font-display text-lg font-semibold text-pine-600">Almost there</p>
         <p className="mt-2 text-sm leading-relaxed text-pine-600/85">
           Check <strong>{email}</strong> for a confirmation link to activate your account. It can
-          take a minute to arrive — check spam if it doesn&apos;t.
+          take a minute to arrive, check spam if it doesn&apos;t.
         </p>
       </div>
     );

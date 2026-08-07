@@ -47,7 +47,7 @@ const config: Config = {
         border: "#E8E1D2",
       },
       fontFamily: {
-        display: ["var(--font-fraunces)", "serif"],
+        display: ["var(--font-playfair)", "serif"],
         sans: ["var(--font-inter)", "sans-serif"],
       },
       borderRadius: {

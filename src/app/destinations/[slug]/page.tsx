@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SmartImage } from "@/components/ui/smart-image";
 import { MapPin, CalendarDays } from "lucide-react";
 import { Container } from "@/components/ui/container";
+import { Reveal } from "@/components/ui/reveal";
 import { TripCard } from "@/components/trips/trip-card";
 import { getDestinationBySlug, getTripsByDestination } from "@/lib/data";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
@@ -59,7 +60,7 @@ export default async function DestinationPage({
 
       <Container className="py-14">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[2fr_1fr]">
-          <div>
+          <Reveal>
             <h2 className="font-display text-2xl font-semibold text-ink">About {destination.name}</h2>
             <p className="mt-3 leading-relaxed text-ink-500">{destination.description}</p>
 
@@ -78,29 +79,31 @@ export default async function DestinationPage({
                 ))}
               </div>
             )}
-          </div>
+          </Reveal>
 
-          <div className="h-fit rounded-2xl border border-border bg-white p-6 shadow-soft">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-ink-400">
-              Good to know
-            </p>
-            <div className="flex items-start gap-3">
-              <CalendarDays size={18} className="mt-0.5 shrink-0 text-pine" />
-              <div>
-                <p className="text-sm font-semibold text-ink">Best time to visit</p>
-                <p className="text-sm text-ink-500">{destination.best_time ?? "Year-round"}</p>
+          <Reveal delay={100}>
+            <div className="h-fit rounded-2xl border border-border bg-white p-6 shadow-soft">
+              <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-ink-400">
+                Good to know
+              </p>
+              <div className="flex items-start gap-3">
+                <CalendarDays size={18} className="mt-0.5 shrink-0 text-pine" />
+                <div>
+                  <p className="text-sm font-semibold text-ink">Best time to visit</p>
+                  <p className="text-sm text-ink-500">{destination.best_time ?? "Year-round"}</p>
+                </div>
+              </div>
+              <div className="mt-4 flex items-start gap-3">
+                <MapPin size={18} className="mt-0.5 shrink-0 text-pine" />
+                <div>
+                  <p className="text-sm font-semibold text-ink">Trips here</p>
+                  <p className="text-sm text-ink-500">
+                    {trips.length} trip{trips.length !== 1 ? "s" : ""} currently running
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="mt-4 flex items-start gap-3">
-              <MapPin size={18} className="mt-0.5 shrink-0 text-pine" />
-              <div>
-                <p className="text-sm font-semibold text-ink">Trips here</p>
-                <p className="text-sm text-ink-500">
-                  {trips.length} trip{trips.length !== 1 ? "s" : ""} currently running
-                </p>
-              </div>
-            </div>
-          </div>
+          </Reveal>
         </div>
 
         <div className="mt-16">
@@ -109,13 +112,15 @@ export default async function DestinationPage({
           </h2>
           {trips.length > 0 ? (
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {trips.map((trip) => (
-                <TripCard key={trip.id} trip={trip} />
+              {trips.map((trip, index) => (
+                <Reveal key={trip.id} delay={Math.min(index, 5) * 70}>
+                  <TripCard trip={trip} />
+                </Reveal>
               ))}
             </div>
           ) : (
             <p className="mt-4 text-ink-500">
-              No published trips here yet — check back soon, or get in touch to build one.
+              No published trips here yet. Check back soon, or get in touch to build one.
             </p>
           )}
         </div>

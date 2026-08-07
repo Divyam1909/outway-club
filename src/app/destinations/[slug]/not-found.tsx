@@ -16,18 +16,18 @@ export default function DestinationNotFound() {
       title="We don't have a page for that destination"
       actions={
         <>
-          <Link href="/destinations" className="btn-primary">
-            See where we go
-          </Link>
-          <Link href="/trips" className="btn-outline">
+          <Link href="/trips" className="btn-primary">
             Browse the escapes
+          </Link>
+          <Link href="/" className="btn-outline">
+            Back to home
           </Link>
         </>
       }
       footnote={
         <ContactFootnote
           email={site.email}
-          prefix="Want us to run something here? We take requests seriously —"
+          prefix="Want us to run something here? We take requests seriously,"
         />
       }
     >

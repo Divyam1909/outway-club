@@ -5,7 +5,7 @@ const steps = [
   },
   {
     title: "Run the schema, then the launch content",
-    body: "Paste and run supabase/migrations/0001_init.sql, then 0002_launch.sql, then supabase/seed.sql — in that order. All three are safe to re-run.",
+    body: "Paste and run supabase/migrations/0001_init.sql, then 0002_launch.sql, then supabase/seed.sql, in that order. All three are safe to re-run.",
   },
   {
     title: "Copy your API keys",
@@ -13,7 +13,7 @@ const steps = [
   },
   {
     title: "Fill in your environment",
-    body: "Copy .env.example to .env.local and fill it in. Razorpay and Resend are optional locally — checkout and email degrade with a clear message rather than erroring.",
+    body: "Copy .env.example to .env.local and fill it in. Razorpay and Resend are optional locally, checkout and email degrade with a clear message rather than erroring.",
   },
 ];
 
@@ -27,7 +27,7 @@ export function SetupRequired() {
           Connect Supabase to continue
         </h1>
         <p className="mb-8 leading-relaxed text-ink-500">
-          Every trip, booking, review and enquiry on this site comes from Supabase — there is no
+          Every trip, booking, review and enquiry on this site comes from Supabase, there is no
           hard-coded content anywhere. Finish these steps locally, then set the same environment
           variables on your host and production works identically.
         </p>
@@ -56,7 +56,7 @@ export function SetupRequired() {
         </div>
 
         <p className="mt-6 text-xs text-ink-400">
-          Full walkthrough — Razorpay, Resend SMTP, admin access and the go-live checklist — is in
+          Full walkthrough (Razorpay, Resend SMTP, admin access and the go-live checklist) is in
           README.md.
         </p>
       </div>

@@ -109,7 +109,7 @@ export function PostEditorForm({
       console.error("[post-editor] save failed:", caught);
       setSaving(null);
       setError(
-        "We couldn't reach the server, so nothing was saved. Your writing is still on this page — check your connection and press save again."
+        "We couldn't reach the server, so nothing was saved. Your writing is still on this page, check your connection and press save again."
       );
     }
   }

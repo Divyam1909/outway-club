@@ -47,7 +47,7 @@ export function CommentModeration({
   async function handleDelete() {
     if (
       !window.confirm(
-        "Delete this comment permanently? Only do this for spam or abuse — never because someone disagreed."
+        "Delete this comment permanently? Only do this for spam or abuse, never because someone disagreed."
       )
     ) {
       return;

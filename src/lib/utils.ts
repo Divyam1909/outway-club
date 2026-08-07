@@ -17,16 +17,31 @@ export function formatDateRange(start: string | Date, end: string | Date): strin
   const endDate = new Date(end);
 
   if (isSameMonth(startDate, endDate) && isSameYear(startDate, endDate)) {
-    return `${format(startDate, "d")} – ${format(endDate, "d MMM yyyy")}`;
+    return `${format(startDate, "d")} to ${format(endDate, "d MMM yyyy")}`;
   }
   if (isSameYear(startDate, endDate)) {
-    return `${format(startDate, "d MMM")} – ${format(endDate, "d MMM yyyy")}`;
+    return `${format(startDate, "d MMM")} to ${format(endDate, "d MMM yyyy")}`;
   }
-  return `${format(startDate, "d MMM yyyy")} – ${format(endDate, "d MMM yyyy")}`;
+  return `${format(startDate, "d MMM yyyy")} to ${format(endDate, "d MMM yyyy")}`;
+}
+
+/** "October 2026" — the label for a month filter value like "2026-10". */
+export function formatMonth(isoMonth: string): string {
+  return format(new Date(`${isoMonth}-01T00:00:00`), "MMMM yyyy");
 }
 
 export function seatsLeft(totalSeats: number, seatsBooked: number): number {
   return Math.max(totalSeats - seatsBooked, 0);
+}
+
+/**
+ * "Escape 001" for a numbered edition, null for everything else. The number
+ * lives on the trip row, so the badge follows the data instead of being typed
+ * into a dozen components the way it used to be.
+ */
+export function editionLabel(trip: { edition_number: number | null }): string | null {
+  if (trip.edition_number === null) return null;
+  return `Escape ${String(trip.edition_number).padStart(3, "0")}`;
 }
 
 /**

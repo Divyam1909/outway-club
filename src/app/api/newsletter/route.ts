@@ -10,7 +10,7 @@ import {
 } from "@/lib/rate-limit";
 import { sendEmail, waitlistWelcomeEmail } from "@/lib/email";
 
-const ALLOWED_SOURCES = new Set(["footer", "upcoming", "trip", "home", "blog"]);
+const ALLOWED_SOURCES = new Set(["footer", "trips", "trip", "home", "blog", "coming-soon"]);
 
 /**
  * Newsletter / "notify me about the next escape" signups.

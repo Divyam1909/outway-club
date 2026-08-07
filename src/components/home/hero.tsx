@@ -1,25 +1,56 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, MapPin, Users } from "lucide-react";
+import { ArrowDown, ArrowRight, CalendarDays, MapPin, Users } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { SmartImage } from "@/components/ui/smart-image";
-import { formatINR, seatsLeft } from "@/lib/utils";
+import { editionLabel, formatDateRange, formatINR, seatsLeft } from "@/lib/utils";
 import type { Departure, Trip } from "@/lib/types";
 
 /**
- * Launch hero. Everything on it — price, seats left, dates — is read from the
- * live trip record, so the homepage can never advertise a number that the
- * booking widget disagrees with.
+ * The spotlight hero. Every word on it (the edition badge, the title, the
+ * dates, the starting point, seats and price) is read from the trip record,
+ * so putting a different escape in the spotlight is a database change and
+ * never a deploy. When nothing is on sale it falls back to brand copy rather
+ * than an empty frame.
  */
+
+type HeroTrip = Pick<
+  Trip,
+  | "slug"
+  | "title"
+  | "short_description"
+  | "hero_image"
+  | "price_per_person"
+  | "discounted_price"
+  | "starting_point"
+  | "group_size_max"
+  | "edition_number"
+>;
+
+/** Renders the "×" in a paired title like "Udaipur × Mount Abu" in gold. */
+function TripTitle({ title }: { title: string }) {
+  const parts = title.split(/\s*×\s*/);
+  if (parts.length !== 2) return <>{title}</>;
+
+  return (
+    <>
+      {parts[0]} <span className="italic text-gold">×</span> {parts[1]}
+    </>
+  );
+}
+
 export function Hero({
   trip,
   departure,
 }: {
-  trip: Pick<Trip, "slug" | "title" | "hero_image" | "price_per_person" | "discounted_price" | "duration_days" | "duration_nights"> | null;
+  trip: HeroTrip | null;
   departure: Departure | null;
 }) {
   const price = trip ? (trip.discounted_price ?? trip.price_per_person) : null;
-  const hasDiscount = Boolean(trip?.discounted_price && trip.discounted_price < trip.price_per_person);
+  const hasDiscount = Boolean(
+    trip?.discounted_price && trip.discounted_price < trip.price_per_person
+  );
   const remaining = departure ? seatsLeft(departure.total_seats, departure.seats_booked) : null;
+  const edition = trip ? editionLabel(trip) : null;
 
   return (
     <section className="relative overflow-hidden bg-pine-700">
@@ -31,7 +62,7 @@ export function Hero({
           priority
           sizes="100vw"
           className="object-cover opacity-70"
-          fallbackLabel="Escape 001 · Udaipur"
+          fallbackLabel={trip?.title ?? "Outway Club"}
         />
       </div>
 
@@ -45,46 +76,59 @@ export function Hero({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-60 motion-reduce:animate-none" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
             </span>
-            Escape 001 · Now boarding
+            {trip ? [edition, "Now boarding"].filter(Boolean).join(" · ") : "Journeys, not tour packages"}
           </p>
 
           <h1 className="max-w-3xl font-display text-[2.6rem] font-semibold leading-[1.05] text-cream-100 text-shadow-hero sm:text-6xl lg:text-7xl">
-            Udaipur <span className="italic text-gold">×</span> Mount Abu
+            {trip ? <TripTitle title={trip.title} /> : "Small groups. Real places."}
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-relaxed text-cream-100/85 sm:text-lg">
-            Three days across the greenest month in Rajasthan. A sunset boat on Lake Pichola,
-            900-year-old marble at Dilwara, and sunrise from the highest point in the Aravallis —
-            with eighteen people who signed up for the same weekend.
+            {trip?.short_description ??
+              "We plan a handful of escapes a year, end to end, and cap every one of them small enough that you'll know everyone's name by the second evening."}
           </p>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-cream-100/90 sm:mt-9">
-          <span className="flex items-center gap-2">
-            <CalendarDays size={16} className="text-gold" /> 15 – 17 August
-          </span>
-          <span className="flex items-center gap-2">
-            <MapPin size={16} className="text-gold" /> Starts &amp; ends in Udaipur
-          </span>
-          <span className="flex items-center gap-2">
-            <Users size={16} className="text-gold" />
-            {remaining !== null && remaining > 0
-              ? `${remaining} of ${departure!.total_seats} seats left`
-              : "Capped at 18 travellers"}
-          </span>
-        </div>
+        {trip && (
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-cream-100/90 sm:mt-9">
+            {departure && (
+              <span className="flex items-center gap-2">
+                <CalendarDays size={16} className="text-gold" />
+                {formatDateRange(departure.start_date, departure.end_date)}
+              </span>
+            )}
+            {trip.starting_point && (
+              <span className="flex items-center gap-2">
+                <MapPin size={16} className="text-gold" />
+                {/* The record holds the full "Udaipur, airport or railway station"
+                    string; the hero only has room for the city. */}
+                {trip.starting_point.split(/[—,(]/)[0].trim()}
+              </span>
+            )}
+            <span className="flex items-center gap-2">
+              <Users size={16} className="text-gold" />
+              {remaining !== null && remaining > 0
+                ? `${remaining} of ${departure!.total_seats} seats left`
+                : `Capped at ${trip.group_size_max} travellers`}
+            </span>
+          </div>
+        )}
 
         <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
-          {trip && (
+          {trip ? (
             <Link href={`/trips/${trip.slug}`} className="btn-accent px-7 py-4 text-base">
               See the full itinerary <ArrowRight size={18} />
             </Link>
+          ) : (
+            <Link href="/trips#notify" className="btn-accent px-7 py-4 text-base">
+              Get notified <ArrowRight size={18} />
+            </Link>
           )}
           <Link
-            href="/upcoming"
+            href="/trips"
             className="btn border border-cream-100/25 px-7 py-4 text-base text-cream-100 hover:bg-cream-100/10"
           >
-            What&apos;s coming next
+            Browse every escape
           </Link>
 
           {price !== null && (
@@ -102,6 +146,17 @@ export function Hero({
           )}
         </div>
       </Container>
+
+      <a
+        href="#explore"
+        aria-label="Scroll to see more"
+        className="group absolute inset-x-0 bottom-6 z-10 mx-auto flex w-fit flex-col items-center gap-1.5 text-cream-100/80 transition-colors hover:text-gold sm:bottom-8"
+      >
+        <span className="text-[11px] font-semibold uppercase tracking-[0.22em]">See more</span>
+        <span className="flex h-9 w-9 animate-bounce items-center justify-center rounded-full border border-cream-100/30 transition-colors group-hover:border-gold motion-reduce:animate-none">
+          <ArrowDown size={16} />
+        </span>
+      </a>
     </section>
   );
 }

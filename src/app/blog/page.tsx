@@ -12,12 +12,12 @@ import { site } from "@/config/site";
 export const metadata: Metadata = {
   title: "The Outway Journal",
   description:
-    "Field notes from the road — destination guides, honest trip write-ups and the reasoning behind how we plan an Outway escape.",
+    "Field notes from the road: destination guides, honest trip write-ups and the reasoning behind how we plan an Outway escape.",
   alternates: { canonical: "/blog" },
   openGraph: {
     title: "The Outway Journal",
     description:
-      "Field notes from the road — destination guides, honest trip write-ups and how we plan an Outway escape.",
+      "Field notes from the road: destination guides, honest trip write-ups and how we plan an Outway escape.",
     url: `${site.url}/blog`,
     type: "website",
   },
@@ -59,7 +59,7 @@ export default async function BlogPage({
             Field notes from the road
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-500">
-            Everything here is written by the people who actually plan and run the escapes —
+            Everything here is written by the people who actually plan and run the escapes:
             what a place is really like, what we got wrong, and why an itinerary looks the way it
             does.
           </p>
@@ -152,10 +152,10 @@ export default async function BlogPage({
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
                 {tag
                   ? "We only tag a post when it genuinely belongs to a topic, so some are still empty."
-                  : "We'd rather publish one piece worth your time than fill this page with search-engine filler. The Udaipur and Mount Abu guides are first up."}
+                  : "We'd rather publish one piece worth your time than fill this page with search-engine filler. Route guides for the escapes we're running are first up."}
               </p>
               <Link href={tag ? "/blog" : "/trips"} className="btn-accent mt-7">
-                {tag ? "Back to all writing" : "See the current escape"}
+                {tag ? "Back to all writing" : "See our escapes"}
               </Link>
             </div>
           </Container>
@@ -173,7 +173,7 @@ export default async function BlogPage({
                 </h2>
                 <p className="mt-3 max-w-lg text-sm leading-relaxed text-cream-100/70">
                   The same list we use to announce a new escape. One email when there&apos;s
-                  something worth reading or booking — nothing else, ever.
+                  something worth reading or booking, nothing else, ever.
                 </p>
               </div>
               <NewsletterForm source="blog" />

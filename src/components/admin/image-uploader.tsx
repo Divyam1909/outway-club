@@ -58,12 +58,12 @@ export function ImageUploader({
 
     for (const [index, file] of list.entries()) {
       if (!ACCEPTED.includes(file.type)) {
-        failures.push(`${file.name} — not a JPG, PNG, WebP or AVIF.`);
+        failures.push(`${file.name}: not a JPG, PNG, WebP or AVIF.`);
         continue;
       }
       if (file.size > MAX_BYTES) {
         failures.push(
-          `${file.name} — ${(file.size / 1024 / 1024).toFixed(1)}MB, over the 8MB limit. Resize it and try again.`
+          `${file.name}: ${(file.size / 1024 / 1024).toFixed(1)}MB, over the 8MB limit. Resize it and try again.`
         );
         continue;
       }
@@ -80,7 +80,7 @@ export function ImageUploader({
 
         if (uploadError) {
           failures.push(
-            `${file.name} — ${friendlyError(uploadError, "image", "upload failed, please try again.")}`
+            `${file.name}: ${friendlyError(uploadError, "image", "upload failed, please try again.")}`
           );
           continue;
         }
@@ -91,7 +91,7 @@ export function ImageUploader({
         uploaded.push(publicUrl);
       } catch (caught) {
         console.error("[image-uploader] upload threw:", caught);
-        failures.push(`${file.name} — the connection dropped during upload.`);
+        failures.push(`${file.name}: the connection dropped during upload.`);
       }
     }
 

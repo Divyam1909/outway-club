@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Menu, X, User as UserIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Menu, X, User as UserIcon, ChevronDown, Settings, Ticket, LogOut } from "lucide-react";
 import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
 
@@ -20,12 +20,17 @@ export function NavbarClient({
   isSignedIn: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const accountRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   // Close the drawer on navigation, and lock body scroll while it's open.
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    setOpen(false);
+    setAccountOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -36,11 +41,25 @@ export function NavbarClient({
 
   useEffect(() => {
     function onEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        setAccountOpen(false);
+      }
     }
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
   }, []);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    function onClickOutside(event: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
+        setAccountOpen(false);
+      }
+    }
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [accountOpen]);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -57,7 +76,7 @@ export function NavbarClient({
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-cream-100/90 backdrop-blur-md">
       <div className="container-outway flex h-20 items-center justify-between gap-4 py-3">
-        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Outway Club — home">
+        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Outway Club, home">
           <Image
             src="/brand/logo.png"
             alt="Outway Club"
@@ -94,13 +113,55 @@ export function NavbarClient({
           )}
           {isSignedIn ? (
             <>
-              <Link href="/account" className="btn-ghost !px-3">
-                <UserIcon size={16} />
-                {fullName ? fullName.split(" ")[0] : "Account"}
+              <Link href="/account" className="text-sm font-medium text-ink-700 hover:text-pine">
+                My Bookings
               </Link>
-              <button onClick={handleSignOut} disabled={signingOut} className="btn-outline">
-                {signingOut ? "Signing out…" : "Sign out"}
-              </button>
+              <div className="relative" ref={accountRef}>
+                <button
+                  type="button"
+                  onClick={() => setAccountOpen((value) => !value)}
+                  aria-expanded={accountOpen}
+                  aria-haspopup="menu"
+                  className="btn-ghost !px-3"
+                >
+                  <UserIcon size={16} />
+                  {fullName ? fullName.split(" ")[0] : "Account"}
+                  <ChevronDown size={14} className={clsx("transition-transform", accountOpen && "rotate-180")} />
+                </button>
+
+                {accountOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-[calc(100%+0.5rem)] w-52 overflow-hidden rounded-2xl border border-border bg-white py-1.5 shadow-lifted animate-fade-in"
+                  >
+                    <Link
+                      href="/account"
+                      role="menuitem"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink-700 hover:bg-cream-300/60"
+                    >
+                      <Ticket size={15} className="text-clay" /> My Bookings
+                    </Link>
+                    <Link
+                      href="/account/settings"
+                      role="menuitem"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink-700 hover:bg-cream-300/60"
+                    >
+                      <Settings size={15} className="text-clay" /> Settings
+                    </Link>
+                    <div className="my-1.5 border-t border-border" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleSignOut}
+                      disabled={signingOut}
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ink-700 hover:bg-cream-300/60 disabled:opacity-60"
+                    >
+                      <LogOut size={15} className="text-clay" />
+                      {signingOut ? "Signing out…" : "Sign out"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <>
@@ -108,7 +169,7 @@ export function NavbarClient({
                 Log in
               </Link>
               <Link href="/trips" className="btn-accent">
-                Book Escape 001
+                Book a trip
               </Link>
             </>
           )}
@@ -154,7 +215,10 @@ export function NavbarClient({
             {isSignedIn ? (
               <>
                 <Link href="/account" className="btn-outline">
-                  My bookings
+                  My Bookings
+                </Link>
+                <Link href="/account/settings" className="btn-outline">
+                  Settings
                 </Link>
                 <button onClick={handleSignOut} disabled={signingOut} className="btn-primary">
                   {signingOut ? "Signing out…" : "Sign out"}
@@ -166,7 +230,7 @@ export function NavbarClient({
                   Log in
                 </Link>
                 <Link href="/trips" className="btn-accent">
-                  Book Escape 001
+                  Book a trip
                 </Link>
               </>
             )}
