@@ -20,7 +20,7 @@ const steps = [
 export function SetupRequired() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-cream-200 px-6 py-16">
-      <div className="w-full max-w-2xl rounded-3xl border border-border bg-white p-8 shadow-card sm:p-12">
+      <div className="w-full max-w-2xl rounded-2xl border border-border bg-white p-8 shadow-card sm:p-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/brand/logo.png" alt="Outway Club" className="mb-4 h-12 w-12 rounded-full" />
         <h1 className="mb-3 font-display text-3xl font-semibold text-ink sm:text-4xl">
@@ -35,7 +35,7 @@ export function SetupRequired() {
         <ol className="space-y-5">
           {steps.map((step, index) => (
             <li key={step.title} className="flex gap-4">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pine-50 font-display text-sm font-semibold text-pine">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pine-50 heading-sm text-sm text-pine">
                 {index + 1}
               </span>
               <div>
@@ -55,7 +55,7 @@ export function SetupRequired() {
           </code>
         </div>
 
-        <p className="mt-6 text-xs text-ink-400">
+        <p className="mt-6 text-xs text-ink-500">
           Full walkthrough (Razorpay, Resend SMTP, admin access and the go-live checklist) is in
           README.md.
         </p>

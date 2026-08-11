@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 import { SmartImage } from "@/components/ui/smart-image";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { site } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -52,16 +53,16 @@ export default function AboutPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/35 to-transparent" />
         <Container className="relative pb-12 text-cream-100">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-gold">
+          <Eyebrow tone="dark" className="mb-3">
             About Outway Club
-          </p>
+          </Eyebrow>
           <h1 className="max-w-2xl font-display text-4xl font-semibold leading-tight sm:text-5xl">
             We got tired of vague itineraries, so we wrote a proper one.
           </h1>
         </Container>
       </section>
 
-      <Container className="py-16 sm:py-20">
+      <Container className="section">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
           <div>
             <SectionHeading
@@ -90,7 +91,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <Link href="/trips" className="btn-accent mt-9 px-7 py-3.5">
+            <Link href="/trips" className="btn-primary btn-lg mt-9">
               See every escape <ArrowRight size={17} />
             </Link>
           </div>
@@ -110,7 +111,7 @@ export default function AboutPage() {
         </div>
       </Container>
 
-      <section className="bg-cream-100 py-16 sm:py-20">
+      <section className="bg-cream-300 section">
         <Container>
           <SectionHeading
             eyebrow="How we work"
@@ -126,7 +127,7 @@ export default function AboutPage() {
                   <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-pine-50 text-pine">
                     <principle.icon size={21} />
                   </div>
-                  <h3 className="mb-2 font-display text-lg font-semibold text-ink">
+                  <h3 className="mb-2 heading-sm text-lg text-ink">
                     {principle.title}
                   </h3>
                   <p className="text-sm leading-relaxed text-ink-500">{principle.body}</p>
@@ -137,9 +138,9 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      <Container className="py-16 sm:py-20">
+      <Container className="section">
         <Reveal>
-          <div className="mx-auto max-w-2xl rounded-3xl border border-border bg-white p-8 text-center shadow-soft sm:p-10">
+          <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-white p-8 text-center shadow-soft sm:p-10">
             <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
               Want to know something we haven&apos;t said here?
             </h2>
@@ -148,7 +149,7 @@ export default function AboutPage() {
               We&apos;ll answer straight.
             </p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link href="/contact" className="btn-accent">
+              <Link href="/contact" className="btn-primary">
                 Get in touch
               </Link>
               <a href={`mailto:${site.email}`} className="btn-outline">

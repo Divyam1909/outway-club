@@ -4,6 +4,7 @@ import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { ContactForm } from "@/components/contact-form";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getTripBySlug } from "@/lib/data";
 import { site, whatsappLink } from "@/config/site";
 
@@ -30,13 +31,13 @@ export default async function ContactPage({
   );
 
   return (
-    <div className="py-14 sm:py-20">
+    <div className="section">
       <Container>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.25fr] lg:gap-16">
           <Reveal>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+            <Eyebrow className="mb-2">
               Get in touch
-            </p>
+            </Eyebrow>
             <h1 className="font-display text-4xl font-semibold leading-tight text-ink sm:text-5xl">
               {trip ? "Tell us what you need to know" : "Ask us anything"}
             </h1>
@@ -87,7 +88,7 @@ export default async function ContactPage({
               </ContactRow>
             </dl>
 
-            <div className="mt-10 rounded-2xl bg-cream-300/70 p-5">
+            <div className="mt-10 rounded-2xl bg-cream-300 p-5">
               <p className="text-sm font-semibold text-ink">Already booked?</p>
               <p className="mt-1.5 text-sm leading-relaxed text-ink-500">
                 You can view, and if you need to, cancel your booking yourself from{" "}
@@ -100,7 +101,7 @@ export default async function ContactPage({
           </Reveal>
 
           <Reveal delay={100}>
-            <div className="rounded-3xl border border-border bg-white p-6 shadow-card sm:p-8">
+            <div className="rounded-2xl border border-border bg-white p-6 shadow-card sm:p-8">
               <ContactForm tripId={trip?.id} tripTitle={trip?.title} />
             </div>
           </Reveal>
@@ -125,7 +126,7 @@ function ContactRow({
         {icon}
       </span>
       <div>
-        <dt className="text-xs font-semibold uppercase tracking-wider text-ink-400">{label}</dt>
+        <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">{label}</dt>
         <dd className="mt-0.5 text-sm">{children}</dd>
       </div>
     </div>

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarClock, Play, ShieldCheck } from "lucide-react";
+import { CalendarClock, PenLine, Play, ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Reveal } from "@/components/ui/reveal";
 import { ReviewStack } from "@/components/reviews/review-stack";
+import { WriteReviewCta } from "@/components/reviews/write-review-cta";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getApprovedReviews, type ReviewWithTrip } from "@/lib/data";
 import { formatMonth } from "@/lib/utils";
 import { site } from "@/config/site";
@@ -77,11 +79,11 @@ export default async function TestimonialsPage() {
 
   return (
     <div className="pb-20 sm:pb-24">
-      <section className="border-b border-border bg-cream-300/40 py-16 sm:py-20">
+      <section className="border-b border-border bg-cream-300 section">
         <Container className="max-w-3xl text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+          <Eyebrow className="mb-3">
             Traveller reviews
-          </p>
+          </Eyebrow>
           <h1 className="font-display text-4xl font-semibold leading-tight text-ink sm:text-5xl">
             {reviews.length > 0 ? "What people said afterwards" : "Nothing here yet, and that's the point"}
           </h1>
@@ -105,16 +107,23 @@ export default async function TestimonialsPage() {
               invented names.
             </p>
           )}
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <WriteReviewCta />
+            <p className="text-sm text-ink-500">
+              Travelled with us? It takes two minutes.
+            </p>
+          </div>
         </Container>
       </section>
 
       {/* --- Best of, stacked -------------------------------------------------- */}
       {featured.length > 0 && (
-        <section className="py-16">
+        <section className="section">
           <Container>
-            <p className="mb-1 text-center text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+            <Eyebrow className="mb-1 text-center">
               Start here
-            </p>
+            </Eyebrow>
             <h2 className="mb-10 text-center font-display text-2xl font-semibold text-ink sm:text-3xl">
               The highest-rated, in the travellers&apos; own words
             </h2>
@@ -136,7 +145,7 @@ export default async function TestimonialsPage() {
                     <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
                       {group.name}
                     </h2>
-                    <span className="text-sm text-ink-400">
+                    <span className="text-sm text-ink-500">
                       {group.reviews.length} review{group.reviews.length === 1 ? "" : "s"}
                     </span>
                   </div>
@@ -144,9 +153,9 @@ export default async function TestimonialsPage() {
                   <div className="space-y-10">
                     {groupByMonth(group.reviews).map(([monthKey, monthReviews]) => (
                       <div key={monthKey}>
-                        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-clay">
+                        <Eyebrow className="mb-4">
                           {formatMonth(monthKey)}
-                        </p>
+                        </Eyebrow>
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                           {monthReviews.map((review) => (
                             <ReviewTile key={review.id} review={review} />
@@ -164,9 +173,9 @@ export default async function TestimonialsPage() {
 
       {/* --- Empty state ----------------------------------------------------- */}
       {reviews.length === 0 && (
-        <section className="py-16">
+        <section className="section">
           <Container className="max-w-2xl">
-            <div className="rounded-3xl border border-border bg-white p-8 text-center shadow-card sm:p-10">
+            <div className="rounded-2xl border border-border bg-white p-8 text-center shadow-card sm:p-10">
               <span className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-clay-50 text-clay">
                 <CalendarClock size={22} />
               </span>
@@ -177,13 +186,37 @@ export default async function TestimonialsPage() {
                 Everyone on a departure gets a link to this form the morning after it ends.
                 Whatever they write goes up as they wrote it.
               </p>
-              <Link href="/trips" className="btn-accent mt-7">
+              <Link href="/trips" className="btn-primary mt-7">
                 Book the escape they&apos;ll be reviewing
               </Link>
             </div>
           </Container>
         </section>
       )}
+
+      {/* --- Add your own ----------------------------------------------------- */}
+      <section className="section-sm">
+        <Container className="max-w-3xl">
+          <div className="rounded-2xl border border-border bg-white p-8 text-center shadow-card sm:p-10">
+            <span className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-clay-50 text-clay">
+              <PenLine size={22} />
+            </span>
+            <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+              Been on one of our escapes?
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-500">
+              Write it here. Sign in with the account you booked on, pick the trip and say what
+              actually happened — including the parts we got wrong. It goes up as you wrote it.
+            </p>
+            <div className="mt-7 flex justify-center">
+              <WriteReviewCta />
+            </div>
+            <p className="mt-4 text-xs text-ink-500">
+              Open to travellers with a completed booking. Nothing else gets in.
+            </p>
+          </div>
+        </Container>
+      </section>
 
       {/* --- Our promises ---------------------------------------------------- */}
       <section className="pt-6">
@@ -199,7 +232,7 @@ export default async function TestimonialsPage() {
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               {PROMISES.map((promise) => (
                 <div key={promise.title}>
-                  <h3 className="font-display text-lg font-semibold text-cream-100">
+                  <h3 className="heading-sm text-lg text-cream-100">
                     {promise.title}
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-cream-100/70">{promise.body}</p>
@@ -243,7 +276,7 @@ function ReviewTile({ review }: { review: ReviewWithTrip }) {
 
       <figcaption className="mt-4 border-t border-border pt-3">
         <span className="block text-sm font-semibold text-ink">{review.author_name}</span>
-        <span className="block text-xs text-ink-400">
+        <span className="block text-xs text-ink-500">
           {review.trip_month ? `Travelled ${review.trip_month}` : ""}
           {review.trip ? `${review.trip_month ? " · " : ""}${review.trip.title}` : ""}
         </span>

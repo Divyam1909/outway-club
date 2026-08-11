@@ -63,7 +63,7 @@ export function ContactForm({ tripId, tripTitle }: { tripId?: string; tripTitle?
     return (
       <div className="rounded-2xl border border-pine-100 bg-pine-50 p-6">
         <CheckCircle2 className="mb-3 text-pine" size={26} />
-        <p className="font-display text-lg font-semibold text-pine-600">
+        <p className="heading-sm text-lg text-pine-600">
           Thanks, we&apos;ve got your message.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-pine-600/85">
@@ -112,7 +112,7 @@ export function ContactForm({ tripId, tripTitle }: { tripId?: string; tripTitle?
         </div>
         <div>
           <label htmlFor="contact-phone" className="field-label">
-            Phone <span className="font-normal text-ink-400">(optional)</span>
+            Phone <span className="font-normal text-ink-500">(optional)</span>
           </label>
           <input
             id="contact-phone"
@@ -162,11 +162,11 @@ export function ContactForm({ tripId, tripTitle }: { tripId?: string; tripTitle?
         </p>
       )}
 
-      <button type="submit" disabled={status === "loading"} className="btn-accent w-full py-3.5 text-base">
+      <button type="submit" disabled={status === "loading"} className="btn-primary btn-lg w-full">
         {status === "loading" ? "Sending…" : "Send message"}
       </button>
 
-      <p className="text-center text-xs text-ink-400">
+      <p className="text-center text-xs text-ink-500">
         We only use your details to answer this message. See our{" "}
         <a href="/privacy" className="underline underline-offset-2 hover:text-pine">
           Privacy Policy

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { site } from "@/config/site";
 
 /**
@@ -20,19 +21,19 @@ export function LegalPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="py-14 sm:py-20">
+    <div className="section">
       <Container className="max-w-3xl">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">{eyebrow}</p>
+        <Eyebrow className="mb-2">{eyebrow}</Eyebrow>
         <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">{title}</h1>
         <p className="mt-4 text-lg leading-relaxed text-ink-500">{intro}</p>
-        <p className="mt-6 inline-flex rounded-full bg-cream-300 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-ink-500">
+        <p className="mt-6 inline-flex rounded-full bg-cream-300 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
           Last updated {lastUpdated}
         </p>
 
         <div className="legal-prose mt-12">{children}</div>
 
         <div className="mt-14 rounded-2xl border border-border bg-white p-6 shadow-soft">
-          <h2 className="font-display text-lg font-semibold text-ink">Questions about this document?</h2>
+          <h2 className="heading-sm text-lg text-ink">Questions about this document?</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-500">
             Write to{" "}
             <a href={`mailto:${site.email}`} className="font-medium text-pine hover:underline">
@@ -41,13 +42,13 @@ export function LegalPage({
             and a person will answer, usually within {site.responseTime}.
           </p>
           <div className="mt-5 flex flex-wrap gap-2 text-sm">
-            <Link href="/terms" className="btn-outline !px-4 !py-2 text-xs">
+            <Link href="/terms" className="btn-outline btn-sm">
               Terms of Service
             </Link>
-            <Link href="/privacy" className="btn-outline !px-4 !py-2 text-xs">
+            <Link href="/privacy" className="btn-outline btn-sm">
               Privacy Policy
             </Link>
-            <Link href="/refund-policy" className="btn-outline !px-4 !py-2 text-xs">
+            <Link href="/refund-policy" className="btn-outline btn-sm">
               Cancellation &amp; Refunds
             </Link>
           </div>

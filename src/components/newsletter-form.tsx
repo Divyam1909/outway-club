@@ -102,18 +102,13 @@ export function NewsletterForm({
           placeholder="you@email.com"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className={clsx(
-            "w-full rounded-full px-4 py-2.5 text-sm transition-colors focus:outline-none",
-            dark
-              ? "border border-cream-100/20 bg-cream-100/10 text-cream-100 placeholder:text-cream-100/40 focus:border-gold"
-              : "border border-border bg-white text-ink placeholder:text-ink-300 focus:border-pine"
-          )}
+          className={clsx("field-pill", dark && "field-on-dark")}
         />
         <button
           type="submit"
           disabled={status === "loading"}
           className={clsx(
-            "btn shrink-0 px-6 py-2.5 text-sm",
+            "btn shrink-0",
             dark
               ? "bg-gold text-pine-700 hover:bg-gold-400 disabled:opacity-60"
               : "bg-pine text-cream-100 hover:bg-pine-600 disabled:opacity-60"

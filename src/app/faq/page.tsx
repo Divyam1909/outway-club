@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { FaqJsonLd } from "@/components/seo/json-ld";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { site } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -120,9 +121,9 @@ const ALL_FAQS = GROUPS.flatMap((group) => group.faqs);
 
 export default function FaqPage() {
   return (
-    <div className="py-14 sm:py-20">
+    <div className="section">
       <Container className="max-w-3xl">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">Support</p>
+        <Eyebrow className="mb-2">Support</Eyebrow>
         <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">
           Questions people actually ask
         </h1>
@@ -138,16 +139,16 @@ export default function FaqPage() {
           {GROUPS.map((group, groupIndex) => (
             <Reveal key={group.heading} delay={Math.min(groupIndex, 3) * 80}>
               <section>
-                <h2 className="mb-4 font-display text-xl font-semibold text-ink">{group.heading}</h2>
+                <h2 className="mb-4 heading-sm text-xl text-ink">{group.heading}</h2>
                 <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white">
                   {group.faqs.map((item) => (
                     <details key={item.q} className="group">
-                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-medium text-ink transition-colors hover:bg-cream-300/40">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-medium text-ink transition-colors hover:bg-cream-300">
                         {item.q}
                         <ChevronDown
                           size={18}
                           aria-hidden="true"
-                          className="shrink-0 text-ink-400 transition-transform group-open:rotate-180"
+                          className="shrink-0 text-ink-500 transition-transform group-open:rotate-180"
                         />
                       </summary>
                       <p className="px-5 pb-5 text-sm leading-relaxed text-ink-500">{item.a}</p>
@@ -166,7 +167,7 @@ export default function FaqPage() {
               We&apos;d rather answer three more questions than have you book something that
               isn&apos;t right for you.
             </p>
-            <Link href="/contact" className="btn-accent mt-6">
+            <Link href="/contact" className="btn-primary mt-6">
               Ask a question
             </Link>
           </div>

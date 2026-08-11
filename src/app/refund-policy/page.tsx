@@ -26,7 +26,7 @@ export default function RefundPolicyPage() {
 
         <div className="not-prose my-7 overflow-x-auto rounded-2xl border border-border bg-white">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-cream-300/60 text-xs uppercase tracking-wider text-ink-400">
+            <thead className="border-b border-border bg-cream-300 text-xs uppercase tracking-[0.18em] text-ink-500">
               <tr>
                 <th scope="col" className="px-5 py-3.5 font-semibold">
                   When we receive your cancellation
@@ -44,8 +44,8 @@ export default function RefundPolicyPage() {
                     <span
                       className={
                         tier.refundPercent > 0
-                          ? "font-display text-lg font-semibold text-pine"
-                          : "font-display text-lg font-semibold text-ink-400"
+                          ? "heading-sm text-lg text-pine"
+                          : "heading-sm text-lg text-ink-500"
                       }
                     >
                       {tier.refundPercent}%
