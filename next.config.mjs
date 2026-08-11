@@ -1,7 +1,52 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/**
+ * Content-Security-Policy.
+ *
+ * Deliberately not a maximal policy. Next.js injects inline bootstrap scripts,
+ * and locking those down means threading a per-request nonce through the whole
+ * app — worth doing eventually, but a mistake there breaks Razorpay's checkout
+ * silently, and a broken checkout costs more than this policy buys.
+ *
+ * What it does buy, with no breakage risk: the page can't be framed by an
+ * attacker, forms can't post off-site, <base> can't be hijacked to re-point
+ * every relative URL, and plugins are off. Those close the clickjacking and
+ * form-hijack routes, which are the ones that matter for a payment page.
+ *
+ * The allowed hosts are: Razorpay (checkout script + the iframe it opens) and
+ * Supabase (REST, auth, realtime, storage). Fonts are self-hosted by
+ * next/font at build time, so no font CDN is needed.
+ */
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'self'",
+  "form-action 'self'",
+  "img-src 'self' data: blob: https:",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  `script-src 'self' 'unsafe-inline' ${
+    process.env.NODE_ENV === "development" ? "'unsafe-eval' " : ""
+  }https://checkout.razorpay.com https://*.razorpay.com`,
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com",
+  "frame-src https://*.razorpay.com",
+]
+  .join("; ")
+  .concat(";");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
   compress: true,
+
+  // There is a stray package-lock.json in the home directory above this one.
+  // Left alone, Next walks up, finds it, and treats C:\Users\divya as the
+  // workspace root — which means file tracing looks for the app's files in the
+  // wrong place and a deployed build can come out missing pieces. Pin the root
+  // to this project.
+  outputFileTracingRoot: dirname(fileURLToPath(import.meta.url)),
 
   images: {
     // Supabase Storage is where real trip photography lives once uploaded
@@ -38,6 +83,7 @@ const nextConfig = {
       {
         source: "/:path*",
         headers: [
+          { key: "Content-Security-Policy", value: contentSecurityPolicy },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

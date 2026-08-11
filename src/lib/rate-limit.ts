@@ -22,6 +22,9 @@ export const RATE_LIMITS = {
   contact: { bucket: "contact", limit: 3, windowSeconds: 600 },
   newsletter: { bucket: "newsletter", limit: 5, windowSeconds: 3600 },
   createOrder: { bucket: "create_order", limit: 8, windowSeconds: 600 },
+  // Generous: a real customer hits this once per payment, but a retrying
+  // browser on a flaky connection can legitimately hit it several times.
+  verifyPayment: { bucket: "verify_payment", limit: 20, windowSeconds: 600 },
   review: { bucket: "review", limit: 5, windowSeconds: 3600 },
   cancelBooking: { bucket: "cancel_booking", limit: 5, windowSeconds: 3600 },
   blogComment: { bucket: "blog_comment", limit: 4, windowSeconds: 900 },

@@ -33,6 +33,8 @@ Four SQL files, run in order. All are safe to re-run.
 | `supabase/migrations/0001_init.sql` | Core schema, RLS policies, triggers |
 | `supabase/migrations/0002_launch.sql` | Review moderation + video, computed ratings, cancellation/refund columns, rate-limit counters, `profiles.email`, admin role guard, image storage bucket |
 | `supabase/migrations/0003_blog.sql` | Journal posts and moderated reader comments, computed post ratings, view counter, editorial image bucket |
+| `supabase/migrations/0004_catalogue.sql` | Edition numbers and spotlight ranking on trips |
+| `supabase/migrations/0005_booking_integrity.sql` | One booking per Razorpay order, atomic seat allocation |
 | `supabase/seed.sql` | Escape 001 content. Deletes the pre-launch demo catalogue. **No seeded reviews and no seeded posts** — both come from real people only. |
 
 Paste them into the Supabase SQL editor, or apply them from the command line:
@@ -41,6 +43,8 @@ Paste them into the Supabase SQL editor, or apply them from the command line:
 npm i -g pg                 # operator-only dependency
 npm run db:migrate
 node scripts/db.mjs supabase/migrations/0003_blog.sql
+node scripts/db.mjs supabase/migrations/0004_catalogue.sql
+node scripts/db.mjs supabase/migrations/0005_booking_integrity.sql
 npm run db:seed
 ```
 
@@ -132,12 +136,29 @@ node scripts/generate-placeholders.mjs
 
 ## Admin access
 
-The first admin has to be created directly, because there's no admin yet to
-promote them:
+There is no separate admin login. An admin is an ordinary account — signed up
+at `/signup` with an email and password like any customer — whose
+`profiles.role` is `'admin'`. That one column is what `/admin` and every
+`/api/admin/*` route check.
+
+The first one has to be promoted from outside the app, because promoting
+someone through `/admin/users` requires already being an admin:
+
+```bash
+npm run admin -- you@yourdomain.com     # promote (sign up first)
+npm run admin                           # who's an admin right now
+npm run admin -- demote them@you.com    # refuses to remove the last admin
+```
+
+Or do the same thing by hand in the Supabase SQL editor:
 
 ```sql
 update profiles set role = 'admin' where email = 'you@yourdomain.com';
 ```
+
+Sign out and back in afterwards — the role is read from the profile at request
+time, but an open session's cached page won't show the admin nav until it
+refetches.
 
 After that it's all in the UI at **/admin/users** — no more SQL. The console
 covers bookings (with a full per-booking detail page), trips, destinations, the
@@ -193,6 +214,31 @@ booking on a departure that has already ended, and reviews land unapproved.
 Trip ratings are recomputed by a database trigger from approved reviews — no
 code path can type a rating in.
 
+Two ways in, one rule: the link emailed after a trip
+(`/trips/[slug]/review`), and the **Write a review** button on `/testimonials`,
+which opens a dialog, asks `/api/reviews/eligible` which of your trips you can
+review, and posts to the same endpoint. `eligible` is a convenience, not a
+gate — `POST /api/reviews` re-derives eligibility from the booking table on
+every submission, so nothing can be unlocked from the browser.
+
+**Places we haven't launched.** `src/config/upcoming-destinations.ts` holds
+somewhere-we-intend-to-run entries with no price, no dates and no booking path.
+They fill the destination grid on `/` and the first row of `/trips` while the
+catalogue is small, always marked "coming soon", always linking to
+`/coming-soon?place=…` rather than a fake listing. They're config rather than
+`destinations` rows on purpose: a row implies a real page, real photography and
+a real trip behind it. The filler is suppressed the moment someone filters the
+catalogue, because a placeholder can't honestly claim to match a month or a
+budget. Delete the array and the sections just render fewer cards.
+
+**Preloading.** Once a page has finished loading, `AssetPreloader` asks
+`/api/preload-manifest` for the routes and photographs worth warming, prefetches
+the routes and pulls each image through `next/image` with the same `sizes`
+string the destination page uses — a different `sizes` warms a different width
+and caches nothing useful. It waits for `load` and then an idle callback, skips
+entirely on Save-Data or a 2g connection, skips the admin and checkout
+sections, and the manifest is capped at 24 images server-side.
+
 **The journal.** Posts are written by admins only; readers can only read and
 comment. The editor is a `contentEditable` surface carrying the same
 `.post-prose` styles the article page uses, so what a writer sees while typing
@@ -218,17 +264,40 @@ memory, because serverless instances don't share memory. Public forms also
 carry a CSS-hidden honeypot field and a minimum fill time. The limiter fails
 open — a counter outage must never block a paying customer.
 
-**Payment verification.** Signatures are compared in constant time, the amount
-is always recomputed server-side, and the handler is idempotent on
-`razorpay_order_id` so a retried callback can't double-book a seat.
+**Payment verification.** A Razorpay signature is an HMAC over
+`order_id|payment_id` — it proves a payment belongs to an order and nothing
+more. It says nothing about *what was bought*, so nothing that determines price
+is taken from the browser. `create-order` stamps the trip, departure, headcount
+and buyer into the order's `notes`, and `recordPaidBooking`
+(`src/lib/bookings.ts`) reads the sale back out of the order it fetches from
+Razorpay, re-prices it from the database, and refuses to write the booking
+unless that total matches the paise actually collected. Signatures are compared
+in constant time.
+
+**Paying without a browser.** `/api/razorpay/webhook` records the same booking
+from Razorpay's `payment.captured` event, so a customer who pays and then loses
+their connection still gets a booking. Both paths run the same function, and a
+partial unique index on `razorpay_order_id` means that if they race, one insert
+wins and the other returns the existing booking instead of duplicating it.
+
+**Seat counts.** `book_departure_seats` increments inside a single UPDATE, so
+two people paying for the last seat can't both read the same count. If a
+departure does overshoot, the seat is still allocated — the money is already
+taken — and the overshoot is logged loudly for ops rather than silently
+dropped.
 
 ## Go-live checklist
 
-- [ ] Run `0001` → `0002` → `0003` → `seed.sql` against the production project
+- [ ] Run `0001` → `0002` → `0003` → `0004` → `0005` → `seed.sql` against the
+      production project
 - [ ] Real photography dropped into `public/images` (or uploaded via admin)
 - [ ] Brand assets regenerated if the logo changed (`build-brand-assets.mjs`)
 - [ ] `NEXT_PUBLIC_SITE_URL` set to the real domain, no trailing slash
 - [ ] Razorpay live keys in, and one real booking made end to end
+- [ ] Razorpay webhook created for `payment.captured` pointing at
+      `/api/razorpay/webhook`, with its secret in `RAZORPAY_WEBHOOK_SECRET`
+      — without it, a customer who closes the tab mid-payment pays and gets
+      no booking
 - [ ] Resend API key set, **and** Supabase SMTP pointed at it
 - [ ] Supabase Auth Site URL + `/auth/callback` redirect URL configured
 - [ ] `NEXT_PUBLIC_CONTACT_PHONE` and `NEXT_PUBLIC_BUSINESS_ADDRESS` filled in

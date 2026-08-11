@@ -40,3 +40,6 @@ next-env.d.ts
 
 # playwright visual sweep output
 /tests/__screens__/
+
+# unprocessed source photos
+/raw-images/
