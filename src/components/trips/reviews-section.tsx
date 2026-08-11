@@ -18,7 +18,7 @@ export function ReviewsSection({
     return (
       <div className="rounded-2xl border border-dashed border-border bg-white/60 p-7">
         <ShieldCheck size={22} className="mb-3 text-pine" />
-        <p className="font-display text-lg font-semibold text-ink">No reviews yet</p>
+        <p className="heading-sm text-lg text-ink">No reviews yet</p>
         <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-500">
           Nobody has been on this departure yet, so there is nothing honest to put here. We
           don&apos;t seed reviews, buy them, or carry them over from other trips. Only travellers
@@ -66,7 +66,7 @@ export function ReviewsSection({
               </a>
             )}
 
-            <figcaption className="mt-3 text-xs font-medium text-ink-400">
+            <figcaption className="mt-3 text-xs font-medium text-ink-500">
               {review.author_name}
               {review.trip_month ? ` · Travelled ${review.trip_month}` : ""}
             </figcaption>
@@ -74,7 +74,7 @@ export function ReviewsSection({
         ))}
       </div>
 
-      <p className="mt-6 text-xs text-ink-400">
+      <p className="mt-6 text-xs text-ink-500">
         Every review above is tied to a paid booking on this trip.{" "}
         <Link href={`/trips/${tripSlug}/review`} className="underline underline-offset-2 hover:text-pine">
           Travelled with us? Add yours.

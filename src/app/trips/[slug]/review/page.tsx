@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { CalendarClock, Lock } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { ReviewForm } from "@/components/reviews/review-form";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getTripBySlug } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -64,18 +65,18 @@ export default async function WriteReviewPage({
     .maybeSingle();
 
   return (
-    <div className="py-14 sm:py-20">
+    <div className="section">
       <Container className="max-w-2xl">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+        <Eyebrow className="mb-2">
           Traveller review
-        </p>
+        </Eyebrow>
         <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">{trip.title}</h1>
         <p className="mt-3 leading-relaxed text-ink-500">
           Everything on our testimonials page came from someone who actually travelled with us.
           That only works if you tell us the truth, including the parts we got wrong.
         </p>
 
-        <div className="mt-10 rounded-3xl border border-border bg-white p-6 shadow-card sm:p-8">
+        <div className="mt-10 rounded-2xl border border-border bg-white p-6 shadow-card sm:p-8">
           {existingReview ? (
             <Notice
               icon={<Lock size={24} className="text-pine" />}
@@ -104,7 +105,7 @@ export default async function WriteReviewPage({
             />
           ) : (
             <Notice
-              icon={<Lock size={24} className="text-ink-400" />}
+              icon={<Lock size={24} className="text-ink-500" />}
               title="Reviews are for travellers only"
               body="We couldn't find a completed booking for this trip on your account. That's deliberate, it's the only way we can promise every review here is real. If you did travel with us and this looks wrong, email us and we'll fix it."
               action={{ href: `/trips/${slug}`, label: "Back to the trip" }}
@@ -132,7 +133,7 @@ function Notice({
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-cream-300">
         {icon}
       </div>
-      <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
+      <h2 className="heading-sm text-xl text-ink">{title}</h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-500">{body}</p>
       <Link href={action.href} className="btn-outline mt-6">
         {action.label}

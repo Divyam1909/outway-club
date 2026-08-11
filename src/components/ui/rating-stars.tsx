@@ -18,7 +18,7 @@ export function RatingStars({
           <Star
             key={i}
             size={size}
-            className={filled ? "fill-gold text-gold" : "fill-transparent text-ink-300"}
+            className={filled ? "fill-gold text-gold" : "fill-transparent text-ink-200"}
           />
         );
       })}

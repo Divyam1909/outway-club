@@ -12,10 +12,17 @@ export function ReviewForm({
   tripId,
   tripTitle,
   defaultAuthorName,
+  onSubmitted,
 }: {
   tripId: string;
   tripTitle: string;
   defaultAuthorName: string;
+  /**
+   * Supplied when the form is hosted somewhere that owns its own confirmation
+   * screen — the dialog on /testimonials. Without it the form shows the
+   * standalone thank-you below, which is what /trips/[slug]/review wants.
+   */
+  onSubmitted?: () => void;
 }) {
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
@@ -55,15 +62,16 @@ export function ReviewForm({
       }
 
       setStatus("done");
+      onSubmitted?.();
     } catch {
       setError(networkError());
       setStatus("idle");
     }
   }
 
-  if (status === "done") {
+  if (status === "done" && !onSubmitted) {
     return (
-      <div className="rounded-3xl border border-pine-100 bg-pine-50 p-8 text-center">
+      <div className="rounded-2xl border border-pine-100 bg-pine-50 p-8 text-center">
         <CheckCircle2 className="mx-auto mb-4 text-pine" size={34} />
         <h2 className="font-display text-2xl font-semibold text-pine-600">Thank you, genuinely.</h2>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-pine-600/85">
@@ -102,7 +110,7 @@ export function ReviewForm({
                   size={30}
                   className={clsx(
                     "transition-colors",
-                    value <= shown ? "fill-gold text-gold" : "fill-transparent text-ink-300"
+                    value <= shown ? "fill-gold text-gold" : "fill-transparent text-ink-200"
                   )}
                 />
               </button>
@@ -127,14 +135,14 @@ export function ReviewForm({
           className="field"
           placeholder="Ananya I."
         />
-        <p className="mt-1.5 text-xs text-ink-400">
+        <p className="mt-1.5 text-xs text-ink-500">
           Most people use a first name and last initial. Your email is never published.
         </p>
       </div>
 
       <div>
         <label htmlFor="review-title" className="field-label">
-          Headline <span className="font-normal text-ink-400">(optional)</span>
+          Headline <span className="font-normal text-ink-500">(optional)</span>
         </label>
         <input
           id="review-title"
@@ -161,14 +169,14 @@ export function ReviewForm({
           className="field"
           placeholder="What was actually good? What would you tell a friend to expect? Be honest, a critical review is more useful to us than a polite one."
         />
-        <p className="mt-1.5 text-xs text-ink-400">{body.length} / 4000</p>
+        <p className="mt-1.5 text-xs text-ink-500">{body.length} / 4000</p>
       </div>
 
       <div>
         <label htmlFor="review-video" className="field-label">
           <span className="inline-flex items-center gap-1.5">
             <Video size={15} className="text-clay" />
-            Video testimonial link <span className="font-normal text-ink-400">(optional)</span>
+            Video testimonial link <span className="font-normal text-ink-500">(optional)</span>
           </span>
         </label>
         <input
@@ -179,7 +187,7 @@ export function ReviewForm({
           className="field"
           placeholder="https://youtube.com/watch?v=…"
         />
-        <p className="mt-1.5 text-xs text-ink-400">
+        <p className="mt-1.5 text-xs text-ink-500">
           Shot something on the trip? Upload it to YouTube or Vimeo and paste the link, we&apos;ll
           feature it on the testimonials page.
         </p>
@@ -191,13 +199,13 @@ export function ReviewForm({
         </p>
       )}
 
-      <div className="rounded-2xl bg-cream-300/70 px-5 py-4 text-xs leading-relaxed text-ink-500">
+      <div className="rounded-2xl bg-cream-300 px-5 py-4 text-xs leading-relaxed text-ink-500">
         Reviews are checked for authenticity and abuse only. We never remove a review for being
         critical, and we never publish one that didn&apos;t come from a real booking. You can ask us
         to take yours down at any time.
       </div>
 
-      <button type="submit" disabled={status === "loading"} className="btn-accent w-full py-3.5 text-base">
+      <button type="submit" disabled={status === "loading"} className="btn-primary btn-lg w-full">
         {status === "loading" ? "Submitting…" : "Submit review"}
       </button>
     </form>

@@ -47,8 +47,8 @@ export function ReviewStack({ reviews }: { reviews: ReviewWithTrip[] }) {
               tabIndex={isFront ? 0 : -1}
               aria-hidden={!isFront}
               className={clsx(
-                "absolute inset-x-0 top-0 flex h-full flex-col rounded-3xl border border-border bg-white p-6 text-left shadow-card transition-all duration-500 ease-out sm:p-7",
-                isFront ? "cursor-pointer hover:-translate-y-1 hover:shadow-lifted" : "pointer-events-none"
+                "absolute inset-x-0 top-0 flex h-full flex-col rounded-2xl border border-border bg-white p-6 text-left shadow-card transition-all duration-500 ease-out sm:p-7",
+                isFront ? "card-lift cursor-pointer" : "pointer-events-none"
               )}
               style={{
                 transform: `translateY(${position * 14}px) rotate(${rotate}deg) scale(${1 - position * 0.045})`,
@@ -59,14 +59,14 @@ export function ReviewStack({ reviews }: { reviews: ReviewWithTrip[] }) {
               <Quote className="mb-3 text-clay" size={22} aria-hidden="true" />
               <RatingStars rating={review.rating} size={15} />
               {review.title && (
-                <p className="mt-3 font-display text-lg font-semibold text-ink">{review.title}</p>
+                <p className="mt-3 heading-sm text-lg text-ink">{review.title}</p>
               )}
               <blockquote className="mt-2 line-clamp-4 flex-1 text-sm leading-relaxed text-ink-500">
                 {review.body}
               </blockquote>
               <figcaption className="mt-5 border-t border-border pt-4">
                 <span className="block text-sm font-semibold text-ink">{review.author_name}</span>
-                <span className="block text-xs text-ink-400">
+                <span className="block text-xs text-ink-500">
                   {review.trip?.destination?.name ?? review.trip?.title}
                   {review.trip_month ? ` · Travelled ${review.trip_month}` : ""}
                 </span>
@@ -76,7 +76,7 @@ export function ReviewStack({ reviews }: { reviews: ReviewWithTrip[] }) {
         })}
       </div>
 
-      <p className="mt-6 text-sm text-ink-400">
+      <p className="mt-6 text-sm text-ink-500">
         Tap the card to read the next one · {reviews.length} in total
       </p>
       {frontTripSlug && (
