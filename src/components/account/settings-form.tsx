@@ -36,7 +36,7 @@ export function SettingsForm({
 function Card({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-border bg-white p-6 shadow-soft sm:p-7">
-      <h2 className="font-display text-lg font-semibold text-ink">{title}</h2>
+      <h2 className="heading-sm text-lg text-ink">{title}</h2>
       <p className="mt-1 text-sm text-ink-500">{description}</p>
       <div className="mt-5">{children}</div>
     </section>
@@ -243,7 +243,7 @@ function PasswordForm() {
             type="button"
             onClick={() => setReveal((value) => !value)}
             aria-label={reveal ? "Hide password" : "Show password"}
-            className="absolute right-3 top-[2.4rem] text-ink-400 hover:text-ink-700"
+            className="absolute right-3 top-[2.4rem] text-ink-500 hover:text-ink-700"
           >
             {reveal ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>

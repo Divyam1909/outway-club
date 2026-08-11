@@ -48,7 +48,7 @@ export function ForgotPasswordForm() {
     return (
       <div className="rounded-2xl border border-pine-100 bg-pine-50 p-6">
         <MailCheck className="mb-3 text-pine" size={26} />
-        <p className="font-display text-lg font-semibold text-pine-600">Check your inbox</p>
+        <p className="heading-sm text-lg text-pine-600">Check your inbox</p>
         <p className="mt-2 text-sm leading-relaxed text-pine-600/85">
           If an account exists for <strong>{email}</strong>, we&apos;ve sent a link to reset your
           password. It expires in one hour.

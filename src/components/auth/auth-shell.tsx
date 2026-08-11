@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { SmartImage } from "@/components/ui/smart-image";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getCurrentEscape } from "@/lib/data";
 import { editionLabel, formatDateRange } from "@/lib/utils";
 
@@ -66,9 +67,9 @@ export async function AuthShell({
         <div className="absolute inset-0 bg-gradient-to-t from-pine-700 via-pine-700/55 to-pine-700/10" />
 
         <div className="absolute bottom-12 left-12 right-12 text-cream-100">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold">
+          <Eyebrow tone="dark">
             {edition ?? "Outway Club"}
-          </p>
+          </Eyebrow>
           <p className="mt-3 font-display text-3xl font-semibold leading-tight">
             {trip?.title ?? "Journeys, not tour packages"}
           </p>

@@ -95,14 +95,14 @@ export function LoginForm() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="field pr-11"
+            className="field pr-14"
             placeholder="••••••••"
           />
           <button
             type="button"
             onClick={() => setReveal((value) => !value)}
             aria-label={reveal ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700"
+            className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink/5 hover:text-ink-700"
           >
             {reveal ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>
@@ -119,9 +119,20 @@ export function LoginForm() {
         {loading ? "Signing in…" : "Log in"}
       </button>
 
+      {/* Carry the redirect across. Without it, someone who came here from a
+          trip page and doesn't have an account yet loses the trip, the date
+          and the traveller count at this link, and lands on an empty
+          /account after signing up. */}
       <p className="text-center text-sm text-ink-500">
         New to Outway Club?{" "}
-        <Link href="/signup" className="font-medium text-pine hover:underline">
+        <Link
+          href={
+            redirect === "/account"
+              ? "/signup"
+              : `/signup?redirect=${encodeURIComponent(redirect)}`
+          }
+          className="font-medium text-pine hover:underline"
+        >
           Create an account
         </Link>
       </p>

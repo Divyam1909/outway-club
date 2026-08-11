@@ -41,7 +41,7 @@ export function BookingListItem({ booking }: { booking: Booking }) {
   const canReview = booking.payment_status === "paid" && isActive && hasDeparted;
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 transition-shadow hover:shadow-soft sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-4 rounded-2xl border border-border card-lift bg-white p-5 sm:flex-row sm:items-center">
       <Link
         href={`/trips/${booking.trip.slug}`}
         className="relative h-28 w-full shrink-0 overflow-hidden rounded-xl sm:h-20 sm:w-28"
@@ -59,7 +59,7 @@ export function BookingListItem({ booking }: { booking: Booking }) {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/trips/${booking.trip.slug}`}
-            className="font-display text-lg font-semibold text-ink hover:text-pine"
+            className="heading-sm text-lg text-ink hover:text-pine"
           >
             {booking.trip.title}
           </Link>
@@ -79,7 +79,7 @@ export function BookingListItem({ booking }: { booking: Booking }) {
             <Users size={13} /> {booking.num_travelers} traveller
             {booking.num_travelers !== 1 ? "s" : ""}
           </span>
-          <span className="font-mono text-xs uppercase text-ink-400">
+          <span className="font-mono text-xs uppercase text-ink-500">
             {booking.id.slice(0, 8)}
           </span>
         </div>
@@ -108,10 +108,10 @@ export function BookingListItem({ booking }: { booking: Booking }) {
       </div>
 
       <div className="shrink-0 text-left sm:text-right">
-        <p className="font-display text-lg font-semibold text-ink">
+        <p className="heading-sm text-lg text-ink">
           {formatINR(booking.total_amount)}
         </p>
-        <p className="text-xs text-ink-400">
+        <p className="text-xs text-ink-500">
           {PAYMENT_LABEL[booking.payment_status] ?? booking.payment_status}
         </p>
         {booking.status === "cancelled" && booking.refund_amount !== null && (

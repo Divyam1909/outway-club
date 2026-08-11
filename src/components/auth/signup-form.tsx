@@ -2,13 +2,25 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { NETWORK_ERROR, friendlyError } from "@/lib/error-messages";
 
 const MIN_PASSWORD_LENGTH = 8;
 
+/** Never send anyone off-site on the strength of a query parameter. */
+function safeRedirect(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/account";
+  return value;
+}
+
 export function SignupForm() {
+  const searchParams = useSearchParams();
+  // Where they were going before they were asked to make an account. Carried
+  // through the confirmation link too, so the email lands them in checkout
+  // rather than on an empty bookings page.
+  const redirect = safeRedirect(searchParams.get("redirect"));
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +47,7 @@ export function SignupForm() {
         password,
         options: {
           data: { full_name: fullName.trim() },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
         },
       });
 
@@ -61,10 +73,12 @@ export function SignupForm() {
     return (
       <div className="rounded-2xl border border-pine-100 bg-pine-50 p-6">
         <MailCheck className="mb-3 text-pine" size={26} />
-        <p className="font-display text-lg font-semibold text-pine-600">Almost there</p>
+        <p className="heading-sm text-lg text-pine-600">Almost there</p>
         <p className="mt-2 text-sm leading-relaxed text-pine-600/85">
           Check <strong>{email}</strong> for a confirmation link to activate your account. It can
           take a minute to arrive, check spam if it doesn&apos;t.
+          {redirect.startsWith("/booking/") &&
+            " The link brings you straight back to your booking — your dates and traveller count are still held."}
         </p>
       </div>
     );
@@ -117,14 +131,14 @@ export function SignupForm() {
             autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="field pr-11"
+            className="field pr-14"
             placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
           />
           <button
             type="button"
             onClick={() => setReveal((value) => !value)}
             aria-label={reveal ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700"
+            className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink/5 hover:text-ink-700"
           >
             {reveal ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>
@@ -141,7 +155,7 @@ export function SignupForm() {
         {loading ? "Creating account…" : "Create account"}
       </button>
 
-      <p className="text-center text-xs leading-relaxed text-ink-400">
+      <p className="text-center text-xs leading-relaxed text-ink-500">
         By creating an account you agree to our{" "}
         <Link href="/terms" className="text-ink-500 underline underline-offset-2 hover:text-pine">
           Terms

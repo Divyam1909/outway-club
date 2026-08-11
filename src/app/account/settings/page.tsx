@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { SettingsForm } from "@/components/account/settings-form";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -18,13 +19,13 @@ export default async function AccountSettingsPage() {
   if (!currentUser) redirect("/login?redirect=/account/settings");
 
   return (
-    <div className="py-14 sm:py-16">
+    <div className="section-sm">
       <Container className="max-w-2xl">
         <Link href="/account" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-pine">
           <ArrowLeft size={15} /> Back to my bookings
         </Link>
 
-        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">Account</p>
+        <Eyebrow className="mb-2">Account</Eyebrow>
         <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">Settings</h1>
         <p className="mt-2 text-ink-500">Update your details, email or password.</p>
 

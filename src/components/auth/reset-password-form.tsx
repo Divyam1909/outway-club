@@ -74,18 +74,18 @@ export function ResetPasswordForm() {
   }
 
   if (sessionState === "checking") {
-    return <p className="text-sm text-ink-400">Checking your reset link…</p>;
+    return <p className="text-sm text-ink-500">Checking your reset link…</p>;
   }
 
   if (sessionState === "invalid") {
     return (
       <div className="rounded-2xl border border-clay-100 bg-clay-50 p-6">
-        <p className="font-display text-lg font-semibold text-clay-600">This link has expired</p>
+        <p className="heading-sm text-lg text-clay-600">This link has expired</p>
         <p className="mt-2 text-sm leading-relaxed text-clay-700/80">
           Password reset links are valid for one hour and can only be used once. Request a fresh one
           and it&apos;ll be in your inbox in a few seconds.
         </p>
-        <Link href="/forgot-password" className="btn-accent mt-6 w-full">
+        <Link href="/forgot-password" className="btn-primary mt-6 w-full">
           Send a new link
         </Link>
       </div>
@@ -96,7 +96,7 @@ export function ResetPasswordForm() {
     return (
       <div className="rounded-2xl border border-pine-100 bg-pine-50 p-6">
         <CheckCircle2 className="mb-3 text-pine" size={26} />
-        <p className="font-display text-lg font-semibold text-pine-600">Password updated</p>
+        <p className="heading-sm text-lg text-pine-600">Password updated</p>
         <p className="mt-2 text-sm leading-relaxed text-pine-600/85">
           You&apos;re signed in on this device. Any other devices have been signed out.
         </p>
@@ -122,14 +122,14 @@ export function ResetPasswordForm() {
             autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="field pr-11"
+            className="field pr-14"
             placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
           />
           <button
             type="button"
             onClick={() => setReveal((value) => !value)}
             aria-label={reveal ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700"
+            className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink/5 hover:text-ink-700"
           >
             {reveal ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>

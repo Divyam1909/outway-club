@@ -73,7 +73,7 @@ export function CancelBookingButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-xs font-medium text-ink-400 underline underline-offset-2 transition-colors hover:text-clay"
+        className="text-xs font-medium text-ink-500 underline underline-offset-2 transition-colors hover:text-clay"
       >
         Cancel booking
       </button>
@@ -95,7 +95,7 @@ export function CancelBookingButton({
                   <AlertTriangle size={20} />
                 </span>
                 <div>
-                  <h2 id={`cancel-title-${bookingId}`} className="font-display text-lg font-semibold text-ink">
+                  <h2 id={`cancel-title-${bookingId}`} className="heading-sm text-lg text-ink">
                     Cancel this booking?
                   </h2>
                   <p className="mt-1 text-sm text-ink-500">{tripTitle}</p>
@@ -106,14 +106,14 @@ export function CancelBookingButton({
                 onClick={() => setOpen(false)}
                 disabled={loading}
                 aria-label="Close"
-                className="rounded-full p-1 text-ink-400 hover:bg-ink/5 hover:text-ink"
+                className="rounded-full p-1 text-ink-500 hover:bg-ink/5 hover:text-ink"
               >
                 <X size={18} />
               </button>
             </div>
 
             <div className="p-6">
-              <div className="rounded-2xl bg-cream-300/70 p-4">
+              <div className="rounded-2xl bg-cream-300 p-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-ink-500">You paid</span>
                   <span className="font-medium text-ink-700">{formatINR(totalAmount)}</span>
@@ -131,8 +131,8 @@ export function CancelBookingButton({
                   <span
                     className={
                       refundAmount > 0
-                        ? "font-display text-xl font-semibold text-pine"
-                        : "font-display text-xl font-semibold text-ink-400"
+                        ? "heading-sm text-xl text-pine"
+                        : "heading-sm text-xl text-ink-500"
                     }
                   >
                     {formatINR(refundAmount)}
@@ -140,14 +140,14 @@ export function CancelBookingButton({
                 </div>
               </div>
 
-              <p className="mt-4 text-xs leading-relaxed text-ink-400">
+              <p className="mt-4 text-xs leading-relaxed text-ink-500">
                 {refundAmount > 0
                   ? "We initiate the refund to your original payment method within 2 working days. Your bank then takes 5 to 7 working days to post it."
                   : "This cancellation falls inside the no-refund window in our cancellation policy. If there are exceptional circumstances, email us instead of cancelling here."}
               </p>
 
               <label htmlFor={`reason-${bookingId}`} className="field-label mt-5">
-                Anything you want to tell us? <span className="font-normal text-ink-400">(optional)</span>
+                Anything you want to tell us? <span className="font-normal text-ink-500">(optional)</span>
               </label>
               <textarea
                 id={`reason-${bookingId}`}

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowRight, Mail } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { BookingListItem } from "@/components/account/booking-list-item";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyBookings } from "@/lib/data";
 import { site } from "@/config/site";
@@ -26,13 +27,13 @@ export default async function AccountPage() {
   const firstName = currentUser.profile?.full_name?.split(" ")[0];
 
   return (
-    <div className="py-14 sm:py-16">
+    <div className="section-sm">
       <Container>
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+            <Eyebrow className="mb-2">
               Welcome back{firstName ? `, ${firstName}` : ""}
-            </p>
+            </Eyebrow>
             <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">
               My bookings
             </h1>
@@ -40,7 +41,7 @@ export default async function AccountPage() {
               <Mail size={14} /> {currentUser.user.email}
             </p>
           </div>
-          <Link href="/trips" className="btn-accent">
+          <Link href="/trips" className="btn-primary">
             Book an escape <ArrowRight size={16} />
           </Link>
         </div>
@@ -59,7 +60,7 @@ export default async function AccountPage() {
 
             {past.length > 0 && (
               <section>
-                <h2 className="mb-4 font-display text-lg font-semibold text-ink-500">
+                <h2 className="mb-4 heading-sm text-lg text-ink-500">
                   Cancelled
                 </h2>
                 <div className="flex flex-col gap-4 opacity-75">
@@ -70,7 +71,7 @@ export default async function AccountPage() {
               </section>
             )}
 
-            <p className="text-sm text-ink-400">
+            <p className="text-sm text-ink-500">
               Something not right?{" "}
               <a
                 href={`mailto:${site.email}`}
@@ -82,8 +83,8 @@ export default async function AccountPage() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center rounded-3xl border border-dashed border-border bg-white/50 py-16 text-center">
-            <p className="font-display text-xl font-semibold text-ink">No bookings yet</p>
+          <div className="flex flex-col items-center rounded-2xl border border-dashed border-border bg-white/50 section text-center">
+            <p className="heading-sm text-xl text-ink">No bookings yet</p>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
               Once you book, your itinerary, traveller list and payment details live here, along
               with a one-click cancel that shows the exact refund before you confirm.
