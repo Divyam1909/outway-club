@@ -10,7 +10,7 @@ export function Testimonials({ reviews }: { reviews: ReviewWithTrip[] }) {
   const hasReviews = reviews.length > 0;
 
   return (
-    <section className="bg-pine-700 py-20 sm:py-24">
+    <section className="bg-pine-700 section-lg">
       <Container>
         <SectionHeading
           eyebrow="Traveller stories"
@@ -32,7 +32,7 @@ export function Testimonials({ reviews }: { reviews: ReviewWithTrip[] }) {
                   <Quote className="mb-3 text-gold" size={22} aria-hidden="true" />
                   <RatingStars rating={review.rating} />
                   {review.title && (
-                    <p className="mt-3 font-display text-lg font-semibold text-cream-100">
+                    <p className="mt-3 heading-sm text-lg text-cream-100">
                       {review.title}
                     </p>
                   )}
@@ -57,9 +57,9 @@ export function Testimonials({ reviews }: { reviews: ReviewWithTrip[] }) {
             ))}
           </div>
         ) : (
-          <div className="mx-auto mt-12 max-w-xl rounded-3xl border border-cream-100/12 bg-cream-100/5 p-8 text-center sm:p-10">
+          <div className="mx-auto mt-12 max-w-xl rounded-2xl border border-cream-100/12 bg-cream-100/5 p-8 text-center sm:p-10">
             <ShieldCheck className="mx-auto mb-4 text-gold" size={28} />
-            <p className="font-display text-xl font-semibold text-cream-100">
+            <p className="heading-sm text-xl text-cream-100">
               How reviews work here
             </p>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream-100/70">

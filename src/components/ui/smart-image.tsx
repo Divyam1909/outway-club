@@ -47,7 +47,7 @@ export function SmartImage({
             <circle cx="35" cy="7" r="3.5" />
           </svg>
           {fallbackLabel && (
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cream-100/45">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cream-100/60">
               {fallbackLabel}
             </span>
           )}

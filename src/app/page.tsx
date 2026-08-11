@@ -4,12 +4,14 @@ import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 import { DestinationCard } from "@/components/destination-card";
+import { ComingSoonDestinationCard } from "@/components/coming-soon-card";
 import { DestinationExplorer } from "@/components/home/destination-explorer";
 import { TripCard } from "@/components/trips/trip-card";
 import { Hero } from "@/components/home/hero";
 import { WhyUs } from "@/components/home/why-us";
 import { Testimonials } from "@/components/home/testimonials";
 import { CtaBanner } from "@/components/home/cta-banner";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import {
   getCurrentEscape,
   getDestinationsWithAvailability,
@@ -17,6 +19,7 @@ import {
   getRunningTrips,
 } from "@/lib/data";
 import { formatDateRange, formatINR, seatsLeft } from "@/lib/utils";
+import { UPCOMING_DESTINATIONS, fillWithUpcoming } from "@/config/upcoming-destinations";
 
 export const revalidate = 300;
 
@@ -37,14 +40,28 @@ export default async function HomePage() {
 
   const bookableDestinations = destinations.filter((d) => d.tripCount > 0);
   const explorerDestinations = (bookableDestinations.length > 0 ? bookableDestinations : destinations).slice(0, 6);
-  const gridDestinations = destinations.slice(0, 8);
+
+  // "Other" has to mean other. Without this the explorer and the grid both
+  // showed the same place, thirteen tiles apart, on a page with one live trip.
+  const explorerIds = new Set(explorerDestinations.map((d) => d.id));
+  const gridDestinations = destinations.filter((d) => !explorerIds.has(d.id)).slice(0, 8);
+
+  // Places we're planning but haven't put on sale. They fill both grids up to
+  // a full row so a catalogue with one live escape still reads as a company
+  // with a plan, and every one of them is marked "coming soon" rather than
+  // dressed up as bookable. See src/config/upcoming-destinations.ts.
+  const explorerUpcoming = UPCOMING_DESTINATIONS.slice(
+    0,
+    Math.max(6 - explorerDestinations.length, 0)
+  );
+  const gridUpcoming = fillWithUpcoming(gridDestinations.length, 8);
 
   return (
     <>
       <Hero trip={trip} departure={departure} />
 
       {!trip && (
-        <section className="py-24">
+        <section className="section-lg">
           <Container className="max-w-xl text-center">
             <h2 className="font-display text-3xl font-semibold text-ink">
               Our next escape is being finalised
@@ -53,7 +70,7 @@ export default async function HomePage() {
               Dates, route and pricing go live here shortly. Leave your email and you&apos;ll hear
               before anyone else.
             </p>
-            <Link href="/trips#notify" className="btn-accent mt-7 px-7 py-3.5">
+            <Link href="/trips#notify" className="btn-primary btn-lg mt-7">
               Get notified <ArrowRight size={16} />
             </Link>
           </Container>
@@ -62,7 +79,7 @@ export default async function HomePage() {
 
       {/* ---- Explore where we go -------------------------------------------- */}
       {explorerDestinations.length > 0 && (
-        <section id="explore" className="scroll-mt-20 py-20 sm:py-24">
+        <section id="explore" className="scroll-mt-20 section-lg">
           <Container>
             <SectionHeading
               eyebrow="Explore"
@@ -70,15 +87,21 @@ export default async function HomePage() {
               description="Small groups, fixed departures, everything booked before it goes on sale, across every part of India we run in. Pick a place to see what that looks like there."
             />
             <div className="mt-12">
-              <DestinationExplorer destinations={explorerDestinations} />
+              <DestinationExplorer
+                destinations={explorerDestinations}
+                upcoming={explorerUpcoming}
+              />
             </div>
           </Container>
         </section>
       )}
 
       {/* ---- Also running ------------------------------------------------- */}
+      {/* Bands alternate page / recessed down the page. Two recessed sections
+          in a row read as one very long band, which is the same invisible
+          work the old five-tier cream scale was doing. */}
       {running.length > 0 && (
-        <section className="py-20 sm:py-24">
+        <section className="section-lg">
           <Container>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <SectionHeading
@@ -103,8 +126,8 @@ export default async function HomePage() {
       )}
 
       {/* ---- Other destinations ---------------------------------------------- */}
-      {gridDestinations.length > 0 && (
-        <section className="bg-cream-300/50 py-20 sm:py-24">
+      {gridDestinations.length + gridUpcoming.length > 0 && (
+        <section className="bg-cream-300 section-lg">
           <Container>
             <SectionHeading
               eyebrow="Other destinations"
@@ -118,6 +141,14 @@ export default async function HomePage() {
                   <DestinationCard destination={destination} tripCount={destination.tripCount} />
                 </Reveal>
               ))}
+              {gridUpcoming.map((place, index) => (
+                <Reveal
+                  key={place.name}
+                  delay={(gridDestinations.length + index) * 60}
+                >
+                  <ComingSoonDestinationCard place={place} />
+                </Reveal>
+              ))}
             </div>
           </Container>
         </section>
@@ -127,19 +158,19 @@ export default async function HomePage() {
 
       {/* ---- Booking band --------------------------------------------------- */}
       {trip && (
-        <section className="py-20 sm:py-24">
+        <section className="section-lg">
           <Container>
             <Reveal>
               <div className="overflow-hidden rounded-3xl bg-pine-700 px-8 py-12 text-cream-100 sm:px-14 sm:py-14">
                 <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
                   <div>
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+                    <Eyebrow tone="dark" className="mb-3">
                       {departure && remaining !== null && remaining > 0
                         ? `${remaining} of ${departure.total_seats} seats left · ${formatDateRange(departure.start_date, departure.end_date)}`
                         : departure
                           ? formatDateRange(departure.start_date, departure.end_date)
                           : "Dates opening soon"}
-                    </p>
+                    </Eyebrow>
                     <h2 className="max-w-lg font-display text-3xl font-semibold sm:text-4xl">
                       {trip.group_size_max} seats, and we don&apos;t add more.
                     </h2>
@@ -163,11 +194,15 @@ export default async function HomePage() {
                         )}
                       </div>
                     )}
+                    {/* Says what it does. This goes to the trip page, same as
+                        the hero button — promising "book your seat" and
+                        delivering an itinerary is the kind of small lie the
+                        rest of this site doesn't tell. */}
                     <Link
                       href={`/trips/${trip.slug}`}
-                      className="btn-accent w-full px-8 py-4 text-base sm:w-auto"
+                      className="btn-accent w-full btn-lg sm:w-auto"
                     >
-                      Book your seat <ArrowRight size={18} />
+                      See dates and book <ArrowRight size={18} />
                     </Link>
                     <p className="mt-3 text-xs text-cream-100/55">
                       Secure checkout via Razorpay · UPI, cards, netbanking

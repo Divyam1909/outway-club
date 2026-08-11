@@ -75,7 +75,9 @@ export function NavbarClient({
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-cream-100/90 backdrop-blur-md">
-      <div className="container-outway flex h-20 items-center justify-between gap-4 py-3">
+      {/* 64px on mobile, not 80px: a sticky bar is a permanent tax on the
+          viewport, and 16px of it was buying nothing on a 640px-tall phone. */}
+      <div className="container-outway flex h-16 items-center justify-between gap-4 py-2 lg:h-20 lg:py-3">
         <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Outway Club, home">
           <Image
             src="/brand/logo.png"
@@ -83,7 +85,7 @@ export function NavbarClient({
             width={56}
             height={56}
             priority
-            className="h-12 w-12 rounded-full sm:h-14 sm:w-14"
+            className="h-10 w-10 rounded-full sm:h-12 sm:w-12 lg:h-14 lg:w-14"
           />
         </Link>
 
@@ -122,7 +124,7 @@ export function NavbarClient({
                   onClick={() => setAccountOpen((value) => !value)}
                   aria-expanded={accountOpen}
                   aria-haspopup="menu"
-                  className="btn-ghost !px-3"
+                  className="btn-ghost px-3"
                 >
                   <UserIcon size={16} />
                   {fullName ? fullName.split(" ")[0] : "Account"}
@@ -137,14 +139,14 @@ export function NavbarClient({
                     <Link
                       href="/account"
                       role="menuitem"
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink-700 hover:bg-cream-300/60"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink-700 hover:bg-cream-300"
                     >
                       <Ticket size={15} className="text-clay" /> My Bookings
                     </Link>
                     <Link
                       href="/account/settings"
                       role="menuitem"
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink-700 hover:bg-cream-300/60"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink-700 hover:bg-cream-300"
                     >
                       <Settings size={15} className="text-clay" /> Settings
                     </Link>
@@ -154,7 +156,7 @@ export function NavbarClient({
                       role="menuitem"
                       onClick={handleSignOut}
                       disabled={signingOut}
-                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ink-700 hover:bg-cream-300/60 disabled:opacity-60"
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ink-700 hover:bg-cream-300 disabled:opacity-60"
                     >
                       <LogOut size={15} className="text-clay" />
                       {signingOut ? "Signing out…" : "Sign out"}
@@ -168,7 +170,7 @@ export function NavbarClient({
               <Link href="/login" className="btn-ghost">
                 Log in
               </Link>
-              <Link href="/trips" className="btn-accent">
+              <Link href="/trips" className="btn-primary">
                 Book a trip
               </Link>
             </>
@@ -191,7 +193,7 @@ export function NavbarClient({
         hidden={!open}
         className="border-t border-border/70 bg-cream-100 lg:hidden"
       >
-        <nav aria-label="Mobile" className="container-outway flex max-h-[calc(100vh-5rem)] flex-col gap-1 overflow-y-auto py-4">
+        <nav aria-label="Mobile" className="container-outway flex max-h-[calc(100vh-4rem)] flex-col gap-1 overflow-y-auto py-4">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -229,7 +231,7 @@ export function NavbarClient({
                 <Link href="/login" className="btn-outline">
                   Log in
                 </Link>
-                <Link href="/trips" className="btn-accent">
+                <Link href="/trips" className="btn-primary">
                   Book a trip
                 </Link>
               </>

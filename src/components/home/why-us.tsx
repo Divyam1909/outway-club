@@ -28,7 +28,7 @@ const POINTS = [
 
 export function WhyUs() {
   return (
-    <section className="bg-cream-100 py-20 sm:py-24">
+    <section className="section-lg">
       <Container>
         <SectionHeading
           eyebrow="Why Outway"
@@ -39,11 +39,11 @@ export function WhyUs() {
         <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {POINTS.map((point, index) => (
             <Reveal key={point.title} delay={index * 80}>
-              <div className="h-full rounded-2xl border border-border bg-white p-6 shadow-soft transition-shadow hover:shadow-card">
+              <div className="card-lift h-full rounded-2xl border border-border bg-white p-6 shadow-soft">
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-pine-50 text-pine">
                   <point.icon size={22} />
                 </div>
-                <h3 className="mb-2 font-display text-lg font-semibold text-ink">{point.title}</h3>
+                <h3 className="mb-2 heading-sm text-lg text-ink">{point.title}</h3>
                 <p className="text-sm leading-relaxed text-ink-500">{point.body}</p>
               </div>
             </Reveal>

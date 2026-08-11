@@ -36,38 +36,122 @@
     @apply mx-auto w-full max-w-8xl px-5 sm:px-8 lg:px-12;
   }
 
+  /* ---------------------------------------------------------------------
+     Section rhythm. Three steps, not the seven ad-hoc paddings this
+     replaced: -sm for a subsection, the default for most bands, -lg for a
+     band that has to breathe (the one below a hero, the closing CTA).
+     --------------------------------------------------------------------- */
+  .section-sm {
+    @apply py-12 sm:py-16;
+  }
+  .section {
+    @apply py-16 sm:py-20;
+  }
+  .section-lg {
+    @apply py-20 sm:py-28;
+  }
+
+  /* One eyebrow, one tracking value. See src/components/ui/eyebrow.tsx. */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em];
+  }
+
+  /**
+   * Playfair's hairlines fall below a device pixel under about 22px, where it
+   * stops reading as elegant and starts reading as grey. Headings set smaller
+   * than that use Inter 600 with the tracking pulled in instead — which is
+   * what display type means at that size.
+   */
+  .heading-sm {
+    @apply font-sans font-semibold tracking-[-0.011em];
+  }
+
+  /* Below the floor on a phone, above it on a laptop — so headings that scale
+     across the breakpoint get the right face at each size. */
+  .heading-fluid {
+    @apply heading-sm sm:font-display sm:tracking-normal;
+  }
+
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold tracking-wide
            transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+  }
+
+  /**
+   * One money action per screen wears clay; the secondary confirm wears pine;
+   * anything tertiary is an outline or a ghost. Two clay buttons in a viewport
+   * means one of them is in the wrong role.
+   */
+  .btn-accent {
+    @apply btn bg-clay text-cream-100 shadow-soft hover:bg-clay-600 hover:shadow-card;
   }
 
   .btn-primary {
     @apply btn bg-pine text-cream-100 shadow-soft hover:bg-pine-600 hover:shadow-card;
   }
 
-  .btn-accent {
-    @apply btn bg-clay text-cream-100 shadow-soft hover:bg-clay-600 hover:shadow-card;
-  }
-
   .btn-outline {
-    @apply btn border border-ink/15 bg-transparent text-ink hover:border-pine hover:bg-pine-50/60 hover:text-pine;
+    @apply btn border border-ink/25 bg-transparent text-ink hover:border-pine hover:bg-pine-50/60 hover:text-pine;
   }
 
   .btn-ghost {
     @apply btn bg-transparent text-ink hover:bg-ink/5;
   }
 
+  /* Size variants. Declared after the tones so they win on source order and
+     callers no longer reach for `!px-3 !py-1.5`. */
+  .btn-sm {
+    @apply px-4 py-2.5 text-xs;
+  }
+  .btn-lg {
+    @apply px-7 py-4 text-base;
+  }
+
   .badge {
     @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider;
   }
 
+  /**
+   * text-base, not text-sm, at every breakpoint: iOS Safari zooms the viewport
+   * on focus for anything under 16px, and that fired on every field in
+   * checkout. The focus ring is clay on focus-visible rather than the old
+   * pine/15, which sat in this layer, beat the base :focus-visible rule and
+   * came out at 1.31:1. The border is border-control, not border — an input's
+   * edge is the only thing saying "you can type here", so WCAG 1.4.11 wants
+   * 3:1 for it.
+   */
   .field {
-    @apply w-full rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-ink
-           transition-colors placeholder:text-ink-300 focus:border-pine focus:outline-none focus:ring-2 focus:ring-pine/15;
+    @apply w-full rounded-xl border border-border-control bg-white px-4 py-2.5 text-base text-ink
+           transition-colors placeholder:text-ink-300
+           focus:border-clay focus:outline-none
+           focus-visible:border-clay focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-clay focus-visible:ring-offset-0;
+  }
+
+  /* Same field, same focus, pill shape — the newsletter strips. The radius is
+     set longhand because @apply orders utilities by Tailwind's own sequence,
+     not the order written, and `rounded-xl` from .field wins otherwise. */
+  .field-pill {
+    @apply field;
+    border-radius: 9999px;
+  }
+
+  /* A field sitting on pine: the light-on-dark treatment, still 3:1 at rest. */
+  .field-on-dark {
+    @apply border-cream-100/40 bg-cream-100/10 text-cream-100 placeholder:text-cream-100/60
+           focus:border-gold focus-visible:border-gold focus-visible:ring-gold;
   }
 
   .field-label {
     @apply mb-1.5 block text-sm font-medium text-ink-700;
+  }
+
+  /* An input that failed validation, and the message under it. */
+  .field-error {
+    @apply border-clay-600 focus:border-clay-600 focus-visible:border-clay-600;
+  }
+  .field-error-text {
+    @apply mt-1.5 flex items-start gap-1.5 text-sm font-medium text-clay-600;
   }
 
   /* Honeypot: off-screen for bots to find, invisible and unreachable for people. */

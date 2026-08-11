@@ -69,7 +69,10 @@ export function Hero({
       <div className="absolute inset-0 bg-gradient-to-t from-pine-700 via-pine-700/65 to-pine-700/25" />
       <div className="absolute inset-0 bg-gradient-to-r from-pine-700/80 via-pine-700/20 to-transparent" />
 
-      <Container className="relative flex min-h-[38rem] flex-col justify-center py-20 sm:min-h-[44rem]">
+      {/* 32rem, not 38: with a 64px navbar above it, 38rem plus py-20 pushed
+          the CTA row past the fold on a 640px-tall phone — the one row on the
+          page whose whole job is to be seen without scrolling. */}
+      <Container className="relative flex min-h-[32rem] flex-col justify-center py-14 sm:min-h-[40rem] sm:py-20">
         <div className="animate-fade-up">
           <p className="mb-5 inline-flex w-fit items-center gap-2.5 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-gold backdrop-blur">
             <span className="relative flex h-2 w-2">
@@ -116,23 +119,23 @@ export function Hero({
 
         <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
           {trip ? (
-            <Link href={`/trips/${trip.slug}`} className="btn-accent px-7 py-4 text-base">
+            <Link href={`/trips/${trip.slug}`} className="btn-accent btn-lg">
               See the full itinerary <ArrowRight size={18} />
             </Link>
           ) : (
-            <Link href="/trips#notify" className="btn-accent px-7 py-4 text-base">
+            <Link href="/trips#notify" className="btn-primary btn-lg">
               Get notified <ArrowRight size={18} />
             </Link>
           )}
           <Link
             href="/trips"
-            className="btn border border-cream-100/25 px-7 py-4 text-base text-cream-100 hover:bg-cream-100/10"
+            className="btn border border-cream-100/25 btn-lg text-cream-100 hover:bg-cream-100/10"
           >
             Browse every escape
           </Link>
 
           {price !== null && (
-            <div className="mt-2 flex items-baseline gap-3 sm:ml-4 sm:mt-0">
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 sm:ml-4 sm:mt-0">
               <span className="font-display text-3xl font-semibold text-cream-100">
                 {formatINR(price)}
               </span>
@@ -150,9 +153,9 @@ export function Hero({
       <a
         href="#explore"
         aria-label="Scroll to see more"
-        className="group absolute inset-x-0 bottom-6 z-10 mx-auto flex w-fit flex-col items-center gap-1.5 text-cream-100/80 transition-colors hover:text-gold sm:bottom-8"
+        className="group absolute inset-x-0 bottom-6 z-10 mx-auto hidden w-fit flex-col items-center gap-1.5 sm:flex text-cream-100/80 transition-colors hover:text-gold sm:bottom-8"
       >
-        <span className="text-[11px] font-semibold uppercase tracking-[0.22em]">See more</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">See more</span>
         <span className="flex h-9 w-9 animate-bounce items-center justify-center rounded-full border border-cream-100/30 transition-colors group-hover:border-gold motion-reduce:animate-none">
           <ArrowDown size={16} />
         </span>

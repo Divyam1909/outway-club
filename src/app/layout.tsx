@@ -6,7 +6,21 @@ import { SetupRequired } from "@/components/setup-required";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
+import { AssetPreloader } from "@/components/asset-preloader";
 import { site } from "@/config/site";
+
+/**
+ * Photography uploaded through the admin console is served from Supabase
+ * Storage, so the TCP + TLS handshake to that origin is worth paying for
+ * before the first image element asks for it.
+ */
+const supabaseOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+  } catch {
+    return null;
+  }
+})();
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -79,6 +93,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en-IN" className={`${playfair.variable} ${inter.variable}`}>
+      <head>
+        {supabaseOrigin && (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        )}
+      </head>
       {/* Browser extensions (e.g. Grammarly) inject attributes on <body> before
           React hydrates, which would otherwise trigger a hydration mismatch. */}
       <body suppressHydrationWarning>
@@ -99,6 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <OrganizationJsonLd />
             <WebSiteJsonLd />
+            <AssetPreloader />
           </>
         ) : (
           <SetupRequired />

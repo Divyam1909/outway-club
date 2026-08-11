@@ -39,7 +39,7 @@ export function Footer() {
 
   return (
     <footer className="border-t border-border bg-pine-700 text-cream-100">
-      <Container className="py-14 sm:py-16">
+      <Container className="section-sm">
         <div className="grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:grid-cols-[1.6fr_1fr_1fr_1fr_1.4fr]">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2" aria-label="Outway Club, home">
@@ -95,7 +95,7 @@ export function Footer() {
 
           {COLUMNS.map((column) => (
             <nav key={column.title} aria-label={column.title}>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cream-100/45">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-cream-100/60">
                 {column.title}
               </p>
               <ul className="space-y-3">
@@ -114,7 +114,7 @@ export function Footer() {
           ))}
 
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cream-100/45">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-cream-100/60">
               Hear about Escape 002 first
             </p>
             <NewsletterForm source="footer" />

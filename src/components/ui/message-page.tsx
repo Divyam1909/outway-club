@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 /**
  * The shared full-page state used by every 404 and error boundary.
@@ -23,18 +24,18 @@ export function MessagePage({
   footnote?: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-[70vh] items-center py-16 sm:py-24">
+    <div className="flex min-h-[70vh] items-center section-lg">
       <Container>
         <div className="mx-auto max-w-xl text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+          <Eyebrow className="mb-3">
             {eyebrow}
-          </p>
+          </Eyebrow>
           <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">{title}</h1>
           <div className="mt-4 text-[15px] leading-relaxed text-ink-500">{children}</div>
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">{actions}</div>
 
-          {footnote && <div className="mt-8 text-xs leading-relaxed text-ink-400">{footnote}</div>}
+          {footnote && <div className="mt-8 text-xs leading-relaxed text-ink-500">{footnote}</div>}
         </div>
       </Container>
     </div>
