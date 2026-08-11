@@ -205,19 +205,19 @@ export function CatalogueFilters({
           <button
             type="button"
             onClick={() => startTransition(() => router.replace(pathname, { scroll: false }))}
-            className="text-xs font-medium text-ink-400 underline underline-offset-2 hover:text-ink"
+            className="text-xs font-medium text-ink-500 underline underline-offset-2 hover:text-ink"
           >
             Clear all
           </button>
         )}
 
         <div className="ml-auto flex items-center gap-2">
-          <label htmlFor="filter-sort" className="text-sm text-ink-400">
+          <label htmlFor="filter-sort" className="text-sm text-ink-500">
             Sort
           </label>
           <select
             id="filter-sort"
-            className="field !w-auto !py-2"
+            className="field w-auto py-2"
             value={searchParams.get("sort") ?? "soonest"}
             onChange={(e) => setParam("sort", e.target.value === "soonest" ? "" : e.target.value)}
           >

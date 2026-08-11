@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Compass } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 export const metadata: Metadata = {
   title: "Coming soon",
@@ -23,16 +24,16 @@ export default async function ComingSoonPage({
   const place = one(params.place);
 
   return (
-    <div className="flex min-h-[70vh] items-center py-16 sm:py-24">
+    <div className="flex min-h-[70vh] items-center section-lg">
       <Container>
         <div className="mx-auto max-w-xl text-center">
           <span className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-clay-50 text-clay">
             <Compass size={26} />
           </span>
 
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+          <Eyebrow className="mb-3">
             {place ? place : "In the works"}
-          </p>
+          </Eyebrow>
           <h1 className="font-display text-3xl font-semibold leading-tight text-ink sm:text-4xl">
             {place ? `${place} is being planned, not sold yet.` : "This one is still being planned."}
           </h1>

@@ -6,9 +6,12 @@ import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { TripCard } from "@/components/trips/trip-card";
+import { ComingSoonEscapeCard } from "@/components/coming-soon-card";
 import { CatalogueFilters } from "@/components/trips/catalogue-filters";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getCatalogueTrips, getCatalogueFacets } from "@/lib/data";
 import { PIPELINE, type PipelineEntry } from "@/config/pipeline";
+import { fillWithUpcoming } from "@/config/upcoming-destinations";
 import type { Category, Difficulty, DurationBucket, TripSort } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -66,13 +69,30 @@ export default async function TripsPage({
   const bookable = trips.filter((trip) => trip.departures.length > 0);
   const waitlist = trips.filter((trip) => trip.departures.length === 0);
 
+  // While the catalogue is small, top the first row up with places we're
+  // planning rather than leaving a half-empty grid. Suppressed the moment
+  // someone filters: a "coming soon" card can't honestly claim to match a
+  // month, a budget or a region the filters just asked for.
+  // `sort` reorders the same result set, so it doesn't count as narrowing.
+  const isUnfiltered = !(
+    filters.month ||
+    filters.region ||
+    filters.category ||
+    filters.difficulty ||
+    filters.duration ||
+    filters.maxPrice
+  );
+  const catalogueUpcoming = isUnfiltered
+    ? fillWithUpcoming(bookable.length + waitlist.length, 3)
+    : [];
+
   return (
-    <div className="py-14 sm:py-16">
+    <div className="section-sm">
       <Container>
         <div className="mb-8 max-w-2xl">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+          <Eyebrow className="mb-2">
             Small groups, fixed departures
-          </p>
+          </Eyebrow>
           <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">Escapes</h1>
           <p className="mt-4 text-lg leading-relaxed text-ink-500">
             Each of these was planned end to end before it went on sale: every night, every
@@ -82,12 +102,12 @@ export default async function TripsPage({
         </div>
 
         {/* useSearchParams needs a Suspense boundary to keep the route static. */}
-        <Suspense fallback={<div className="h-40 rounded-2xl bg-cream-300/40" />}>
+        <Suspense fallback={<div className="h-40 rounded-2xl bg-cream-300" />}>
           <CatalogueFilters facets={facets} resultCount={trips.length} />
         </Suspense>
 
-        {trips.length === 0 ? (
-          <div className="mt-10 rounded-3xl border border-dashed border-border bg-white/60 p-14 text-center">
+        {trips.length === 0 && !isUnfiltered ? (
+          <div className="mt-10 rounded-2xl border border-dashed border-border bg-white/60 p-14 text-center">
             <p className="font-display text-2xl font-semibold text-ink">
               Nothing matches that combination
             </p>
@@ -99,7 +119,7 @@ export default async function TripsPage({
               <Link href="/trips" className="btn-outline px-6 py-3">
                 Clear filters
               </Link>
-              <Link href="#notify" className="btn-accent px-6 py-3">
+              <Link href="#notify" className="btn-primary px-6 py-3">
                 Get notified <ArrowRight size={16} />
               </Link>
             </div>
@@ -112,11 +132,24 @@ export default async function TripsPage({
                   <TripCard trip={trip} />
                 </Reveal>
               ))}
+              {catalogueUpcoming.map((place, index) => (
+                <Reveal key={place.name} delay={Math.min(bookable.length + index, 5) * 70}>
+                  <ComingSoonEscapeCard place={place} />
+                </Reveal>
+              ))}
             </div>
+
+            {catalogueUpcoming.length > 0 && (
+              <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-500">
+                The dashed cards aren&apos;t on sale. They&apos;re the places we&apos;re planning
+                next, and they&apos;ll get a price and a date here only once every night and
+                transfer on them is actually booked.
+              </p>
+            )}
 
             {waitlist.length > 0 && (
               <div className="mt-14">
-                <div className="mb-6 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-ink-400">
+                <div className="mb-6 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-ink-500">
                   <CalendarDays size={15} />
                   Between dates
                 </div>
@@ -140,9 +173,9 @@ export default async function TripsPage({
             <div className="overflow-hidden rounded-3xl bg-pine-700 px-8 py-12 text-cream-100 sm:px-12 sm:py-14">
               <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
                 <div className="max-w-lg">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+                  <Eyebrow tone="dark">
                     What&apos;s next
-                  </p>
+                  </Eyebrow>
                   <h2 className="mt-2 font-display text-2xl font-semibold sm:text-3xl">
                     Be told before anyone else.
                   </h2>
@@ -182,17 +215,17 @@ export default async function TripsPage({
                 const Icon = PIPELINE_ICONS[entry.icon];
                 return (
                   <Reveal key={entry.theme} delay={index * 90}>
-                    <article className="flex h-full flex-col rounded-3xl border border-border bg-white p-7">
+                    <article className="flex h-full flex-col rounded-2xl border border-border bg-white p-7">
                       <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-pine-50 text-pine">
                         <Icon size={21} />
                       </span>
-                      <h3 className="font-display text-xl font-semibold text-ink">
+                      <h3 className="heading-sm text-xl text-ink">
                         {entry.theme}
                       </h3>
                       <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-500">
                         {entry.body}
                       </p>
-                      <p className="mt-6 border-t border-border pt-4 text-xs font-medium uppercase tracking-wider text-ink-400">
+                      <p className="mt-6 border-t border-border pt-4 text-xs font-medium uppercase tracking-[0.18em] text-ink-500">
                         {entry.status}
                       </p>
                     </article>

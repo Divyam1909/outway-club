@@ -37,13 +37,13 @@ export function DestinationCard({
       <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />
 
       {comingSoon && (
-        <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-cream-100/95 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-clay shadow-soft">
+        <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-cream-100/95 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-clay shadow-soft">
           <Clock3 size={12} /> Coming soon
         </span>
       )}
 
       <div className="relative mt-auto flex flex-col gap-1 p-5 text-cream-100">
-        <p className="text-xs font-semibold uppercase tracking-widest text-cream-100/70">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cream-100/70">
           {destination.region}
         </p>
         <h3 className="font-display text-2xl font-semibold">{destination.name}</h3>

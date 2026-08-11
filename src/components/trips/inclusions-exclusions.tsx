@@ -12,7 +12,7 @@ export function InclusionsExclusions({
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
       <div>
-        <h3 className="mb-4 font-display text-lg font-semibold text-ink">What&apos;s included</h3>
+        <h3 className="mb-4 heading-sm text-lg text-ink">What&apos;s included</h3>
         <ul className="space-y-3">
           {inclusions.map((item) => (
             <li key={item} className="flex items-start gap-2.5 text-sm text-ink-700">
@@ -24,7 +24,7 @@ export function InclusionsExclusions({
       </div>
 
       <div>
-        <h3 className="mb-4 font-display text-lg font-semibold text-ink">What&apos;s not included</h3>
+        <h3 className="mb-4 heading-sm text-lg text-ink">What&apos;s not included</h3>
         <ul className="space-y-3">
           {exclusions.map((item) => (
             <li key={item} className="flex items-start gap-2.5 text-sm text-ink-700">
@@ -37,7 +37,7 @@ export function InclusionsExclusions({
 
       {thingsToCarry.length > 0 && (
         <div className="sm:col-span-2">
-          <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-ink">
+          <h3 className="mb-4 flex items-center gap-2 heading-sm text-lg text-ink">
             <Backpack size={18} className="text-pine" /> What to pack
           </h3>
           <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">

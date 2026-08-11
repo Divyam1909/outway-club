@@ -10,6 +10,9 @@ import { TripGallery } from "@/components/trips/trip-gallery";
 import { ItineraryTimeline } from "@/components/trips/itinerary-timeline";
 import { InclusionsExclusions } from "@/components/trips/inclusions-exclusions";
 import { ReviewsSection } from "@/components/trips/reviews-section";
+import { StayCards } from "@/components/trips/stay-cards";
+import { TripCaptain } from "@/components/trips/trip-captain";
+import { TrustBand } from "@/components/trips/trust-band";
 import { BookingWidget } from "@/components/trips/booking-widget";
 import { MobileBookingBar } from "@/components/trips/mobile-booking-bar";
 import { BreadcrumbJsonLd, TripJsonLd } from "@/components/seo/json-ld";
@@ -71,7 +74,7 @@ export default async function TripDetailPage({
   return (
     <div className="py-8 sm:py-10">
       <Container>
-        <nav aria-label="Breadcrumb" className="mb-5 text-sm text-ink-400">
+        <nav aria-label="Breadcrumb" className="mb-5 text-sm text-ink-500">
           <ol className="flex flex-wrap items-center gap-2">
             <li>
               <Link href="/trips" className="hover:text-pine">
@@ -103,7 +106,10 @@ export default async function TripDetailPage({
               )}
             </div>
 
-            <h1 className="mt-3 font-display text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+            {/* The product outranks the catalogue index it came from — /trips
+                was set at 4xl/5xl while this, the page that sells, was a size
+                smaller. */}
+            <h1 className="mt-3 font-display text-4xl font-semibold leading-tight text-ink sm:text-5xl">
               {trip.title}
             </h1>
 
@@ -132,7 +138,7 @@ export default async function TripDetailPage({
             <p className="mt-4 leading-relaxed text-ink-500">{trip.description}</p>
 
             {trip.starting_point && (
-              <p className="mt-6 rounded-2xl bg-cream-300/70 px-5 py-4 text-sm leading-relaxed text-ink-700">
+              <p className="mt-6 rounded-2xl bg-cream-300 px-5 py-4 text-sm leading-relaxed text-ink-700">
                 <strong className="font-semibold text-ink">Starts and ends at:</strong>{" "}
                 {trip.starting_point}. Book flights or trains that land before midday on the first
                 day and leave after 8pm on the last.
@@ -142,14 +148,14 @@ export default async function TripDetailPage({
             {trip.highlights.length > 0 && (
               <Reveal>
                 <section className="mt-10">
-                  <h2 className="mb-4 font-display text-xl font-semibold text-ink">
+                  <h2 className="mb-4 heading-sm text-xl text-ink">
                     Trip highlights
                   </h2>
                   <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {trip.highlights.map((highlight) => (
                       <li
                         key={highlight}
-                        className="flex items-start gap-2.5 rounded-xl bg-cream-300/60 p-3.5 text-sm leading-relaxed text-ink-700"
+                        className="flex items-start gap-2.5 rounded-xl bg-cream-300 p-3.5 text-sm leading-relaxed text-ink-700"
                       >
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-clay" />
                         {highlight}
@@ -162,16 +168,34 @@ export default async function TripDetailPage({
 
             <Reveal>
               <section className="mt-12">
-                <h2 className="mb-6 font-display text-xl font-semibold text-ink">
-                  Full itinerary, day by day
-                </h2>
+                <h2 className="heading-sm mb-2 text-xl text-ink">Where you sleep</h2>
+                <p className="mb-5 text-ink-500">
+                  Named, not &ldquo;3-star or similar&rdquo;.
+                </p>
+                <StayCards days={trip.itinerary_days} />
+              </section>
+            </Reveal>
+
+            <Reveal>
+              <section className="mt-12">
+                <h2 className="heading-sm mb-6 text-xl text-ink">Full itinerary, day by day</h2>
                 <ItineraryTimeline days={trip.itinerary_days} />
               </section>
             </Reveal>
 
             <Reveal>
               <section className="mt-12">
-                <h2 className="mb-6 font-display text-xl font-semibold text-ink">
+                <h2 className="heading-sm mb-2 text-xl text-ink">Who runs this trip</h2>
+                <p className="mb-5 text-ink-500">
+                  One person is with the group the whole way. This is them.
+                </p>
+                <TripCaptain tripSlug={trip.slug} />
+              </section>
+            </Reveal>
+
+            <Reveal>
+              <section className="mt-12">
+                <h2 className="heading-sm mb-6 text-xl text-ink">
                   Inclusions, exclusions &amp; packing list
                 </h2>
                 <InclusionsExclusions
@@ -184,7 +208,7 @@ export default async function TripDetailPage({
 
             <section className="mt-12">
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-display text-xl font-semibold text-ink">Traveller reviews</h2>
+                <h2 className="heading-sm text-xl text-ink">Traveller reviews</h2>
                 {currentUser && (
                   <Link
                     href={`/trips/${trip.slug}/review`}
@@ -203,24 +227,24 @@ export default async function TripDetailPage({
             </section>
 
             <section className="mt-12 rounded-2xl border border-border bg-white p-6">
-              <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-ink">
-                <ShieldCheck size={19} className="text-pine" /> Cancelling, if you need to
+              <h2 className="heading-sm flex items-center gap-2 text-lg text-ink">
+                <ShieldCheck size={19} className="text-pine" aria-hidden="true" /> Cancelling, if
+                you need to
               </h2>
               <p className="mt-2.5 text-sm leading-relaxed text-ink-500">
-                Cancel 15 or more days before departure and you get 90% back. 7 to 14 days, 50%.
-                Inside 7 days, no refund. That&apos;s when our suppliers stop refunding us. If{" "}
-                <em>we</em> cancel for any reason, you get 100% back, no exceptions.{" "}
-                <Link href="/refund-policy" className="font-medium text-pine underline underline-offset-2">
-                  Read the full policy
-                </Link>
-                .
+                That&apos;s when our suppliers stop refunding us. If <em>we</em> cancel for any
+                reason, you get 100% back, no exceptions.
               </p>
+              <TrustBand className="mt-5" />
             </section>
           </div>
 
-          {/* Ordered before the long-form content on mobile so price and
-              availability are visible without scrolling. */}
-          <div className="order-first lg:order-none">
+          {/* Desktop only, and no `order-first` any more. On mobile that put
+              the price and a traveller stepper above the H1, so the page
+              opened on a form for something the reader hadn't been told about
+              yet — and once it moved down it just competed with the fixed bar
+              for the same click. MobileBookingBar owns booking below lg. */}
+          <div className="hidden lg:block">
             <BookingWidget
               trip={trip}
               departures={trip.departures}
@@ -232,7 +256,7 @@ export default async function TripDetailPage({
 
       <MobileBookingBar
         trip={trip}
-        departure={departure}
+        departures={trip.departures}
         isSignedIn={Boolean(currentUser)}
       />
 

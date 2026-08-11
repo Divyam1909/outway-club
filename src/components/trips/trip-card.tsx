@@ -84,12 +84,12 @@ export function TripCard({ trip }: { trip: Trip & { departures?: Departure[] } }
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-ink-400">
+        <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-ink-500">
           <MapPin size={13} />
           {trip.destination?.name ?? trip.destination?.region}
         </div>
 
-        <h3 className="font-display text-lg font-semibold leading-snug text-ink group-hover:text-pine">
+        <h3 className="heading-sm text-lg leading-snug text-ink group-hover:text-pine">
           {trip.title}
         </h3>
 
@@ -98,7 +98,7 @@ export function TripCard({ trip }: { trip: Trip & { departures?: Departure[] } }
             <Clock size={14} />
             {trip.duration_days}D/{trip.duration_nights}N
           </span>
-          <span className="h-1 w-1 rounded-full bg-ink-300" />
+          <span className="h-1 w-1 rounded-full bg-ink-200" />
           <span className="capitalize">{trip.difficulty}</span>
         </div>
 
@@ -108,20 +108,20 @@ export function TripCard({ trip }: { trip: Trip & { departures?: Departure[] } }
             <span>
               {upcoming.map((d) => format(new Date(d.start_date), "d MMM")).join(" · ")}
               {moreCount > 0 && (
-                <span className="text-ink-400"> +{moreCount} more</span>
+                <span className="text-ink-500"> +{moreCount} more</span>
               )}
             </span>
           </div>
         )}
 
         {soldOut && (
-          <p className="text-sm text-ink-400">No dates open, join the waitlist</p>
+          <p className="text-sm text-ink-500">No dates open, join the waitlist</p>
         )}
 
         {hasReviews && (
           <div className="flex items-center gap-2">
             <RatingStars rating={trip.rating} />
-            <span className="text-xs text-ink-400">
+            <span className="text-xs text-ink-500">
               {trip.rating.toFixed(1)} ({trip.review_count})
             </span>
           </div>
@@ -129,20 +129,20 @@ export function TripCard({ trip }: { trip: Trip & { departures?: Departure[] } }
 
         <div className="mt-auto flex items-end justify-between border-t border-border pt-3">
           <div>
-            <p className="text-xs text-ink-400">From</p>
+            <p className="text-xs text-ink-500">From</p>
             <div className="flex items-baseline gap-2">
-              <span className="font-display text-xl font-semibold text-ink">
+              <span className="heading-sm text-xl text-ink">
                 {formatINR(trip.discounted_price ?? trip.price_per_person)}
               </span>
               {hasDiscount && (
-                <span className="text-sm text-ink-300 line-through">
+                <span className="text-sm text-ink-400 line-through">
                   {formatINR(trip.price_per_person)}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-ink-400">per person</p>
+            <p className="text-[11px] text-ink-500">per person</p>
           </div>
-          <span className="btn-ghost !px-3 !py-1.5 text-xs">View trip</span>
+          <span className="btn-ghost btn-sm">View trip</span>
         </div>
       </div>
     </Link>

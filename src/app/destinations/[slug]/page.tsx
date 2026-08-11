@@ -36,7 +36,8 @@ export default async function DestinationPage({
 
   return (
     <div>
-      <section className="relative flex h-[26rem] items-end">
+      {/* Fixed at 26rem this ate a whole phone screen before a word of copy. */}
+      <section className="relative flex h-[18rem] items-end sm:h-[26rem]">
         <SmartImage
           src={destination.hero_image}
           alt={destination.name}
@@ -58,7 +59,7 @@ export default async function DestinationPage({
         </Container>
       </section>
 
-      <Container className="py-14">
+      <Container className="section-sm">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[2fr_1fr]">
           <Reveal>
             <h2 className="font-display text-2xl font-semibold text-ink">About {destination.name}</h2>
@@ -83,7 +84,7 @@ export default async function DestinationPage({
 
           <Reveal delay={100}>
             <div className="h-fit rounded-2xl border border-border bg-white p-6 shadow-soft">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-ink-400">
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-ink-500">
                 Good to know
               </p>
               <div className="flex items-start gap-3">
