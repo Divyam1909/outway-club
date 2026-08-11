@@ -90,7 +90,15 @@ export async function POST(request: Request) {
       amount: Math.round(totalAmount * 100),
       currency: "INR",
       receipt: `trip_${tripId.slice(0, 8)}_${Date.now()}`,
-      notes: { tripId, departureId: departureId ?? "", userId: user.id },
+      // These notes are the record of what was actually sold. Confirmation
+      // reads the sale back out of them rather than trusting the browser —
+      // see recordPaidBooking in src/lib/bookings.ts.
+      notes: {
+        tripId,
+        departureId: departureId ?? "",
+        userId: user.id,
+        numTravelers: String(numTravelers),
+      },
     });
 
     return NextResponse.json({

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { clsx } from "clsx";
+import { AlertCircle, AlertTriangle } from "lucide-react";
+import { TrustBand } from "@/components/trips/trust-band";
 import { loadRazorpayScript } from "@/lib/load-razorpay-script";
 import { messageFromResponse } from "@/lib/error-messages";
 import { formatINR } from "@/lib/utils";
@@ -93,6 +95,15 @@ export function BookingForm({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   /**
+   * Validation lives per field, keyed by the same string as the control's id.
+   * A single combined role="alert" above the button told a screen-reader user
+   * that *something* was wrong and left them to find it in a form that can run
+   * to eighteen name boxes; this puts the message under the field it belongs
+   * to, marks the field aria-invalid, and moves focus to the first one.
+   */
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const controls = useRef<Record<string, HTMLElement | null>>({});
+  /**
    * Set only when money has left the customer's account but we could not turn
    * it into a booking. It carries the payment id, because that reference is
    * the one thing that lets us reconcile the charge by hand — and this screen
@@ -103,23 +114,77 @@ export function BookingForm({
     message: string;
   } | null>(null);
 
+  /**
+   * The summary can change the party size mid-checkout. Grow or trim the rows
+   * to match without discarding names already typed into the ones that stay.
+   */
+  useEffect(() => {
+    setTravelers((prev) => {
+      if (prev.length === travelersCount) return prev;
+      if (travelersCount < prev.length) return prev.slice(0, travelersCount);
+      return [
+        ...prev,
+        ...Array.from({ length: travelersCount - prev.length }, () => ({
+          full_name: "",
+          age: "",
+          gender: "",
+        })),
+      ];
+    });
+  }, [travelersCount]);
+
   function updateTraveler(index: number, field: keyof TravelerInput, value: string) {
     setTravelers((prev) => prev.map((t, i) => (i === index ? { ...t, [field]: value } : t)));
+    if (field === "full_name") clearFieldError(`traveler-${index}-name`);
+  }
+
+  /** Clear as they type, so a corrected field stops shouting immediately. */
+  function clearFieldError(key: string) {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
+  /** Returned in the order the fields appear, so [0] is the one to focus. */
+  function validate(): [key: string, message: string][] {
+    const found: [string, string][] = [];
+
+    travelers.forEach((traveler, i) => {
+      if (!traveler.full_name.trim()) {
+        found.push([
+          `traveler-${i}-name`,
+          "Enter this traveller's name exactly as it appears on their photo ID.",
+        ]);
+      }
+    });
+
+    if (contactPhone.replace(/\D/g, "").length < 10) {
+      found.push([
+        "contact-phone",
+        "Add a phone number your trip captain can reach you on, at least 10 digits.",
+      ]);
+    }
+
+    if (!acceptedTerms) {
+      found.push(["accept-terms", "Please confirm you've read the terms and the refund policy."]);
+    }
+
+    return found;
   }
 
   async function handlePayment() {
     setError(null);
 
-    if (travelers.some((t) => !t.full_name.trim())) {
-      setError("Please enter a name for every traveller, exactly as it appears on their ID.");
-      return;
-    }
-    if (contactPhone.replace(/\D/g, "").length < 10) {
-      setError("Please add a phone number your trip captain can reach you on.");
-      return;
-    }
-    if (!acceptedTerms) {
-      setError("Please confirm you've read the terms and the cancellation policy.");
+    const problems = validate();
+    setFieldErrors(Object.fromEntries(problems));
+
+    if (problems.length > 0) {
+      const first = controls.current[problems[0][0]];
+      first?.focus();
+      first?.scrollIntoView({ block: "center", behavior: "smooth" });
       return;
     }
 
@@ -180,11 +245,12 @@ export function BookingForm({
             const verifyRes = await fetch("/api/razorpay/verify", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
+              // Only the payment identifiers and the traveller details go up.
+              // Trip, departure and headcount are deliberately absent: the
+              // server reads those off the Razorpay order so that nothing
+              // affecting the price can be edited in the browser.
               body: JSON.stringify({
                 ...response,
-                tripId,
-                departureId,
-                numTravelers: travelersCount,
                 travelers: travelers.map((t) => ({
                   full_name: t.full_name,
                   age: t.age ? Number(t.age) : undefined,
@@ -261,12 +327,12 @@ export function BookingForm({
   // id, never to pay a second time.
   if (paidButUnconfirmed) {
     return (
-      <div className="rounded-3xl border border-clay-100 bg-clay-50/60 p-6 sm:p-8">
+      <div className="rounded-2xl border border-clay-100 bg-clay-50/60 p-6 sm:p-8">
         <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-clay-100 text-clay-600">
           <AlertTriangle size={24} />
         </span>
 
-        <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+        <h2 className="heading-fluid text-xl text-ink sm:text-2xl">
           Your payment went through, the booking needs a manual check
         </h2>
 
@@ -279,7 +345,7 @@ export function BookingForm({
         </p>
 
         <div className="mt-5 rounded-2xl border border-clay-100 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Payment ID</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">Payment ID</p>
           <p className="mt-1 select-all break-all font-mono text-sm font-medium text-ink">
             {paidButUnconfirmed.paymentId}
           </p>
@@ -305,7 +371,7 @@ export function BookingForm({
           </Link>
         </div>
 
-        <p className="mt-4 text-center text-xs text-ink-400">
+        <p className="mt-4 text-center text-xs text-ink-500">
           It&apos;s worth checking your bookings first, sometimes the booking saved and only the
           confirmation screen failed.
         </p>
@@ -316,49 +382,69 @@ export function BookingForm({
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="mb-1 font-display text-xl font-semibold text-ink">Traveller details</h2>
+        <h2 className="mb-1 heading-sm text-xl text-ink">Traveller details</h2>
         <p className="mb-4 text-sm text-ink-500">
           Names must match the government photo ID each person will carry, hotels record it at
           check-in and we can&apos;t get a room without it.
         </p>
         <div className="space-y-4">
-          {travelers.map((traveler, i) => (
-            <div key={i} className="rounded-2xl border border-border p-4">
-              <p className="mb-3 text-sm font-semibold text-ink-700">
-                Traveller {i + 1} {i === 0 && <span className="font-normal text-ink-400">(primary)</span>}
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <input
-                  aria-label={`Traveller ${i + 1} full name`}
-                  placeholder="Full name"
-                  value={traveler.full_name}
-                  onChange={(e) => updateTraveler(i, "full_name", e.target.value)}
-                  className="field sm:col-span-1"
-                />
-                <input
-                  aria-label={`Traveller ${i + 1} age`}
-                  placeholder="Age"
-                  type="number"
-                  min={0}
-                  max={120}
-                  value={traveler.age}
-                  onChange={(e) => updateTraveler(i, "age", e.target.value)}
-                  className="field"
-                />
-                <select
-                  aria-label={`Traveller ${i + 1} gender`}
-                  value={traveler.gender}
-                  onChange={(e) => updateTraveler(i, "gender", e.target.value)}
-                  className="field"
-                >
-                  <option value="">Gender</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                  <option value="other">Other</option>
-                </select>
+          {travelers.map((traveler, i) => {
+            const nameKey = `traveler-${i}-name`;
+            const nameError = fieldErrors[nameKey];
+
+            return (
+              <div key={i} className="rounded-2xl border border-border p-4">
+                <p className="mb-3 text-sm font-semibold text-ink-700">
+                  Traveller {i + 1}{" "}
+                  {i === 0 && <span className="font-normal text-ink-500">(primary)</span>}
+                </p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="sm:col-span-1">
+                    <input
+                      id={nameKey}
+                      ref={(node) => {
+                        controls.current[nameKey] = node;
+                      }}
+                      aria-label={`Traveller ${i + 1} full name`}
+                      aria-invalid={nameError ? true : undefined}
+                      aria-describedby={nameError ? `${nameKey}-error` : undefined}
+                      placeholder="Full name"
+                      value={traveler.full_name}
+                      onChange={(e) => updateTraveler(i, "full_name", e.target.value)}
+                      className={clsx("field", nameError && "field-error")}
+                    />
+                    {nameError && (
+                      <p id={`${nameKey}-error`} className="field-error-text">
+                        <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                        {nameError}
+                      </p>
+                    )}
+                  </div>
+                  <input
+                    aria-label={`Traveller ${i + 1} age`}
+                    placeholder="Age"
+                    type="number"
+                    min={0}
+                    max={120}
+                    value={traveler.age}
+                    onChange={(e) => updateTraveler(i, "age", e.target.value)}
+                    className="field h-fit"
+                  />
+                  <select
+                    aria-label={`Traveller ${i + 1} gender`}
+                    value={traveler.gender}
+                    onChange={(e) => updateTraveler(i, "gender", e.target.value)}
+                    className="field h-fit"
+                  >
+                    <option value="">Gender</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -368,22 +454,39 @@ export function BookingForm({
         </label>
         <input
           id="contact-phone"
+          ref={(node) => {
+            controls.current["contact-phone"] = node;
+          }}
           type="tel"
           autoComplete="tel"
           value={contactPhone}
-          onChange={(e) => setContactPhone(e.target.value)}
+          onChange={(e) => {
+            setContactPhone(e.target.value);
+            clearFieldError("contact-phone");
+          }}
           placeholder="+91 98765 43210"
-          className="field"
+          aria-invalid={fieldErrors["contact-phone"] ? true : undefined}
+          aria-describedby={
+            fieldErrors["contact-phone"] ? "contact-phone-error" : "contact-phone-hint"
+          }
+          className={clsx("field", fieldErrors["contact-phone"] && "field-error")}
         />
-        <p className="mt-1.5 text-xs text-ink-400">
-          Your trip captain uses this on the day, and it&apos;s how we reach you if anything
-          changes before departure.
-        </p>
+        {fieldErrors["contact-phone"] ? (
+          <p id="contact-phone-error" className="field-error-text">
+            <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+            {fieldErrors["contact-phone"]}
+          </p>
+        ) : (
+          <p id="contact-phone-hint" className="mt-1.5 text-xs text-ink-500">
+            Your trip captain uses this on the day, and it&apos;s how we reach you if anything
+            changes before departure.
+          </p>
+        )}
       </div>
 
       <div>
         <label htmlFor="special-requests" className="field-label">
-          Anything we should know? <span className="font-normal text-ink-400">(optional)</span>
+          Anything we should know? <span className="font-normal text-ink-500">(optional)</span>
         </label>
         <textarea
           id="special-requests"
@@ -395,44 +498,70 @@ export function BookingForm({
         />
       </div>
 
-      <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-cream-300/60 p-4">
-        <input
-          type="checkbox"
-          checked={acceptedTerms}
-          onChange={(e) => setAcceptedTerms(e.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 accent-pine"
-        />
-        <span className="text-sm leading-relaxed text-ink-700">
-          I&apos;ve read the{" "}
-          <Link href="/terms" target="_blank" className="font-medium text-pine underline underline-offset-2">
-            Terms of Service
-          </Link>{" "}
-          and the{" "}
-          <Link
-            href="/refund-policy"
-            target="_blank"
-            className="font-medium text-pine underline underline-offset-2"
-          >
-            cancellation policy
-          </Link>
-          , and every traveller above will carry original government photo ID.
-        </span>
-      </label>
+      <div>
+        <label
+          htmlFor="accept-terms"
+          className={clsx(
+            "flex cursor-pointer items-start gap-3 rounded-2xl p-4",
+            fieldErrors["accept-terms"] ? "bg-clay-50 ring-1 ring-clay-600" : "bg-cream-300"
+          )}
+        >
+          <input
+            id="accept-terms"
+            ref={(node) => {
+              controls.current["accept-terms"] = node;
+            }}
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(e) => {
+              setAcceptedTerms(e.target.checked);
+              clearFieldError("accept-terms");
+            }}
+            aria-invalid={fieldErrors["accept-terms"] ? true : undefined}
+            aria-describedby={fieldErrors["accept-terms"] ? "accept-terms-error" : undefined}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-pine"
+          />
+          <span className="text-sm leading-relaxed text-ink-700">
+            I&apos;ve read the{" "}
+            <Link
+              href="/terms"
+              target="_blank"
+              className="font-medium text-pine underline underline-offset-2"
+            >
+              Terms of Service
+            </Link>{" "}
+            and the{" "}
+            <Link
+              href="/refund-policy"
+              target="_blank"
+              className="font-medium text-pine underline underline-offset-2"
+            >
+              cancellation policy
+            </Link>
+            , and every traveller above will carry original government photo ID.
+          </span>
+        </label>
+        {fieldErrors["accept-terms"] && (
+          <p id="accept-terms-error" className="field-error-text">
+            <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+            {fieldErrors["accept-terms"]}
+          </p>
+        )}
+      </div>
 
+      {/* Payment and network failures, not field validation — those live under
+          the field they belong to and move focus there instead. */}
       {error && (
         <p role="alert" className="rounded-xl bg-clay-50 px-4 py-3 text-sm text-clay-600">
           {error}
         </p>
       )}
 
-      <button onClick={handlePayment} disabled={loading} className="btn-accent w-full py-4 text-base">
+      <button onClick={handlePayment} disabled={loading} className="btn-accent btn-lg w-full">
         {loading ? "Opening secure checkout…" : `Pay ${formatINR(pricePerPerson * travelersCount)}`}
       </button>
 
-      <p className="flex items-center justify-center gap-1.5 text-center text-xs text-ink-400">
-        <ShieldCheck size={13} className="text-pine" />
-        Secure checkout by Razorpay · UPI, cards and netbanking · we never see your card details
-      </p>
+      <TrustBand />
     </div>
   );
 }

@@ -29,9 +29,9 @@ export default async function BookingConfirmationPage({
   const receiptEmail = booking.contact_email ?? currentUser.user.email;
 
   return (
-    <div className="py-14">
+    <div className="section-sm">
       <Container className="max-w-2xl">
-        <div className="rounded-3xl border border-border bg-white p-8 shadow-card sm:p-10">
+        <div className="rounded-2xl border border-border bg-white p-8 shadow-card sm:p-10">
           <div className="flex flex-col items-center text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-pine-50 text-pine">
               <CheckCircle2 size={30} />
@@ -57,7 +57,7 @@ export default async function BookingConfirmationPage({
               <SmartImage src={booking.trip.hero_image} alt={booking.trip.title} fill sizes="96px" className="object-cover" />
             </div>
             <div>
-              <p className="font-display text-lg font-semibold text-ink">{booking.trip.title}</p>
+              <p className="heading-sm text-lg text-ink">{booking.trip.title}</p>
               <p className="text-sm text-ink-500">
                 {booking.trip.duration_days} days / {booking.trip.duration_nights} nights
               </p>
@@ -96,7 +96,7 @@ export default async function BookingConfirmationPage({
             </span>
           </div>
 
-          <div className="mt-7 rounded-2xl bg-cream-300/70 p-5">
+          <div className="mt-7 rounded-2xl bg-cream-300 p-5">
             <p className="text-sm font-semibold text-ink">What happens next</p>
             <ol className="mt-2.5 space-y-2 text-sm leading-relaxed text-ink-500">
               <li>1. Keep this reference, it&apos;s what we&apos;ll ask for.</li>
@@ -120,7 +120,7 @@ export default async function BookingConfirmationPage({
             </Link>
           </div>
 
-          <p className="mt-5 text-center text-xs leading-relaxed text-ink-400">
+          <p className="mt-5 text-center text-xs leading-relaxed text-ink-500">
             Need to change or cancel? You can do it yourself from My bookings, and you&apos;ll see
             the exact refund first.{" "}
             <Link href="/refund-policy" className="underline underline-offset-2 hover:text-pine">

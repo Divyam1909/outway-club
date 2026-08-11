@@ -1,29 +1,27 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { bookingConfirmationEmail, newBookingAlertEmail, sendEmail } from "@/lib/email";
-import { site } from "@/config/site";
-import { formatDateRange, formatINR, seatsLeft } from "@/lib/utils";
-import { sanitizeMultiline, sanitizeText } from "@/lib/rate-limit";
+import { recordPaidBooking, type TravelerInput } from "@/lib/bookings";
+import { RATE_LIMITS, TOO_MANY_REQUESTS, rateLimitRequest } from "@/lib/rate-limit";
 
-interface DepartureRow {
-  id: string;
-  total_seats: number;
-  seats_booked: number;
-  price_override: number | null;
-  start_date: string;
-  end_date: string;
-}
-
+/**
+ * Called by the browser as soon as Razorpay's checkout reports success.
+ *
+ * Its job is narrow: prove the payment is genuine, prove the caller is signed
+ * in, and hand off. It does NOT decide what was bought — the signature below
+ * is an HMAC over `order_id|payment_id` and says nothing about trip, departure
+ * or headcount, so those are read from the Razorpay order itself inside
+ * recordPaidBooking. Anything this route reads out of the request body can
+ * only ever be decoration.
+ *
+ * If the customer's browser dies before this fires, the webhook at
+ * /api/razorpay/webhook records the same booking from the same order.
+ */
 interface VerifyPayload {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
-  tripId: string;
-  departureId: string | null;
-  numTravelers: number;
-  travelers: { full_name: string; age?: number; gender?: string }[];
+  travelers?: TravelerInput[];
   specialRequests?: string;
   contactPhone?: string;
 }
@@ -38,6 +36,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You need to be signed in to book." }, { status: 401 });
   }
 
+  if (!(await rateLimitRequest(RATE_LIMITS.verifyPayment, request, user.id))) {
+    return NextResponse.json(TOO_MANY_REQUESTS, { status: 429 });
+  }
+
   let payload: VerifyPayload;
   try {
     payload = (await request.json()) as VerifyPayload;
@@ -45,16 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Malformed request." }, { status: 400 });
   }
 
-  const {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-    tripId,
-    departureId,
-    numTravelers,
-    travelers,
-    specialRequests,
-  } = payload;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = payload;
 
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     return NextResponse.json({ error: "Incomplete payment response." }, { status: 400 });
@@ -82,147 +75,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Payment verification failed." }, { status: 400 });
   }
 
-  const admin = createAdminClient();
-
-  // Idempotency: Razorpay's handler can fire twice (retries, double-submit).
-  // If this order already produced a booking, return it rather than charging
-  // the seat count again.
-  const { data: existing } = await admin
-    .from("bookings")
-    .select("id")
-    .eq("razorpay_order_id", razorpay_order_id)
-    .maybeSingle();
-
-  if (existing) {
-    return NextResponse.json({ bookingId: existing.id });
-  }
-
-  const { data: trip, error: tripError } = await admin
-    .from("trips")
-    .select("id, title, price_per_person, discounted_price, duration_days, duration_nights")
-    .eq("id", tripId)
-    .single();
-
-  if (tripError || !trip) {
-    return NextResponse.json({ error: "Trip not found." }, { status: 404 });
-  }
-
-  let pricePerPerson = Number(trip.discounted_price ?? trip.price_per_person);
-  let departure: DepartureRow | null = null;
-
-  if (departureId) {
-    const { data, error } = await admin.from("departures").select("*").eq("id", departureId).single();
-    if (error || !data) {
-      return NextResponse.json({ error: "Departure not found." }, { status: 404 });
-    }
-    departure = data as DepartureRow;
-    if (departure.price_override) pricePerPerson = Number(departure.price_override);
-  }
-
-  // The amount is recomputed server-side; the client's figure is never trusted.
-  const totalAmount = pricePerPerson * numTravelers;
-
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("full_name, email, phone")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const contactEmail = profile?.email || user.email || null;
-  const contactPhone = sanitizeText(payload.contactPhone, 32) || profile?.phone || null;
-  const cleanRequests = sanitizeMultiline(specialRequests, 2000) || null;
-
-  const { data: booking, error: bookingError } = await admin
-    .from("bookings")
-    .insert({
-      user_id: user.id,
-      trip_id: tripId,
-      departure_id: departureId,
-      num_travelers: numTravelers,
-      total_amount: totalAmount,
-      status: "confirmed",
-      payment_status: "paid",
-      razorpay_order_id,
-      razorpay_payment_id,
-      special_requests: cleanRequests,
-      contact_email: contactEmail,
-      contact_phone: contactPhone,
-    })
-    .select()
-    .single();
-
-  if (bookingError || !booking) {
-    // The payment succeeded but we couldn't record it. Loud log — this needs
-    // manual reconciliation, and the customer must not be told "try again"
-    // in a way that would charge them twice.
-    console.error("[verify] BOOKING INSERT FAILED after successful payment", {
-      razorpay_order_id,
-      razorpay_payment_id,
-      userId: user.id,
-      error: bookingError?.message,
-    });
-    return NextResponse.json(
-      {
-        error:
-          "Your payment went through but we couldn't save the booking. Please email us with your payment ID and we'll confirm it manually, you will not be charged again.",
-      },
-      { status: 500 }
-    );
-  }
-
-  const travelerNames: string[] = [];
-  if (travelers?.length) {
-    const rows = travelers.slice(0, numTravelers).map((traveler, index) => {
-      const fullName = sanitizeText(traveler.full_name, 120);
-      travelerNames.push(fullName);
-      return {
-        booking_id: booking.id,
-        full_name: fullName,
-        age: Number.isFinite(traveler.age) ? traveler.age : null,
-        gender: sanitizeText(traveler.gender, 20) || null,
-        is_primary: index === 0,
-      };
-    });
-    await admin.from("travelers").insert(rows);
-  }
-
-  if (departure) {
-    const remaining = seatsLeft(departure.total_seats, departure.seats_booked);
-    await admin
-      .from("departures")
-      .update({ seats_booked: departure.seats_booked + Math.min(numTravelers, remaining) })
-      .eq("id", departure.id);
-  }
-
-  // Email is fire-and-forget: a mail failure must never fail a paid booking.
-  const emailData = {
-    bookingRef: booking.id.slice(0, 8).toUpperCase(),
-    bookingId: booking.id,
-    customerName: profile?.full_name || travelerNames[0] || "traveller",
-    customerEmail: contactEmail ?? "",
-    tripTitle: trip.title,
-    dateRange: departure ? formatDateRange(departure.start_date, departure.end_date) : null,
-    numTravelers,
-    totalAmount: formatINR(totalAmount),
-    travelerNames: travelerNames.length ? travelerNames : ["Not provided"],
-    specialRequests: cleanRequests,
+  const result = await recordPaidBooking({
+    orderId: razorpay_order_id,
     paymentId: razorpay_payment_id,
-  };
+    expectedUserId: user.id,
+    details: {
+      travelers: payload.travelers,
+      specialRequests: payload.specialRequests,
+      contactPhone: payload.contactPhone,
+    },
+    source: "verify",
+  });
 
-  const receipt = bookingConfirmationEmail(emailData);
-  const alert = newBookingAlertEmail(emailData);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
 
-  await Promise.allSettled([
-    contactEmail
-      ? sendEmail({ to: contactEmail, subject: receipt.subject, html: receipt.html, replyTo: site.email })
-      : Promise.resolve(false),
-    sendEmail({
-      to: site.opsEmail,
-      subject: alert.subject,
-      html: alert.html,
-      ...(contactEmail ? { replyTo: contactEmail } : {}),
-    }),
-  ]);
-
-  return NextResponse.json({ bookingId: booking.id });
+  return NextResponse.json({ bookingId: result.bookingId });
 }

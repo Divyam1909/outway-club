@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/container";
-import { BookingForm } from "@/components/booking/booking-form";
-import { OrderSummary } from "@/components/booking/order-summary";
+import { BookingPanel } from "@/components/booking/booking-panel";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getTripBySlug } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth";
+import { seatsLeft } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Complete your booking" };
 
@@ -36,35 +37,31 @@ export default async function BookingPage({
   const departure = departureId ? trip.departures.find((d) => d.id === departureId) ?? null : null;
   const pricePerPerson = departure?.price_override ?? trip.discounted_price ?? trip.price_per_person;
 
+  // The ceiling on the summary's traveller stepper. Never more than the group
+  // cap, and never more than the seats this departure actually has left.
+  const maxTravelers = departure
+    ? Math.max(1, Math.min(trip.group_size_max, seatsLeft(departure.total_seats, departure.seats_booked)))
+    : trip.group_size_max;
+
   return (
-    <div className="py-14">
+    <div className="section-sm">
       <Container>
         <div className="mb-10 max-w-2xl">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-clay">
-            Almost there
-          </p>
-          <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">
+          <Eyebrow className="mb-2">Almost there</Eyebrow>
+          <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">
             Complete your booking
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[2fr_1fr]">
-          <BookingForm
-            tripId={trip.id}
-            tripTitle={trip.title}
-            departureId={departure?.id ?? null}
-            pricePerPerson={pricePerPerson}
-            travelersCount={travelersCount}
-            prefillName={currentUser.profile?.full_name ?? ""}
-            prefillEmail={currentUser.user.email ?? ""}
-          />
-          <OrderSummary
-            trip={trip}
-            departure={departure}
-            pricePerPerson={pricePerPerson}
-            travelersCount={travelersCount}
-          />
-        </div>
+        <BookingPanel
+          trip={trip}
+          departure={departure}
+          pricePerPerson={pricePerPerson}
+          initialTravelers={travelersCount}
+          maxTravelers={maxTravelers}
+          prefillName={currentUser.profile?.full_name ?? ""}
+          prefillEmail={currentUser.user.email ?? ""}
+        />
       </Container>
     </div>
   );
