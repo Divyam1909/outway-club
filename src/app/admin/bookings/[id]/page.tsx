@@ -62,7 +62,7 @@ export default async function AdminBookingDetailPage({
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-sm uppercase tracking-wider text-ink-400">
+          <p className="font-mono text-sm uppercase tracking-wider text-ink-500">
             {booking.id.slice(0, 8)}
           </p>
           <h1 className="mt-1 font-display text-3xl font-semibold text-ink">
@@ -75,7 +75,7 @@ export default async function AdminBookingDetailPage({
             <Badge tone={booking.payment_status === "paid" ? "pine" : "clay"}>
               {booking.payment_status.replace("_", " ")}
             </Badge>
-            <span className="text-sm text-ink-400">Booked {formatDate(booking.created_at)}</span>
+            <span className="text-sm text-ink-500">Booked {formatDate(booking.created_at)}</span>
           </div>
         </div>
 
@@ -116,7 +116,7 @@ export default async function AdminBookingDetailPage({
                   ))}
               </ul>
             ) : (
-              <p className="text-sm text-ink-400">
+              <p className="text-sm text-ink-500">
                 No traveller details were captured on this booking.
               </p>
             )}
@@ -158,7 +158,7 @@ export default async function AdminBookingDetailPage({
                 />
               </dl>
               {booking.cancellation_reason && (
-                <p className="mt-4 rounded-xl bg-cream-300/70 p-4 text-sm leading-relaxed text-ink-700">
+                <p className="mt-4 rounded-xl bg-cream-300 p-4 text-sm leading-relaxed text-ink-700">
                   &ldquo;{booking.cancellation_reason}&rdquo;
                 </p>
               )}
@@ -192,7 +192,7 @@ export default async function AdminBookingDetailPage({
                 </a>
               )}
               {customer?.created_at && (
-                <p className="text-xs text-ink-400">
+                <p className="text-xs text-ink-500">
                   Account created {formatDate(customer.created_at)}
                 </p>
               )}
@@ -225,7 +225,7 @@ export default async function AdminBookingDetailPage({
                   {booking.num_travelers} × {formatINR(Number(booking.total_amount) / booking.num_travelers)}
                 </p>
                 {daysBeforeDeparture !== null && daysBeforeDeparture >= 0 && (
-                  <p className="text-xs text-ink-400">
+                  <p className="text-xs text-ink-500">
                     {daysBeforeDeparture} day{daysBeforeDeparture === 1 ? "" : "s"} until departure
                   </p>
                 )}
@@ -264,7 +264,7 @@ export default async function AdminBookingDetailPage({
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-border bg-white p-6">
-      <h2 className="mb-4 font-display text-lg font-semibold text-ink">{title}</h2>
+      <h2 className="mb-4 heading-sm text-lg text-ink">{title}</h2>
       {children}
     </section>
   );
@@ -273,7 +273,7 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-ink-400">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-ink-500">{label}</dt>
       <dd
         className={
           mono

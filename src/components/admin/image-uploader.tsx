@@ -132,7 +132,7 @@ export function ImageUploader({
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
         <span className="text-sm font-medium text-ink-700">{label}</span>
         {value.length > 0 && (
-          <span className="text-xs text-ink-400">
+          <span className="text-xs text-ink-500">
             {value.length} image{value.length === 1 ? "" : "s"}
           </span>
         )}
@@ -151,7 +151,7 @@ export function ImageUploader({
         }}
         className={clsx(
           "rounded-xl border-2 border-dashed p-5 text-center transition-colors",
-          dragging ? "border-pine bg-pine-50" : "border-border bg-cream-200/40"
+          dragging ? "border-pine bg-pine-50" : "border-border bg-cream-300"
         )}
       >
         <input
@@ -171,22 +171,22 @@ export function ImageUploader({
           </p>
         ) : (
           <>
-            <UploadCloud size={22} className="mx-auto mb-2 text-ink-400" />
+            <UploadCloud size={22} className="mx-auto mb-2 text-ink-500" />
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="btn-outline !px-4 !py-2 text-xs"
+              className="btn-outline btn-sm"
             >
               <ImagePlus size={13} /> {multiple ? "Add photos" : "Choose photo"}
             </button>
-            <p className="mt-2 text-xs text-ink-400">
+            <p className="mt-2 text-xs text-ink-500">
               or drag and drop · JPG, PNG, WebP or AVIF · up to 8MB each
             </p>
           </>
         )}
       </div>
 
-      {hint && <p className="mt-1.5 text-xs text-ink-400">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs text-ink-500">{hint}</p>}
 
       {error && (
         <p

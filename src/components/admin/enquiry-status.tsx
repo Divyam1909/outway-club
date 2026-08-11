@@ -53,7 +53,7 @@ export function EnquiryStatus({ enquiryId, status }: { enquiryId: string; status
 
   return (
     <div className="flex flex-col items-start gap-1 sm:items-end">
-      <label className="flex items-center gap-2 text-xs text-ink-400">
+      <label className="flex items-center gap-2 text-xs text-ink-500">
         <span className="sr-only">Enquiry status</span>
         <select
           value={value}

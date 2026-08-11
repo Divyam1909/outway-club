@@ -27,7 +27,7 @@ export default async function AdminReviewsPage() {
 
       {reviews.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-white/50 p-12 text-center">
-          <p className="font-display text-lg font-semibold text-ink">No reviews yet</p>
+          <p className="heading-sm text-lg text-ink">No reviews yet</p>
           <p className="mt-1 text-sm text-ink-500">
             Travellers can review from the day after their trip ends.
           </p>
@@ -61,9 +61,9 @@ function ReviewGroup({
 }) {
   return (
     <section>
-      <h2 className="mb-4 font-display text-lg font-semibold text-ink">{title}</h2>
+      <h2 className="mb-4 heading-sm text-lg text-ink">{title}</h2>
       {reviews.length === 0 ? (
-        <p className="text-sm text-ink-400">{emptyLabel}</p>
+        <p className="text-sm text-ink-500">{emptyLabel}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {reviews.map((review) => (
@@ -78,7 +78,7 @@ function ReviewGroup({
                   {review.trip && (
                     <Link
                       href={`/trips/${review.trip.slug}`}
-                      className="text-xs text-ink-400 hover:text-pine"
+                      className="text-xs text-ink-500 hover:text-pine"
                     >
                       {review.trip.title}
                     </Link>
@@ -106,7 +106,7 @@ function ReviewGroup({
                   </a>
                 )}
 
-                <p className="mt-3 text-xs text-ink-400">
+                <p className="mt-3 text-xs text-ink-500">
                   Submitted {formatDate(review.created_at)}
                   {review.trip_month ? ` · Travelled ${review.trip_month}` : ""}
                 </p>

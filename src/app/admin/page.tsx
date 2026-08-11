@@ -35,7 +35,7 @@ export default async function AdminDashboardPage() {
           <div key={card.label} className="rounded-2xl border border-border bg-white p-6 shadow-soft">
             <p className="text-sm text-ink-500">{card.label}</p>
             <p className="mt-2 font-display text-2xl font-semibold text-ink">{card.value}</p>
-            <p className="mt-1 text-xs text-ink-400">{card.hint}</p>
+            <p className="mt-1 text-xs text-ink-500">{card.hint}</p>
           </div>
         ))}
       </div>
@@ -73,7 +73,7 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-10">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold text-ink">Latest bookings</h2>
+          <h2 className="heading-sm text-xl text-ink">Latest bookings</h2>
           <Link href="/admin/bookings" className="text-sm font-medium text-pine hover:underline">
             View all
           </Link>
@@ -81,7 +81,7 @@ export default async function AdminDashboardPage() {
 
         {recent.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-white/50 p-10 text-center">
-            <p className="font-display text-lg font-semibold text-ink">No bookings yet</p>
+            <p className="heading-sm text-lg text-ink">No bookings yet</p>
             <p className="mt-1 text-sm text-ink-500">
               They&apos;ll appear here the moment the first payment clears.
             </p>
@@ -92,15 +92,15 @@ export default async function AdminDashboardPage() {
               <li key={booking.id}>
                 <Link
                   href={`/admin/bookings/${booking.id}`}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 transition-colors hover:bg-cream-300/40"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 transition-colors hover:bg-cream-300"
                 >
-                  <span className="font-mono text-xs uppercase text-ink-400">
+                  <span className="font-mono text-xs uppercase text-ink-500">
                     {booking.id.slice(0, 8)}
                   </span>
                   <span className="flex-1 text-sm font-medium text-ink">
                     {booking.trip?.title ?? "N/A"}
                   </span>
-                  <span className="text-xs text-ink-400">{formatDate(booking.created_at)}</span>
+                  <span className="text-xs text-ink-500">{formatDate(booking.created_at)}</span>
                   <Badge
                     tone={booking.status === "cancelled" ? "ink" : "pine"}
                     className="capitalize"

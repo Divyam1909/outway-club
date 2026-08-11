@@ -333,7 +333,7 @@ export function RichTextEditor({
           top-20 parks it directly under the site header, which is itself
           sticky at h-20 — at top-0 the toolbar scrolls underneath and
           disappears exactly when a long article needs it most. */}
-      <div className="sticky top-20 z-20 border-b border-border bg-cream-200/95 backdrop-blur-sm">
+      <div className="sticky top-20 z-20 border-b border-border bg-cream-300 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-1 p-2">
           <Group>
             <ToolButton label="Paragraph" active={blockTag === "p"} onClick={() => setBlock("p")}>
@@ -400,7 +400,7 @@ export function RichTextEditor({
               active={blockClasses.includes("post-serif")}
               onClick={() => toggleBlockClass("post-serif")}
             >
-              <span className="font-display text-[13px] font-semibold">Aa</span>
+              <span className="heading-sm text-[13px]">Aa</span>
             </ToolButton>
             <ToolButton
               label="Sans font"
@@ -543,7 +543,7 @@ export function RichTextEditor({
         className="post-prose post-editor min-h-[26rem] px-5 py-7 focus:outline-none sm:px-9 sm:py-9"
       />
 
-      <div className="flex items-center justify-between border-t border-border bg-cream-200/60 px-4 py-2.5 text-xs text-ink-400">
+      <div className="flex items-center justify-between border-t border-border bg-cream-300 px-4 py-2.5 text-xs text-ink-500">
         <span>
           {stats.words.toLocaleString("en-IN")} word{stats.words === 1 ? "" : "s"} ·{" "}
           {stats.minutes} min read

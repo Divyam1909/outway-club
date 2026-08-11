@@ -22,7 +22,7 @@ export default async function AdminTripsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-border bg-white">
         <table className="w-full text-sm">
-          <thead className="border-b border-border bg-cream-300/50 text-left text-xs uppercase tracking-wide text-ink-400">
+          <thead className="border-b border-border bg-cream-300 text-left text-xs uppercase tracking-wide text-ink-500">
             <tr>
               <th className="px-5 py-3">Trip</th>
               <th className="px-5 py-3">Destination</th>
@@ -55,7 +55,7 @@ export default async function AdminTripsPage() {
             ))}
           </tbody>
         </table>
-        {trips.length === 0 && <p className="p-8 text-center text-ink-400">No trips yet.</p>}
+        {trips.length === 0 && <p className="p-8 text-center text-ink-500">No trips yet.</p>}
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ export default async function AdminDestinationsPage() {
           <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-clay-50 text-clay">
             <MapPinned size={22} />
           </span>
-          <h2 className="font-display text-xl font-semibold text-ink">No destinations yet</h2>
+          <h2 className="heading-sm text-xl text-ink">No destinations yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
             Add a place before you add a trip to it, a trip can&apos;t be saved without one.
           </p>
@@ -62,8 +62,8 @@ export default async function AdminDestinationsPage() {
               </div>
 
               <div className="flex flex-1 flex-col p-5">
-                <h2 className="font-display text-lg font-semibold text-ink">{destination.name}</h2>
-                <p className="mt-0.5 text-xs text-ink-400">
+                <h2 className="heading-sm text-lg text-ink">{destination.name}</h2>
+                <p className="mt-0.5 text-xs text-ink-500">
                   {destination.region}, {destination.country} · /{destination.slug}
                 </p>
 

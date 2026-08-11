@@ -46,7 +46,7 @@ export default async function AdminBlogPage() {
           <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-clay-50 text-clay">
             <PenLine size={22} />
           </span>
-          <h2 className="font-display text-xl font-semibold text-ink">Nothing written yet</h2>
+          <h2 className="heading-sm text-xl text-ink">Nothing written yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
             A destination guide or an honest write-up of an escape does more for search than any
             amount of keyword stuffing, and it&apos;s the only thing on this site people forward
@@ -61,7 +61,7 @@ export default async function AdminBlogPage() {
           {/* Table on desktop; stacked cards on phones, where a five-column
               table would either overflow or shrink to nothing. */}
           <table className="hidden w-full text-sm sm:table">
-            <thead className="border-b border-border bg-cream-300/50 text-left text-xs uppercase tracking-wide text-ink-400">
+            <thead className="border-b border-border bg-cream-300 text-left text-xs uppercase tracking-wide text-ink-500">
               <tr>
                 <th className="px-5 py-3">Post</th>
                 <th className="px-5 py-3">Status</th>
@@ -75,7 +75,7 @@ export default async function AdminBlogPage() {
                 <tr key={post.id} className="border-b border-border last:border-0">
                   <td className="px-5 py-4">
                     <span className="block font-medium text-ink">{post.title}</span>
-                    <span className="mt-0.5 block text-xs text-ink-400">
+                    <span className="mt-0.5 block text-xs text-ink-500">
                       /blog/{post.slug}
                       {post.destination?.name ? ` · ${post.destination.name}` : ""}
                     </span>
@@ -141,7 +141,7 @@ export default async function AdminBlogPage() {
                   {post.is_featured && <Badge tone="gold">Pinned</Badge>}
                 </div>
                 <p className="font-medium text-ink">{post.title}</p>
-                <p className="mt-0.5 text-xs text-ink-400">
+                <p className="mt-0.5 text-xs text-ink-500">
                   {post.published_at ? formatDate(post.published_at) : "Not published"} ·{" "}
                   {post.view_count} view{post.view_count === 1 ? "" : "s"} · {post.comment_count}{" "}
                   comment{post.comment_count === 1 ? "" : "s"}

@@ -57,7 +57,7 @@ export function CopyEmails({ emails }: { emails: string[] }) {
   return (
     <div className="flex flex-col items-end gap-1.5">
       <div className="flex gap-2">
-        <button type="button" onClick={handleCopy} className="btn-outline !px-4 !py-2 text-xs">
+        <button type="button" onClick={handleCopy} className="btn-outline btn-sm">
           {copied ? (
             <>
               <Check size={13} /> Copied
@@ -68,7 +68,7 @@ export function CopyEmails({ emails }: { emails: string[] }) {
             </>
           )}
         </button>
-        <button type="button" onClick={handleDownload} className="btn-outline !px-4 !py-2 text-xs">
+        <button type="button" onClick={handleDownload} className="btn-outline btn-sm">
           <Download size={13} /> CSV
         </button>
       </div>

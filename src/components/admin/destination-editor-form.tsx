@@ -103,7 +103,7 @@ export function DestinationEditorForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-5 font-display text-lg font-semibold text-ink">Where it is</h2>
+        <h2 className="mb-5 heading-sm text-lg text-ink">Where it is</h2>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
@@ -128,7 +128,7 @@ export function DestinationEditorForm({
               Web address
             </label>
             <div className="flex items-center gap-1 rounded-xl border border-border px-3.5 focus-within:border-pine">
-              <span className="shrink-0 text-sm text-ink-400">/destinations/</span>
+              <span className="shrink-0 text-sm text-ink-500">/destinations/</span>
               <input
                 id="destination-slug"
                 className="w-full bg-transparent py-2.5 text-sm focus:outline-none"
@@ -176,7 +176,7 @@ export function DestinationEditorForm({
 
           <div className="sm:col-span-2">
             <label htmlFor="destination-tagline" className={LABEL}>
-              Tagline <span className="font-normal text-ink-400">(optional)</span>
+              Tagline <span className="font-normal text-ink-500">(optional)</span>
             </label>
             <input
               id="destination-tagline"
@@ -186,14 +186,14 @@ export function DestinationEditorForm({
               placeholder="Lake palaces, old-city lanes and the best sunsets in Rajasthan."
               maxLength={200}
             />
-            <p className="mt-1.5 text-xs text-ink-400">
+            <p className="mt-1.5 text-xs text-ink-500">
               One line under the name on the destination card.
             </p>
           </div>
 
           <div className="sm:col-span-2">
             <label htmlFor="destination-best-time" className={LABEL}>
-              Best time to visit <span className="font-normal text-ink-400">(optional)</span>
+              Best time to visit <span className="font-normal text-ink-500">(optional)</span>
             </label>
             <input
               id="destination-best-time"
@@ -216,9 +216,9 @@ export function DestinationEditorForm({
       </section>
 
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-5 font-display text-lg font-semibold text-ink">Description</h2>
+        <h2 className="mb-5 heading-sm text-lg text-ink">Description</h2>
         <label htmlFor="destination-description" className={LABEL}>
-          About this place <span className="font-normal text-ink-400">(optional)</span>
+          About this place <span className="font-normal text-ink-500">(optional)</span>
         </label>
         <textarea
           id="destination-description"
@@ -231,7 +231,7 @@ export function DestinationEditorForm({
       </section>
 
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-5 font-display text-lg font-semibold text-ink">Photography</h2>
+        <h2 className="mb-5 heading-sm text-lg text-ink">Photography</h2>
         <div className="space-y-5">
           <ImageUploader
             label="Hero image"
@@ -250,7 +250,7 @@ export function DestinationEditorForm({
       </section>
 
       {isEdit && tripCount > 0 && (
-        <p className="rounded-xl bg-cream-300/70 px-4 py-3 text-sm text-ink-500">
+        <p className="rounded-xl bg-cream-300 px-4 py-3 text-sm text-ink-500">
           {tripCount} trip{tripCount === 1 ? "" : "s"} currently point here. Editing this
           destination updates every one of them.
         </p>

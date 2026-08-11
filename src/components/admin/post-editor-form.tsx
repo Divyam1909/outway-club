@@ -144,7 +144,7 @@ export function PostEditorForm({
 
           <div>
             <label htmlFor="post-subtitle" className={LABEL}>
-              Standfirst <span className="font-normal text-ink-400">(optional)</span>
+              Standfirst <span className="font-normal text-ink-500">(optional)</span>
             </label>
             <input
               id="post-subtitle"
@@ -162,7 +162,7 @@ export function PostEditorForm({
                 Web address
               </label>
               <div className="flex items-center gap-1 rounded-xl border border-border px-3.5 focus-within:border-pine">
-                <span className="shrink-0 text-sm text-ink-400">/blog/</span>
+                <span className="shrink-0 text-sm text-ink-500">/blog/</span>
                 <input
                   id="post-slug"
                   className="w-full bg-transparent py-2.5 text-sm focus:outline-none"
@@ -177,7 +177,7 @@ export function PostEditorForm({
             </div>
             <div>
               <label htmlFor="post-tags" className={LABEL}>
-                Topics <span className="font-normal text-ink-400">(comma separated, max 8)</span>
+                Topics <span className="font-normal text-ink-500">(comma separated, max 8)</span>
               </label>
               <input
                 id="post-tags"
@@ -206,8 +206,8 @@ export function PostEditorForm({
       {/* --- Body ----------------------------------------------------------- */}
       <section>
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold text-ink">The article</h2>
-          <p className="text-xs text-ink-400">
+          <h2 className="heading-sm text-lg text-ink">The article</h2>
+          <p className="text-xs text-ink-500">
             Styled exactly as readers will see it
           </p>
         </div>
@@ -216,7 +216,7 @@ export function PostEditorForm({
 
       {/* --- Cover ---------------------------------------------------------- */}
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-5 font-display text-lg font-semibold text-ink">Cover photo</h2>
+        <h2 className="mb-5 heading-sm text-lg text-ink">Cover photo</h2>
         <ImageUploader
           label="Cover image"
           hint="Sits above the article, on the journal grid and in every link preview. Landscape, at least 1600px wide."
@@ -226,7 +226,7 @@ export function PostEditorForm({
         />
         <div className="mt-4">
           <label htmlFor="post-cover-caption" className={LABEL}>
-            Photo caption <span className="font-normal text-ink-400">(optional)</span>
+            Photo caption <span className="font-normal text-ink-500">(optional)</span>
           </label>
           <input
             id="post-cover-caption"
@@ -241,7 +241,7 @@ export function PostEditorForm({
 
       {/* --- Attribution & links -------------------------------------------- */}
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-5 font-display text-lg font-semibold text-ink">Byline &amp; links</h2>
+        <h2 className="mb-5 heading-sm text-lg text-ink">Byline &amp; links</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="post-author" className={LABEL}>
@@ -257,7 +257,7 @@ export function PostEditorForm({
           </div>
           <div>
             <label htmlFor="post-author-role" className={LABEL}>
-              Author role <span className="font-normal text-ink-400">(optional)</span>
+              Author role <span className="font-normal text-ink-500">(optional)</span>
             </label>
             <input
               id="post-author-role"
@@ -269,7 +269,7 @@ export function PostEditorForm({
           </div>
           <div>
             <label htmlFor="post-destination" className={LABEL}>
-              About a destination <span className="font-normal text-ink-400">(optional)</span>
+              About a destination <span className="font-normal text-ink-500">(optional)</span>
             </label>
             <select
               id="post-destination"
@@ -287,7 +287,7 @@ export function PostEditorForm({
           </div>
           <div>
             <label htmlFor="post-trip" className={LABEL}>
-              About a trip <span className="font-normal text-ink-400">(optional)</span>
+              About a trip <span className="font-normal text-ink-500">(optional)</span>
             </label>
             <select
               id="post-trip"
@@ -302,7 +302,7 @@ export function PostEditorForm({
                 </option>
               ))}
             </select>
-            <p className="mt-1.5 text-xs text-ink-400">
+            <p className="mt-1.5 text-xs text-ink-500">
               Adds a &ldquo;see the trip&rdquo; card at the end of the article.
             </p>
           </div>
@@ -320,7 +320,7 @@ export function PostEditorForm({
 
       {/* --- Search appearance ---------------------------------------------- */}
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-1.5 font-display text-lg font-semibold text-ink">Search appearance</h2>
+        <h2 className="mb-1.5 heading-sm text-lg text-ink">Search appearance</h2>
         <p className="mb-5 text-sm text-ink-500">
           Leave these blank and the title and summary below are used instead.
         </p>
@@ -339,7 +339,7 @@ export function PostEditorForm({
               onChange={(event) => setExcerpt(event.target.value)}
               placeholder="Shown on the journal grid. If you leave it blank we'll use the opening of the article."
             />
-            <p className="mt-1.5 text-xs text-ink-400">{excerpt.length} / 320</p>
+            <p className="mt-1.5 text-xs text-ink-500">{excerpt.length} / 320</p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -354,7 +354,7 @@ export function PostEditorForm({
                 value={seoTitle}
                 onChange={(event) => setSeoTitle(event.target.value)}
               />
-              <p className="mt-1.5 text-xs text-ink-400">{seoTitle.length} / 70</p>
+              <p className="mt-1.5 text-xs text-ink-500">{seoTitle.length} / 70</p>
             </div>
             <div>
               <label htmlFor="post-seo-description" className={LABEL}>
@@ -367,13 +367,13 @@ export function PostEditorForm({
                 value={seoDescription}
                 onChange={(event) => setSeoDescription(event.target.value)}
               />
-              <p className="mt-1.5 text-xs text-ink-400">{seoDescription.length} / 180</p>
+              <p className="mt-1.5 text-xs text-ink-500">{seoDescription.length} / 180</p>
             </div>
           </div>
 
           {/* Live preview of the Google result. */}
-          <div className="rounded-xl border border-border bg-cream-200/60 p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-400">
+          <div className="rounded-xl border border-border bg-cream-300 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-500">
               How this looks in search
             </p>
             <p className="truncate text-xs text-ink-500">outwayclub.com › blog › {slug || "…"}</p>
@@ -394,7 +394,7 @@ export function PostEditorForm({
       )}
 
       {/* --- Actions --------------------------------------------------------- */}
-      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center gap-3 border-t border-border bg-cream-300/95 px-1 py-4 backdrop-blur-sm">
+      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center gap-3 border-t border-border bg-cream-300 px-1 py-4 backdrop-blur-sm">
         <button
           type="button"
           onClick={() => save("published")}

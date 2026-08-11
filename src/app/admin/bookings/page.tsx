@@ -43,7 +43,7 @@ export default async function AdminBookingsPage() {
 
       {bookings.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-white/50 p-12 text-center">
-          <p className="font-display text-lg font-semibold text-ink">No bookings yet</p>
+          <p className="heading-sm text-lg text-ink">No bookings yet</p>
           <p className="mt-1 text-sm text-ink-500">
             Every booking will land here with its full traveller list and payment reference.
           </p>
@@ -54,7 +54,7 @@ export default async function AdminBookingsPage() {
           <div className="hidden overflow-x-auto rounded-2xl border border-border bg-white md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">All bookings, newest first</caption>
-              <thead className="border-b border-border bg-cream-300/50 text-left text-xs uppercase tracking-wide text-ink-400">
+              <thead className="border-b border-border bg-cream-300 text-left text-xs uppercase tracking-wide text-ink-500">
                 <tr>
                   <th scope="col" className="px-5 py-3 font-semibold">Ref</th>
                   <th scope="col" className="px-5 py-3 font-semibold">Booked</th>
@@ -68,7 +68,7 @@ export default async function AdminBookingsPage() {
               </thead>
               <tbody>
                 {bookings.map((booking) => (
-                  <tr key={booking.id} className="border-b border-border last:border-0 hover:bg-cream-300/30">
+                  <tr key={booking.id} className="border-b border-border last:border-0 hover:bg-cream-300">
                     <td className="whitespace-nowrap px-5 py-4 font-mono text-xs uppercase text-ink-500">
                       {booking.id.slice(0, 8)}
                     </td>
@@ -78,7 +78,7 @@ export default async function AdminBookingsPage() {
                     <td className="px-5 py-4">
                       <span className="block font-medium text-ink">{booking.trip?.title ?? "N/A"}</span>
                       {booking.departure && (
-                        <span className="block text-xs text-ink-400">
+                        <span className="block text-xs text-ink-500">
                           {formatDateRange(booking.departure.start_date, booking.departure.end_date)}
                         </span>
                       )}
@@ -122,11 +122,11 @@ export default async function AdminBookingsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-medium text-ink">{booking.trip?.title ?? "N/A"}</p>
-                      <p className="mt-0.5 font-mono text-xs uppercase text-ink-400">
+                      <p className="mt-0.5 font-mono text-xs uppercase text-ink-500">
                         {booking.id.slice(0, 8)} · {formatDate(booking.created_at)}
                       </p>
                     </div>
-                    <span className="shrink-0 font-display text-base font-semibold text-ink">
+                    <span className="shrink-0 heading-sm text-base text-ink">
                       {formatINR(booking.total_amount)}
                     </span>
                   </div>
@@ -137,7 +137,7 @@ export default async function AdminBookingsPage() {
                     <Badge tone={PAYMENT_TONE[booking.payment_status] ?? "ink"}>
                       {booking.payment_status.replace("_", " ")}
                     </Badge>
-                    <span className="text-xs text-ink-400">{booking.num_travelers} pax</span>
+                    <span className="text-xs text-ink-500">{booking.num_travelers} pax</span>
                   </div>
                 </Link>
               </li>

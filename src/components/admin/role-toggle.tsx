@@ -64,7 +64,7 @@ export function RoleToggle({
         type="button"
         onClick={handleToggle}
         disabled={loading}
-        className="btn-outline !px-3 !py-1.5 text-xs"
+        className="btn-outline btn-sm"
       >
         {role === "admin" ? (
           <>

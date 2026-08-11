@@ -52,7 +52,7 @@ export default function AdminError({
       </div>
 
       {error.digest && (
-        <p className="mt-6 text-xs text-ink-400">
+        <p className="mt-6 text-xs text-ink-500">
           Reference:{" "}
           <code className="rounded bg-cream-300 px-1.5 py-0.5 font-mono text-[11px]">
             {error.digest}

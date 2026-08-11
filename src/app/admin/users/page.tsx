@@ -24,7 +24,7 @@ export default async function AdminUsersPage() {
 
       {profiles.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-white/50 p-12 text-center">
-          <p className="font-display text-lg font-semibold text-ink">No accounts yet</p>
+          <p className="heading-sm text-lg text-ink">No accounts yet</p>
           <p className="mt-1 text-sm text-ink-500">
             Everyone who signs up will appear here.
           </p>
@@ -42,7 +42,7 @@ export default async function AdminUsersPage() {
               >
                 <span
                   aria-hidden="true"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pine-50 font-display text-base font-semibold text-pine"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pine-50 heading-sm text-base text-pine"
                 >
                   {initials(name)}
                 </span>
@@ -68,7 +68,7 @@ export default async function AdminUsersPage() {
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-ink-400">
+                  <p className="mt-1 text-xs text-ink-500">
                     Joined {formatDate(profile.created_at)} ·{" "}
                     {profile.booking_count} booking{profile.booking_count === 1 ? "" : "s"}
                   </p>

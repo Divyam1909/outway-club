@@ -31,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const stats = await getAdminStats();
 
   return (
-    <div className="min-h-full bg-cream-300/40 py-8 sm:py-10">
+    <div className="min-h-full bg-cream-300 py-8 sm:py-10">
       <Container>
         <nav aria-label="Admin sections" className="mb-8 -mx-1 overflow-x-auto pb-1 no-scrollbar">
           <ul className="flex w-max items-center gap-2 px-1">

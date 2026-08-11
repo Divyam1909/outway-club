@@ -36,10 +36,10 @@ export default async function AdminBlogCommentsPage() {
 
       {ordered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center">
-          <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-cream-300 text-ink-400">
+          <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-cream-300 text-ink-500">
             <MessageSquare size={22} />
           </span>
-          <h2 className="font-display text-xl font-semibold text-ink">No comments yet</h2>
+          <h2 className="heading-sm text-xl text-ink">No comments yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
             Readers can comment on any published post without an account. They&apos;ll appear here
             first.
@@ -65,7 +65,7 @@ export default async function AdminBlogCommentsPage() {
                     )}
                   </div>
 
-                  <p className="mt-1.5 text-xs text-ink-400">
+                  <p className="mt-1.5 text-xs text-ink-500">
                     {formatDate(comment.created_at)}
                     {comment.author_email && (
                       <>

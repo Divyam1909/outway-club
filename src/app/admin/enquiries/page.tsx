@@ -27,7 +27,7 @@ export default async function AdminEnquiriesPage() {
 
       {enquiries.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-white/50 p-12 text-center">
-          <p className="font-display text-lg font-semibold text-ink">No enquiries yet</p>
+          <p className="heading-sm text-lg text-ink">No enquiries yet</p>
           <p className="mt-1 text-sm text-ink-500">
             Messages from the contact form land here, and a copy goes to your inbox.
           </p>
@@ -44,7 +44,7 @@ export default async function AdminEnquiriesPage() {
                       {enquiry.status}
                     </Badge>
                     {enquiry.trip && (
-                      <span className="text-xs text-ink-400">re: {enquiry.trip.title}</span>
+                      <span className="text-xs text-ink-500">re: {enquiry.trip.title}</span>
                     )}
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -66,12 +66,12 @@ export default async function AdminEnquiriesPage() {
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
-                  <span className="text-xs text-ink-400">{formatDate(enquiry.created_at)}</span>
+                  <span className="text-xs text-ink-500">{formatDate(enquiry.created_at)}</span>
                   <EnquiryStatus enquiryId={enquiry.id} status={enquiry.status} />
                 </div>
               </div>
 
-              <p className="mt-4 whitespace-pre-line rounded-xl bg-cream-300/60 p-4 text-sm leading-relaxed text-ink-700">
+              <p className="mt-4 whitespace-pre-line rounded-xl bg-cream-300 p-4 text-sm leading-relaxed text-ink-700">
                 {enquiry.message}
               </p>
             </li>

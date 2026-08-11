@@ -73,7 +73,7 @@ export function ReviewModeration({ reviewId, isApproved }: { reviewId: string; i
             type="button"
             onClick={() => setApproval(false)}
             disabled={loading}
-            className="btn-outline !px-3 !py-1.5 text-xs"
+            className="btn-outline btn-sm"
           >
             <EyeOff size={13} /> Unpublish
           </button>
@@ -82,7 +82,7 @@ export function ReviewModeration({ reviewId, isApproved }: { reviewId: string; i
             type="button"
             onClick={() => setApproval(true)}
             disabled={loading}
-            className="btn-primary !px-3 !py-1.5 text-xs"
+            className="btn-primary btn-sm"
           >
             <Check size={13} /> Publish
           </button>
@@ -92,7 +92,7 @@ export function ReviewModeration({ reviewId, isApproved }: { reviewId: string; i
           onClick={handleDelete}
           disabled={loading}
           aria-label="Delete review"
-          className="btn-outline !px-2.5 !py-1.5 text-xs text-clay hover:border-clay hover:text-clay-600"
+          className="btn-outline btn-sm text-clay hover:border-clay hover:text-clay-600"
         >
           <Trash2 size={13} />
         </button>

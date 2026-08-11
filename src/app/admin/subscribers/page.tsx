@@ -52,7 +52,7 @@ export default async function AdminSubscribersPage() {
 
       {subscribers.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-white/50 p-12 text-center">
-          <p className="font-display text-lg font-semibold text-ink">Nobody on the list yet</p>
+          <p className="heading-sm text-lg text-ink">Nobody on the list yet</p>
           <p className="mt-1 text-sm text-ink-500">
             Signups from the footer and the upcoming-escapes page collect here.
           </p>
@@ -61,7 +61,7 @@ export default async function AdminSubscribersPage() {
         <div className="overflow-x-auto rounded-2xl border border-border bg-white">
           <table className="w-full text-sm">
             <caption className="sr-only">Waitlist subscribers, newest first</caption>
-            <thead className="border-b border-border bg-cream-300/50 text-left text-xs uppercase tracking-wide text-ink-400">
+            <thead className="border-b border-border bg-cream-300 text-left text-xs uppercase tracking-wide text-ink-500">
               <tr>
                 <th scope="col" className="px-5 py-3 font-semibold">Email</th>
                 <th scope="col" className="px-5 py-3 font-semibold">Signed up via</th>
@@ -79,7 +79,7 @@ export default async function AdminSubscribersPage() {
                       {subscriber.email}
                     </a>
                     {subscriber.name && (
-                      <span className="ml-2 text-xs text-ink-400">{subscriber.name}</span>
+                      <span className="ml-2 text-xs text-ink-500">{subscriber.name}</span>
                     )}
                   </td>
                   <td className="px-5 py-3.5">

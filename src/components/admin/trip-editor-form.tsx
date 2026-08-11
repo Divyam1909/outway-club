@@ -321,7 +321,7 @@ export function TripEditorForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-10">
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-5 font-display text-lg font-semibold text-ink">Basics</h2>
+        <h2 className="mb-5 heading-sm text-lg text-ink">Basics</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className={LABEL}>Trip title</label>
@@ -446,7 +446,7 @@ export function TripEditorForm({
               value={editionNumber}
               onChange={(e) => setEditionNumber(e.target.value === "" ? "" : Number(e.target.value))}
             />
-            <p className="mt-1.5 text-xs text-ink-400">
+            <p className="mt-1.5 text-xs text-ink-500">
               Renders as the &ldquo;Escape 001&rdquo; badge. Leave blank for an unnumbered trip.
             </p>
           </div>
@@ -463,7 +463,7 @@ export function TripEditorForm({
               value={spotlightRank}
               onChange={(e) => setSpotlightRank(e.target.value === "" ? "" : Number(e.target.value))}
             />
-            <p className="mt-1.5 text-xs text-ink-400">
+            <p className="mt-1.5 text-xs text-ink-500">
               1 puts this trip in the homepage hero. Blank keeps it catalogue-only.
             </p>
           </div>
@@ -471,7 +471,7 @@ export function TripEditorForm({
       </section>
 
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-5 font-display text-lg font-semibold text-ink">Content</h2>
+        <h2 className="mb-5 heading-sm text-lg text-ink">Content</h2>
         <div className="space-y-4">
           <div>
             <label className={LABEL}>Short description (card &amp; hero subtitle)</label>
@@ -517,8 +517,8 @@ export function TripEditorForm({
 
       <section className="rounded-2xl border border-border bg-white p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink">Day-by-day itinerary</h2>
-          <button type="button" onClick={addDay} className="btn-outline !px-3 !py-1.5 text-xs">
+          <h2 className="heading-sm text-lg text-ink">Day-by-day itinerary</h2>
+          <button type="button" onClick={addDay} className="btn-outline btn-sm">
             <Plus size={14} /> Add day
           </button>
         </div>
@@ -572,7 +572,7 @@ export function TripEditorForm({
               </div>
             </div>
           ))}
-          {days.length === 0 && <p className="text-sm text-ink-400">No days added yet.</p>}
+          {days.length === 0 && <p className="text-sm text-ink-500">No days added yet.</p>}
         </div>
       </section>
 
@@ -580,10 +580,10 @@ export function TripEditorForm({
         <section className="rounded-2xl border border-border bg-white p-6">
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <h2 className="font-display text-lg font-semibold text-ink">Departures</h2>
-              <p className="text-xs text-ink-400">Saving replaces the full departure list below.</p>
+              <h2 className="heading-sm text-lg text-ink">Departures</h2>
+              <p className="text-xs text-ink-500">Saving replaces the full departure list below.</p>
             </div>
-            <button type="button" onClick={addDeparture} className="btn-outline !px-3 !py-1.5 text-xs">
+            <button type="button" onClick={addDeparture} className="btn-outline btn-sm">
               <Plus size={14} /> Add departure
             </button>
           </div>
@@ -607,13 +607,13 @@ export function TripEditorForm({
                   <input className={INPUT} value={departure.price_override} onChange={(e) => updateDeparture(departure.id, { price_override: e.target.value })} />
                 </div>
                 <div className="flex items-end">
-                  <button type="button" onClick={() => removeDeparture(departure.id)} className="btn-outline w-full !py-2.5 text-clay">
+                  <button type="button" onClick={() => removeDeparture(departure.id)} className="btn-outline btn-sm w-full text-clay">
                     <Trash2 size={14} /> Remove
                   </button>
                 </div>
               </div>
             ))}
-            {departures.length === 0 && <p className="text-sm text-ink-400">No departures added yet.</p>}
+            {departures.length === 0 && <p className="text-sm text-ink-500">No departures added yet.</p>}
           </div>
         </section>
       )}
