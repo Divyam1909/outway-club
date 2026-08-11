@@ -39,9 +39,9 @@ export function PostCard({ post, featured = false }: { post: BlogPost; featured?
       </Link>
 
       <div className={clsx("flex flex-1 flex-col", featured ? "p-7 sm:p-9" : "p-6")}>
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-400">
+        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-500">
           {post.destination?.name && (
-            <span className="font-semibold uppercase tracking-[0.14em] text-clay">
+            <span className="font-semibold uppercase tracking-[0.18em] text-clay">
               {post.destination.name}
             </span>
           )}
@@ -77,7 +77,7 @@ export function PostCard({ post, featured = false }: { post: BlogPost; featured?
         </p>
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          <span className="text-xs font-medium text-ink-400">By {post.author_name}</span>
+          <span className="text-xs font-medium text-ink-500">By {post.author_name}</span>
           {post.tags.length > 0 && (
             <span className="flex flex-wrap gap-1.5">
               {post.tags.slice(0, featured ? 4 : 2).map((tag) => (

@@ -75,7 +75,7 @@ export function CommentForm({
     return (
       <div className="rounded-2xl border border-pine-100 bg-pine-50 p-7 text-center">
         <CheckCircle2 className="mx-auto mb-3 text-pine" size={30} />
-        <h3 className="font-display text-xl font-semibold text-pine-600">Thanks for reading properly.</h3>
+        <h3 className="heading-sm text-xl text-pine-600">Thanks for reading properly.</h3>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-pine-600/85">
           Your comment is with us. We read every one before it goes up (usually within a day) and
           we publish it as you wrote it.
@@ -86,7 +86,7 @@ export function CommentForm({
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-white p-6 sm:p-7">
-      <h3 className="font-display text-xl font-semibold text-ink">Leave a comment</h3>
+      <h3 className="heading-sm text-xl text-ink">Leave a comment</h3>
       <p className="mt-1.5 text-sm text-ink-500">
         No account needed. Comments are moderated for spam and abuse only.
       </p>
@@ -106,7 +106,7 @@ export function CommentForm({
 
       <fieldset className="mt-6">
         <legend className="field-label">
-          Rate this piece <span className="font-normal text-ink-400">(optional)</span>
+          Rate this piece <span className="font-normal text-ink-500">(optional)</span>
         </legend>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-0.5" onMouseLeave={() => setHovered(0)}>
@@ -124,7 +124,7 @@ export function CommentForm({
                   size={26}
                   className={clsx(
                     "transition-colors",
-                    value <= shown ? "fill-gold text-gold" : "fill-transparent text-ink-300"
+                    value <= shown ? "fill-gold text-gold" : "fill-transparent text-ink-200"
                   )}
                 />
               </button>
@@ -164,7 +164,7 @@ export function CommentForm({
             className="field"
             placeholder="you@email.com"
           />
-          <p className="mt-1.5 text-xs text-ink-400">Never published. Only used if we reply.</p>
+          <p className="mt-1.5 text-xs text-ink-500">Never published. Only used if we reply.</p>
         </div>
       </div>
 
@@ -183,7 +183,7 @@ export function CommentForm({
           className="field"
           placeholder="Been to this place? Disagree with something here? Say so, we'd rather know."
         />
-        <p className="mt-1.5 text-xs text-ink-400">{body.length} / 3000</p>
+        <p className="mt-1.5 text-xs text-ink-500">{body.length} / 3000</p>
       </div>
 
       {error && (
@@ -192,7 +192,7 @@ export function CommentForm({
         </p>
       )}
 
-      <button type="submit" disabled={status === "loading"} className="btn-accent mt-5 w-full py-3 sm:w-auto sm:px-8">
+      <button type="submit" disabled={status === "loading"} className="btn-primary mt-5 w-full sm:w-auto sm:px-8">
         {status === "loading" ? "Posting…" : "Post comment"}
       </button>
     </form>

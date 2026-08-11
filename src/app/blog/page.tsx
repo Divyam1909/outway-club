@@ -6,6 +6,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { PostCard } from "@/components/blog/post-card";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getFeaturedPost, getPostTags, getPublishedPosts } from "@/lib/blog";
 import { site } from "@/config/site";
 
@@ -50,11 +51,11 @@ export default async function BlogPage({
         ]}
       />
 
-      <section className="border-b border-border bg-cream-300/40 py-16 sm:py-20">
+      <section className="border-b border-border bg-cream-300 section">
         <Container className="max-w-3xl text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-clay">
+          <Eyebrow className="mb-3">
             The Outway Journal
-          </p>
+          </Eyebrow>
           <h1 className="font-display text-4xl font-semibold leading-tight text-ink sm:text-5xl">
             Field notes from the road
           </h1>
@@ -142,7 +143,7 @@ export default async function BlogPage({
       {posts.length === 0 && (
         <section className="pt-14">
           <Container className="max-w-2xl">
-            <div className="rounded-3xl border border-border bg-white p-8 text-center shadow-card sm:p-10">
+            <div className="rounded-2xl border border-border bg-white p-8 text-center shadow-card sm:p-10">
               <span className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-clay-50 text-clay">
                 {tag ? <PenLine size={22} /> : <NotebookPen size={22} />}
               </span>
@@ -154,7 +155,7 @@ export default async function BlogPage({
                   ? "We only tag a post when it genuinely belongs to a topic, so some are still empty."
                   : "We'd rather publish one piece worth your time than fill this page with search-engine filler. Route guides for the escapes we're running are first up."}
               </p>
-              <Link href={tag ? "/blog" : "/trips"} className="btn-accent mt-7">
+              <Link href={tag ? "/blog" : "/trips"} className="btn-primary mt-7">
                 {tag ? "Back to all writing" : "See our escapes"}
               </Link>
             </div>

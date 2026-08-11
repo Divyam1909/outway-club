@@ -35,7 +35,7 @@ export function CommentsSection({
             </span>
             <span>
               <RatingStars rating={averageRating} size={15} />
-              <span className="mt-0.5 block text-xs text-ink-400">
+              <span className="mt-0.5 block text-xs text-ink-500">
                 from {rated.length} reader{rated.length === 1 ? "" : "s"}
               </span>
             </span>
@@ -48,12 +48,12 @@ export function CommentsSection({
           {comments.map((comment) => (
             <li key={comment.id} className="rounded-2xl border border-border bg-white p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pine-50 font-display text-sm font-semibold text-pine">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pine-50 heading-sm text-sm text-pine">
                   {comment.author_name.trim().charAt(0).toUpperCase()}
                 </span>
                 <span className="font-semibold text-ink">{comment.author_name}</span>
                 {comment.rating !== null && <RatingStars rating={comment.rating} size={13} />}
-                <time dateTime={comment.created_at} className="text-xs text-ink-400">
+                <time dateTime={comment.created_at} className="text-xs text-ink-500">
                   {formatDate(comment.created_at)}
                 </time>
               </div>
@@ -64,8 +64,8 @@ export function CommentsSection({
           ))}
         </ul>
       ) : (
-        <div className="mb-10 flex items-start gap-3 rounded-2xl border border-dashed border-border bg-cream-300/40 p-6">
-          <MessageSquare size={20} className="mt-0.5 shrink-0 text-ink-400" />
+        <div className="mb-10 flex items-start gap-3 rounded-2xl border border-dashed border-border bg-cream-300 p-6">
+          <MessageSquare size={20} className="mt-0.5 shrink-0 text-ink-500" />
           <p className="text-sm leading-relaxed text-ink-500">
             No comments on this one yet. If you&apos;ve been to this place, or you think we&apos;ve
             got something wrong, you&apos;d be the first to say so.

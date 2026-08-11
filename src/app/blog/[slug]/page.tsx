@@ -8,6 +8,7 @@ import { PostCard } from "@/components/blog/post-card";
 import { ShareButtons } from "@/components/blog/share-buttons";
 import { CommentsSection } from "@/components/blog/comments-section";
 import { BlogPostJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import {
   getApprovedComments,
   getPostBySlug,
@@ -97,10 +98,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       />
 
       {/* --- Header ---------------------------------------------------------- */}
-      <header className="border-b border-border bg-cream-300/40 py-12 sm:py-16">
+      <header className="border-b border-border bg-cream-300 section-sm">
         {/* Same measure as the article body below, so the headline and the
             first paragraph share one left edge. */}
-        <Container className="max-w-[46rem]">
+        <Container className="max-w-[42rem]">
           <Link
             href="/blog"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors hover:text-pine"
@@ -114,7 +115,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <li key={tag}>
                   <Link
                     href={`/blog?tag=${encodeURIComponent(tag)}`}
-                    className="inline-flex rounded-full bg-clay-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-clay-600 transition-colors hover:bg-clay-100"
+                    className="inline-flex rounded-full bg-clay-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-clay-600 transition-colors hover:bg-clay-100"
                   >
                     {tag}
                   </Link>
@@ -139,7 +140,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <span>
                 <span className="font-medium text-ink">{post.author_name}</span>
                 {post.author_role && (
-                  <span className="block text-xs text-ink-400">{post.author_role}</span>
+                  <span className="block text-xs text-ink-500">{post.author_role}</span>
                 )}
               </span>
             </span>
@@ -163,7 +164,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {post.cover_image && (
         <Container className="max-w-5xl">
           <figure className="-mt-0 pt-8 sm:pt-10">
-            <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-cream-300 sm:rounded-3xl">
+            <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-cream-300">
               <SmartImage
                 src={post.cover_image}
                 alt={post.cover_caption || post.title}
@@ -174,7 +175,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               />
             </div>
             {post.cover_caption && (
-              <figcaption className="mt-3 text-center text-[13px] text-ink-400">
+              <figcaption className="mt-3 text-center text-[13px] text-ink-500">
                 {post.cover_caption}
               </figcaption>
             )}
@@ -183,7 +184,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       )}
 
       {/* --- Body ------------------------------------------------------------ */}
-      <Container className="max-w-[46rem] pt-10 sm:pt-14">
+      <Container className="max-w-[42rem] pt-10 sm:pt-14">
         {/* Sanitised on the server against a tag allowlist before it was
             stored — see src/lib/sanitize-html.ts. */}
         <div
@@ -194,7 +195,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-7">
           <ShareButtons url={url} title={post.title} />
-          <span className="text-xs text-ink-400">
+          <span className="text-xs text-ink-500">
             Last updated {formatDate(post.updated_at)}
           </span>
         </div>
@@ -204,10 +205,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <aside className="mt-10 overflow-hidden rounded-2xl border border-border bg-pine-700 text-cream-100">
             <div className="flex flex-col gap-5 p-7 sm:flex-row sm:items-center sm:justify-between sm:p-8">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+                <Eyebrow tone="dark">
                   Written about a real escape
-                </p>
-                <h2 className="mt-2 font-display text-xl font-semibold sm:text-2xl">
+                </Eyebrow>
+                <h2 className="mt-2 heading-fluid text-xl sm:text-2xl">
                   {post.trip.title}
                 </h2>
               </div>
