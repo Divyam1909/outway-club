@@ -324,6 +324,99 @@ export function enquiryAcknowledgementEmail(data: EnquiryEmailData) {
   };
 }
 
+export interface TripRequestEmailData {
+  requestId: string;
+  name: string;
+  email: string;
+  phone: string;
+  tripTitle: string;
+  dateRange: string | null;
+  numTravelers: number;
+  /** Already-resolved label, e.g. "Delhi NCR" or the free-text city. */
+  origin: string;
+  travelHelp: string;
+  /** Questionnaire answers as [question, answer] label pairs. */
+  answers: [string, string][];
+  dealBreakers?: string | null;
+  notes?: string | null;
+}
+
+export function tripRequestAlertEmail(data: TripRequestEmailData) {
+  return {
+    subject: `Booking request: ${data.tripTitle} · ${data.name} · ${data.numTravelers} traveller${
+      data.numTravelers > 1 ? "s" : ""
+    }`,
+    html: layout({
+      preheader: `${data.name} wants ${data.numTravelers} seat${
+        data.numTravelers > 1 ? "s" : ""
+      } on ${data.tripTitle}, from ${data.origin}.`,
+      heading: "New booking request",
+      body: [
+        detailRows([
+          ["Trip", data.tripTitle],
+          ...(data.dateRange ? ([["Dates", data.dateRange]] as [string, string][]) : []),
+          ["Name", data.name],
+          ["Email", data.email],
+          ["Phone", data.phone],
+          ["Travellers", String(data.numTravelers)],
+          ["Starting from", data.origin],
+          ["Flights / trains", data.travelHelp],
+        ]),
+        paragraph(`<strong style="color:${COLORS.ink};">How they travel</strong>`),
+        detailRows(data.answers),
+        data.dealBreakers
+          ? paragraph(
+              `<strong style="color:${COLORS.ink};">Would ruin it for them:</strong> ${escapeHtml(data.dealBreakers)}`
+            )
+          : "",
+        data.notes
+          ? paragraph(`<strong style="color:${COLORS.ink};">Anything else:</strong> ${escapeHtml(data.notes)}`)
+          : "",
+        paragraph(
+          `Nothing is held and no seat has moved. Reply to this email to confirm the seat and take payment.`
+        ),
+        button(`${site.url}/admin/requests`, "Open in admin"),
+      ].join(""),
+    }),
+  };
+}
+
+export function tripRequestAcknowledgementEmail(data: TripRequestEmailData) {
+  return {
+    subject: `We've got your request: ${data.tripTitle}`,
+    html: layout({
+      preheader: `Nothing is booked yet. We'll come back to you within ${site.responseTime}.`,
+      heading: `Thanks, ${data.name.split(" ")[0] || "traveller"}. We've got it.`,
+      body: [
+        paragraph(
+          `You asked for ${data.numTravelers} seat${
+            data.numTravelers > 1 ? "s" : ""
+          } on <strong style="color:${COLORS.ink};">${escapeHtml(data.tripTitle)}</strong>. Nothing is booked and nothing has been charged yet — this is a request, and a person reads it.`
+        ),
+        detailRows([
+          ["Trip", data.tripTitle],
+          ...(data.dateRange ? ([["Dates", data.dateRange]] as [string, string][]) : []),
+          ["Travellers", String(data.numTravelers)],
+          ["Starting from", data.origin],
+          ["Flights / trains", data.travelHelp],
+        ]),
+        paragraph(
+          `<strong style="color:${COLORS.ink};">What happens next.</strong> We'll write or call within ${site.responseTime} to confirm your seat is free, answer whatever you still want to ask, and only then take payment. If the answers you gave suggest a different departure would suit you better, we'll say so.`
+        ),
+        paragraph(
+          `Timings shown on the itinerary are indicative and can shift with weather, traffic and monument hours. The route and the stays don't.`
+        ),
+        button(`${site.url}/contact`, "Reply or ask us something"),
+        paragraph(
+          `In a hurry? Write to <a href="mailto:${site.email}" style="color:${COLORS.pine};">${site.email}</a>${
+            site.phoneDisplay ? ` or call ${escapeHtml(site.phoneDisplay)}` : ""
+          }.`
+        ),
+      ].join(""),
+    }),
+  };
+}
+
 export function waitlistWelcomeEmail(data: { email: string; name?: string | null }) {
   return {
     subject: `You're on the list: ${site.name}`,

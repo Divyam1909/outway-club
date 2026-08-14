@@ -38,6 +38,18 @@ export default function PrivacyPage() {
           <li>A password, stored only as a salted hash by our authentication provider: we never see it</li>
         </ul>
 
+        <h3>When you send a booking request</h3>
+        <ul>
+          <li>Your name, email address and phone number, and how many of you are travelling</li>
+          <li>The city you are travelling from, and whether you want us to book your flight or train</li>
+          <li>
+            Your answers to the short questionnaire about how you like to travel, including the age
+            band you select. We use these only to place you in a group that suits you, and we do not
+            publish them, sell them or share them with anyone outside Outway Club.
+          </li>
+          <li>Anything you choose to add in the two optional boxes at the end</li>
+        </ul>
+
         <h3>When you make a booking</h3>
         <ul>
           <li>Full name, age and gender for each traveller on the booking</li>
@@ -88,7 +100,9 @@ export default function PrivacyPage() {
             obligation for tax records.
           </li>
           <li>
-            <strong>To reply to enquiries</strong>: your consent, given by writing to us.
+            <strong>To reply to enquiries and booking requests</strong>: your consent, given by
+            writing to us or sending the request, and steps taken at your request before entering a
+            contract.
           </li>
           <li>
             <strong>To email you about a future escape</strong>: your consent, given by subscribing.

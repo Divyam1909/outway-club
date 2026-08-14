@@ -13,6 +13,7 @@ import type {
   Profile,
   Enquiry,
   Subscriber,
+  TripRequest,
 } from "@/lib/types";
 
 const TRIP_COLUMNS = "*, destination:destinations(*)";
@@ -433,6 +434,7 @@ const EMPTY_ADMIN_STATS = {
   cancelledCount: 0,
   customerCount: 0,
   newEnquiryCount: 0,
+  newRequestCount: 0,
   pendingReviewCount: 0,
   subscriberCount: 0,
   seatsSold: 0,
@@ -455,6 +457,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     { data: bookings },
     { count: customerCount },
     { count: newEnquiryCount },
+    { count: newRequestCount },
     { count: pendingReviewCount },
     { count: subscriberCount },
     { data: departures },
@@ -468,6 +471,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     supabase.from("bookings").select("total_amount, refund_amount, payment_status, status, num_travelers"),
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("enquiries").select("*", { count: "exact", head: true }).eq("status", "new"),
+    supabase.from("trip_requests").select("*", { count: "exact", head: true }).eq("status", "new"),
     supabase.from("reviews").select("*", { count: "exact", head: true }).eq("is_approved", false),
     supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
     supabase.from("departures").select("total_seats, seats_booked"),
@@ -492,6 +496,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     cancelledCount: rows.filter((booking) => booking.status === "cancelled").length,
     customerCount: customerCount ?? 0,
     newEnquiryCount: newEnquiryCount ?? 0,
+    newRequestCount: newRequestCount ?? 0,
     pendingReviewCount: pendingReviewCount ?? 0,
     subscriberCount: subscriberCount ?? 0,
     seatsSold: (departures ?? []).reduce((sum, d) => sum + Number(d.seats_booked ?? 0), 0),
@@ -631,6 +636,24 @@ export async function getEnquiriesForAdmin(): Promise<Enquiry[]> {
 
   if (error) throw error;
   return (data as unknown as Enquiry[]) ?? [];
+}
+
+/**
+ * Booking requests from the pre-booking questionnaire, newest first.
+ *
+ * These are leads, not bookings: nothing is held and no seat has moved until
+ * someone confirms one by hand.
+ */
+export async function getTripRequestsForAdmin(): Promise<TripRequest[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("trip_requests")
+    .select("*, trip:trips(title, slug), departure:departures(start_date, end_date)")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data as unknown as TripRequest[]) ?? [];
 }
 
 export async function getSubscribersForAdmin(): Promise<Subscriber[]> {

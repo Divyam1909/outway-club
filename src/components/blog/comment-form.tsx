@@ -3,7 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, Star } from "lucide-react";
 import { clsx } from "clsx";
-import { HONEYPOT_FIELD } from "@/lib/rate-limit";
+import { HONEYPOT_FIELD } from "@/lib/honeypot";
 import { messageFromResponse, networkError } from "@/lib/error-messages";
 
 const RATING_LABELS = ["", "Not for me", "Some of it landed", "Useful", "Really good", "Sending this to a friend"];

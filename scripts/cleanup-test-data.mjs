@@ -37,6 +37,12 @@ await admin.from("enquiries").delete().or(
 
 await admin.from("newsletter_subscribers").delete().like("email", "pw-%@example.com");
 
+// Booking requests from the questionnaire, same rule: fixed test addresses only.
+await admin
+  .from("trip_requests")
+  .delete()
+  .or("email.eq.playwright-request@example.com,email.like.pw-%@example.com");
+
 // Journal posts and destinations the suite creates carry a fixed slug prefix.
 // Comments cascade with their post; anything orphaned is caught by email.
 await admin.from("blog_comments").delete().like("author_email", "pw-%@example.com");
@@ -58,7 +64,12 @@ const { count: posts } = await admin
   .from("blog_posts")
   .select("*", { count: "exact", head: true });
 
+const { count: requests } = await admin
+  .from("trip_requests")
+  .select("*", { count: "exact", head: true });
+
 console.log(`enquiries   ${enquiriesBefore} -> ${enquiriesAfter}`);
+console.log(`requests    ${requests} remaining`);
 console.log(`subscribers ${subscribers} remaining`);
 console.log(`blog posts  ${posts} remaining`);
 console.log("rate limits cleared");

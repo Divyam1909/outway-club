@@ -154,12 +154,12 @@ test.describe("the launch escape", () => {
     await page.goto(`/trips/${TRIP_SLUG}`, { waitUntil: "networkidle" });
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Udaipur");
-    await expect(page.getByText(/15\s*to\s*17 Aug/i).first()).toBeVisible();
-    await expect(page.getByText("₹12,499").first()).toBeVisible();
+    await expect(page.getByText(/15\s*to\s*18 Aug/i).first()).toBeVisible();
+    await expect(page.getByText("₹7,999").and(page.locator(":visible")).first()).toBeVisible();
 
-    // Three itinerary days, each with a heading.
+    // Four itinerary days, each with a heading.
     const timeline = page.locator("ol.border-l > li");
-    await expect(timeline).toHaveCount(3);
+    await expect(timeline).toHaveCount(4);
 
     await expect(page.getByRole("heading", { name: /Full itinerary/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Inclusions, exclusions/i })).toBeVisible();
@@ -171,11 +171,41 @@ test.describe("the launch escape", () => {
     await expect(page.getByText(/don't seed reviews/i)).toBeVisible();
   });
 
-  test("booking CTA sends a signed-out visitor to login with a return path", async ({ page }) => {
+  test("timings carry the subject-to-change footnote", async ({ page }) => {
     await page.goto(`/trips/${TRIP_SLUG}`);
-    await page.getByRole("button", { name: /Book now/i }).click();
-    await page.waitForURL(/\/login\?redirect=/);
-    expect(page.url()).toContain(encodeURIComponent(`/booking/${TRIP_SLUG}`));
+
+    // The seeded itinerary quotes clock times, so the note has to be on the page.
+    await expect(page.getByText(/indicative and subject to change/i).first()).toBeVisible();
+  });
+
+  test("booking CTA opens the questionnaire, and no payment screen", async ({ page, isMobile }) => {
+    await page.goto(`/trips/${TRIP_SLUG}`);
+
+    if (isMobile) {
+      // The fixed bar is the only booking UI below lg, and it slides in on scroll.
+      await page.evaluate(() => window.scrollTo(0, 900));
+      await page.getByRole("button", { name: /^Book now$/ }).click();
+      await page.getByRole("button", { name: /^Continue$/ }).click();
+    } else {
+      await page.getByRole("button", { name: /^Book now$/ }).click();
+    }
+
+    await page.waitForURL(new RegExp(`/booking/${TRIP_SLUG}`));
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/how you travel/i);
+    // Payments are off: nothing on this route may offer to charge anyone.
+    await expect(page.getByRole("button", { name: /^Pay /i })).toHaveCount(0);
+  });
+
+  test("the questionnaire is compulsory before a request can be sent", async ({ page }) => {
+    await page.goto(`/booking/${TRIP_SLUG}`);
+
+    // Step 1 arrives with a date and headcount already chosen, so it passes.
+    await page.getByRole("button", { name: /Continue/ }).click();
+
+    // Step 2 asks where you're starting from — skipping it must not advance.
+    await page.getByRole("button", { name: /Continue/ }).click();
+    await expect(page.getByText(/Tell us which city you're starting from/i)).toBeVisible();
+    await expect(page.getByText(/Step 2 of 5/)).toBeVisible();
   });
 
   test("emits TouristTrip structured data without a fake rating", async ({ page }) => {

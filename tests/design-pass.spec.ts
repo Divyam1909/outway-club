@@ -33,7 +33,9 @@ test("mobile bar opens the date sheet", async ({ page }, info) => {
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("radio").first()).toBeAttached();
-  await expect(dialog.getByRole("button", { name: /Continue to checkout/i })).toBeVisible();
+  // "Continue", not "Continue to checkout": what follows is the pre-booking
+  // questionnaire, and payments are off.
+  await expect(dialog.getByRole("button", { name: /^Continue$/ })).toBeVisible();
 });
 
 test("field focus ring is clay, and fields are 16px", async ({ page }, info) => {

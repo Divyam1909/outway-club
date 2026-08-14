@@ -6,6 +6,14 @@ import { OrderSummary } from "@/components/booking/order-summary";
 import type { Departure, Trip } from "@/lib/types";
 
 /**
+ * PARKED — the Razorpay checkout, kept intact but not routed to.
+ *
+ * While payments are off, /booking/[slug] renders the pre-booking
+ * questionnaire (components/booking/trip-request-form.tsx) and seats are
+ * confirmed by hand. Nothing here is deleted because turning payments back on
+ * should be a routing change, not a rewrite: render this from the booking page
+ * again and the flow returns exactly as it was.
+ *
  * Owns the one piece of state the checkout screen shares: how many people are
  * going. The summary edits it, the form's traveller boxes follow it, and both
  * halves quote the same total — which they couldn't when each read the

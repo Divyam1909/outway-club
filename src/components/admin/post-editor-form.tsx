@@ -8,6 +8,7 @@ import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { messageFromResponse } from "@/lib/error-messages";
 import { slugify } from "@/lib/utils";
+import { site } from "@/config/site";
 import type { BlogPost, Destination, Trip } from "@/lib/types";
 
 const INPUT =
@@ -376,7 +377,7 @@ export function PostEditorForm({
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-500">
               How this looks in search
             </p>
-            <p className="truncate text-xs text-ink-500">outwayclub.com › blog › {slug || "…"}</p>
+            <p className="truncate text-xs text-ink-500">{site.host} › blog › {slug || "…"}</p>
             <p className="mt-0.5 truncate text-[17px] text-[#1a0dab]">
               {seoTitle || title || "Post title"}
             </p>

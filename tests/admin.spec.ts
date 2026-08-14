@@ -47,6 +47,7 @@ test.describe("admin console", () => {
     page.on("pageerror", (error) => failures.push(error.message));
 
     const sections: [string, RegExp][] = [
+      ["/admin/requests", /^Booking requests$/],
       ["/admin/bookings", /^Bookings$/],
       ["/admin/trips", /Trips/],
       ["/admin/destinations", /^Destinations$/],
@@ -109,6 +110,7 @@ test.describe("admin console", () => {
     const nav = page.getByRole("navigation", { name: "Admin sections" });
     for (const label of [
       "Dashboard",
+      "Requests",
       "Bookings",
       "Trips",
       "Destinations",

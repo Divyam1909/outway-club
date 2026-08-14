@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Reveal } from "@/components/ui/reveal";
 import { TripGallery } from "@/components/trips/trip-gallery";
+import { GettingThere } from "@/components/trips/getting-there";
 import { ItineraryTimeline } from "@/components/trips/itinerary-timeline";
 import { InclusionsExclusions } from "@/components/trips/inclusions-exclusions";
+import { PaymentDetails } from "@/components/trips/payment-details";
 import { ReviewsSection } from "@/components/trips/reviews-section";
 import { StayCards } from "@/components/trips/stay-cards";
 import { TripCaptain } from "@/components/trips/trip-captain";
@@ -137,13 +139,13 @@ export default async function TripDetailPage({
             <p className="mt-7 text-lg leading-relaxed text-ink-700">{trip.short_description}</p>
             <p className="mt-4 leading-relaxed text-ink-500">{trip.description}</p>
 
-            {trip.starting_point && (
-              <p className="mt-6 rounded-2xl bg-cream-300 px-5 py-4 text-sm leading-relaxed text-ink-700">
-                <strong className="font-semibold text-ink">Starts and ends at:</strong>{" "}
-                {trip.starting_point}. Book flights or trains that land before midday on the first
-                day and leave after 8pm on the last.
-              </p>
-            )}
+            <div className="mt-7">
+              <GettingThere
+                tripSlug={trip.slug}
+                destinationName={trip.destination.name}
+                startingPoint={trip.starting_point}
+              />
+            </div>
 
             {trip.highlights.length > 0 && (
               <Reveal>
@@ -226,6 +228,8 @@ export default async function TripDetailPage({
               />
             </section>
 
+            <PaymentDetails tripTitle={trip.title} className="mt-12" />
+
             <section className="mt-12 rounded-2xl border border-border bg-white p-6">
               <h2 className="heading-sm flex items-center gap-2 text-lg text-ink">
                 <ShieldCheck size={19} className="text-pine" aria-hidden="true" /> Cancelling, if
@@ -235,7 +239,9 @@ export default async function TripDetailPage({
                 That&apos;s when our suppliers stop refunding us. If <em>we</em> cancel for any
                 reason, you get 100% back, no exceptions.
               </p>
-              <TrustBand className="mt-5" />
+              {/* The payment mechanism is spelled out in full directly above,
+                  so this carries only the refund ladder. */}
+              <TrustBand showPayment={false} className="mt-5" />
             </section>
           </div>
 
@@ -245,20 +251,12 @@ export default async function TripDetailPage({
               yet — and once it moved down it just competed with the fixed bar
               for the same click. MobileBookingBar owns booking below lg. */}
           <div className="hidden lg:block">
-            <BookingWidget
-              trip={trip}
-              departures={trip.departures}
-              isSignedIn={Boolean(currentUser)}
-            />
+            <BookingWidget trip={trip} departures={trip.departures} />
           </div>
         </div>
       </Container>
 
-      <MobileBookingBar
-        trip={trip}
-        departures={trip.departures}
-        isSignedIn={Boolean(currentUser)}
-      />
+      <MobileBookingBar trip={trip} departures={trip.departures} />
 
       {/* Clears the fixed mobile bar so the footer is never overlapped. */}
       <div aria-hidden="true" className="h-20 lg:hidden" />

@@ -43,3 +43,5 @@ next-env.d.ts
 
 # unprocessed source photos
 /raw-images/
+
+.vercel

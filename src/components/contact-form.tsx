@@ -2,7 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { HONEYPOT_FIELD } from "@/lib/rate-limit";
+import { HONEYPOT_FIELD } from "@/lib/honeypot";
 import { messageFromResponse } from "@/lib/error-messages";
 import { site } from "@/config/site";
 

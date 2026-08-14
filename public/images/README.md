@@ -1,8 +1,8 @@
 # Real photography goes here
 
 Drop files in with **exactly** these names and every page picks them up with no
-code change. Generation prompts for each one are in
-[`docs/photography-prompts.md`](../../docs/photography-prompts.md).
+code change. Generation prompts for each one — plus current shot/placeholder
+status — are in [`docs/image-prompts.md`](../../docs/image-prompts.md).
 
 ```
 public/images/

@@ -3,7 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { clsx } from "clsx";
 import { Check } from "lucide-react";
-import { HONEYPOT_FIELD } from "@/lib/rate-limit";
+import { HONEYPOT_FIELD } from "@/lib/honeypot";
 import { messageFromResponse, networkError } from "@/lib/error-messages";
 
 /**

@@ -21,10 +21,19 @@ export const site = {
     "Outway Club runs small-group escapes across India, each one planned end to end, capped tight, and on sale only once every night and transfer is booked.",
 
   url: env("NEXT_PUBLIC_SITE_URL", "http://localhost:3000").replace(/\/$/, ""),
+  /**
+   * Bare hostname, for the places that show a domain rather than link to one —
+   * the search-result preview in the blog editor, print copy, and anywhere a
+   * "https://" would be noise. Derived, so changing NEXT_PUBLIC_SITE_URL moves
+   * it too and no second env var can drift out of sync.
+   */
+  host: env("NEXT_PUBLIC_SITE_URL", "http://localhost:3000")
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, ""),
 
-  email: env("NEXT_PUBLIC_CONTACT_EMAIL", "hello@outwayclub.com"),
+  email: env("NEXT_PUBLIC_CONTACT_EMAIL", "hello@outway.club"),
   /** Where booking/enquiry alerts land. Falls back to the public address. */
-  opsEmail: env("OPS_EMAIL") || env("NEXT_PUBLIC_CONTACT_EMAIL", "hello@outwayclub.com"),
+  opsEmail: env("OPS_EMAIL") || env("NEXT_PUBLIC_CONTACT_EMAIL", "hello@outway.club"),
 
   /** Digits only, with country code, e.g. "919876543210". Empty = hidden. */
   whatsapp: env("NEXT_PUBLIC_WHATSAPP_NUMBER").replace(/[^\d]/g, ""),
@@ -43,7 +52,58 @@ export const site = {
 
   /** Responded-within promise used in copy and auto-replies. Keep honest. */
   responseTime: "one business day",
+
+  /**
+   * Online checkout. False while we confirm seats by hand: "Book now" opens
+   * the pre-booking questionnaire, ops reply, and payment is arranged
+   * directly. Every claim about paying on this site reads from here, so
+   * flipping it back to true is one edit rather than a copy hunt — see
+   * components/trips/trust-band.tsx and components/booking/booking-panel.tsx.
+   */
+  paymentsEnabled: false,
+
+  /**
+   * How people actually pay while checkout is off: UPI or a bank transfer,
+   * then a screenshot on WhatsApp. Published openly on the trip page, which is
+   * how every small operator in this market does it — seeing the account
+   * before you commit is reassurance, not exposure.
+   *
+   * Every field is env-sourced and the block hides itself unless a UPI ID or a
+   * complete bank account is set. A half-filled account number would send
+   * someone's money nowhere, so partial data renders nothing.
+   */
+  bank: {
+    upiId: env("NEXT_PUBLIC_UPI_ID"),
+    accountName: env("NEXT_PUBLIC_BANK_ACCOUNT_NAME"),
+    bankName: env("NEXT_PUBLIC_BANK_NAME"),
+    accountNumber: env("NEXT_PUBLIC_BANK_ACCOUNT_NUMBER"),
+    ifsc: env("NEXT_PUBLIC_BANK_IFSC"),
+  },
 } as const;
+
+/** True when there is at least one complete, usable way to pay. */
+export function hasPaymentDetails(): boolean {
+  const { upiId, accountName, bankName, accountNumber, ifsc } = site.bank;
+  return Boolean(upiId) || Boolean(accountName && bankName && accountNumber && ifsc);
+}
+
+/**
+ * The three lines under the price.
+ *
+ * Reassurance at the exact moment someone is deciding — the same job the
+ * competition does with "Instant Confirmation · Best Price Guaranteed · 1000+
+ * Happy Customers". Ours say only what is true today: a real person replies,
+ * the price has nothing added to it, and we carry the risk if we cancel.
+ *
+ * This is the line to edit as claims become evidenced. "1,000 travellers" is
+ * a fine badge the day the 1,000th traveller comes home; it is a lie the day
+ * before, and this site's whole argument is that we don't do that.
+ */
+export const TRUST_POINTS = [
+  "A person confirms your seat, within one business day",
+  "No booking fee, no card surcharge, nothing added later",
+  "If we cancel, you get 100% back. No exceptions",
+] as const;
 
 export function whatsappLink(message?: string): string | null {
   if (!site.whatsapp) return null;

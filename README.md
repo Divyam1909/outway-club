@@ -1,7 +1,7 @@
 # Outway Club
 
 Small-group travel, one escape at a time. Currently running **Escape 001 —
-Udaipur × Mount Abu, 15–17 August**.
+Udaipur × Mount Abu, 15–18 August**.
 
 Next.js 15 (App Router) · Supabase (Postgres, Auth, Storage) · Razorpay ·
 Resend · Tailwind.
@@ -26,7 +26,7 @@ aren't switched on yet" and emails log a warning instead of sending.
 
 ## Database
 
-Four SQL files, run in order. All are safe to re-run.
+Six SQL files, run in order. All are safe to re-run.
 
 | File | What it does |
 |---|---|
@@ -35,7 +35,9 @@ Four SQL files, run in order. All are safe to re-run.
 | `supabase/migrations/0003_blog.sql` | Journal posts and moderated reader comments, computed post ratings, view counter, editorial image bucket |
 | `supabase/migrations/0004_catalogue.sql` | Edition numbers and spotlight ranking on trips |
 | `supabase/migrations/0005_booking_integrity.sql` | One booking per Razorpay order, atomic seat allocation |
-| `supabase/seed.sql` | Escape 001 content. Deletes the pre-launch demo catalogue. **No seeded reviews and no seeded posts** — both come from real people only. |
+| `supabase/migrations/0006_trip_requests.sql` | `trip_requests`: the pre-booking questionnaire, one column per answer. **Required** — "Book now" writes here while payments are off |
+| `supabase/seed.sql` | Escape 001 content. Deletes the pre-launch demo catalogue. **No seeded reviews** — those come from real travellers only. |
+| `supabase/seed-blog.sql` | The Udaipur destination guide, the Journal's first post. Real editorial copy kept in version control rather than typed into the admin console, so a fresh environment comes up with the same article. Re-runnable: it upserts on `slug` and never overwrites the original `published_at`. |
 
 Paste them into the Supabase SQL editor, or apply them from the command line:
 
@@ -45,7 +47,9 @@ npm run db:migrate
 node scripts/db.mjs supabase/migrations/0003_blog.sql
 node scripts/db.mjs supabase/migrations/0004_catalogue.sql
 node scripts/db.mjs supabase/migrations/0005_booking_integrity.sql
+node scripts/db.mjs supabase/migrations/0006_trip_requests.sql
 npm run db:seed
+node scripts/db.mjs supabase/seed-blog.sql
 ```
 
 `scripts/db.mjs` probes Supabase's direct, session-pooler and
@@ -68,19 +72,42 @@ Every variable is documented in `.env.example`. The ones that matter most:
   **Anything left blank is omitted from the site rather than rendered as a
   placeholder.** It all flows through `src/config/site.ts`.
 
+## Deployment
+
+The site is on **Vercel**, at **https://outway.club** (apex is canonical;
+`www` 301-redirects to it). DNS is managed at **Porkbun**; mailboxes are
+**Zoho Mail**; app-sent email is **Resend**.
+
+Full step-by-step — DNS records, Zoho, Resend, Supabase, the env vars to set in
+Vercel and the order to do it all in — is in
+[`docs/production-setup.md`](docs/production-setup.md). Read that before
+touching DNS.
+
 ## Production email
 
-There are two separate email paths and both need wiring before real signups:
+Three providers touch one domain, and they do **not** overlap:
 
-1. **Transactional email we send** — booking receipts, cancellation
-   confirmations, enquiry alerts, waitlist welcomes. Handled by
-   `src/lib/email.ts` through the Resend API. Set `RESEND_API_KEY` and verify
-   your sending domain in Resend.
+| Path | Provider | What it carries |
+|---|---|---|
+| Mail *to* us | Zoho Mail | `hello@`, `bookings@` and friends — inboxes a person reads |
+| Mail *from* the app | Resend | Booking receipts, cancellation confirmations, enquiry alerts, waitlist welcomes — `src/lib/email.ts` |
+| Auth mail | Supabase → Resend SMTP | Signup confirmation, password reset |
+
+> **Zoho's free plan has no SMTP access** — it can receive but it cannot send
+> on the app's behalf. That is not a limitation to work around; it is the
+> reason the split above exists. Resend does the sending, Zoho does the
+> reading, and they coexist on one domain because Resend's MX record lands on
+> `send.outway.club` rather than the root.
+
+1. **Transactional email we send** — handled by `src/lib/email.ts` through the
+   Resend API. Set `RESEND_API_KEY` and verify `outway.club` in Resend.
+   `EMAIL_FROM` must stay a monitored mailbox: several templates say "reply to
+   this email", so `noreply@` there would break that promise.
 
 2. **Supabase Auth email** — signup confirmation and password reset. These are
    sent *by Supabase*, not by this app, and the built-in sender is rate-limited
    to a handful per hour and explicitly not meant for real users. Point
-   Supabase at the same provider:
+   Supabase at Resend:
 
    Supabase dashboard → **Project Settings → Authentication → SMTP Settings**
 
@@ -90,11 +117,32 @@ There are two separate email paths and both need wiring before real signups:
    | Port | `465` |
    | Username | `resend` |
    | Password | your Resend API key |
-   | Sender email | an address on your verified domain |
+   | Sender email | `noreply@outway.club` |
 
-   Then set the **Site URL** and add `https://yourdomain.com/auth/callback` to
-   **Redirect URLs**, or password-reset and confirmation links will bounce to
-   localhost.
+   Then set the **Site URL** to `https://outway.club` and add
+   `https://outway.club/auth/callback` to **Redirect URLs**, or password-reset
+   and confirmation links will bounce to localhost.
+
+## The itinerary PDF
+
+The customer-facing brochure is generated from the trip's own rows, not drawn
+by hand:
+
+```bash
+npm run itinerary:pdf                            # the spotlight trip
+npm run itinerary:pdf -- udaipur-mount-abu       # a specific slug
+```
+
+It reads `trips`, `itinerary_days` and the next `departure`, and writes
+`docs/<slug>-itinerary.pdf` — cover, overview, one page per day, then
+inclusions and packing list. **Re-run it after any change to a trip's dates,
+price, itinerary or inclusions**, or the PDF you hand people starts quietly
+contradicting the site. The only text in it that isn't from the database is the
+"extending your stay" and per-day callout copy, kept at the top of
+`scripts/build-itinerary-pdf.mjs`.
+
+Printing uses Playwright's bundled Chromium, so it needs `npx playwright
+install chromium` once, and a network connection the first time for the fonts.
 
 ## Brand assets
 
@@ -121,9 +169,10 @@ Replace the file in `assets/brand/` and re-run to change the logo everywhere.
 
 ## Photography
 
-Every image path the site expects is listed in
-[`public/images/README.md`](public/images/README.md), with generation prompts in
-[`docs/photography-prompts.md`](docs/photography-prompts.md).
+Every image path the site expects — trip, destination, Journal and brand — is
+listed with a paragraph generation prompt in
+[`docs/image-prompts.md`](docs/image-prompts.md), which also tracks which files
+are real photos and which are still placeholders.
 
 Branded placeholders ship at each path so nothing is ever broken. Drop real
 photos over them using the same filenames, or upload through the admin trip
@@ -264,7 +313,38 @@ memory, because serverless instances don't share memory. Public forms also
 carry a CSS-hidden honeypot field and a minimum fill time. The limiter fails
 open — a counter outage must never block a paying customer.
 
-**Payment verification.** A Razorpay signature is an HMAC over
+**Booking, while payments are off.** `site.paymentsEnabled` is `false`, and
+that is the switch. "Book now" goes to `/booking/[slug]`, which renders the
+compulsory pre-booking questionnaire
+(`src/components/booking/trip-request-form.tsx`) instead of checkout: five short
+steps covering the date, the headcount, which city they're travelling in from,
+whether we should book their flight or train, and six questions about how they
+travel. It writes a `trip_requests` row and emails ops — it does **not** create
+a booking or move a seat count, because confirming one is a human step. No login
+is required: there is no money involved, and a signup wall in front of an
+enquiry only loses the enquiry. Ops read them at `/admin/requests`, grouped by
+departure with the mix of answers summarised above each group.
+
+The questions live in `src/config/trip-request.ts`, and every question id there
+is a column in `trip_requests` — add one without adding the column and
+submissions fail. The Razorpay checkout is parked, not deleted: render
+`BookingPanel` from the booking page again and the old flow returns.
+
+**How people actually pay.** `site.bank` (five `NEXT_PUBLIC_*` vars, see
+`.env.example`) drives the "Payment details" block on the trip and booking
+pages: UPI ID, bank account, and a screenshot on WhatsApp. It renders nothing
+unless a UPI ID or a *complete* account is configured — a payment section with
+half an account number is worse than none. Because the vars are
+`NEXT_PUBLIC_`, they are inlined at build time: set them in Vercel as well as
+locally, and redeploy after changing them.
+
+**Trust points.** The three lines under the price come from `TRUST_POINTS` in
+`src/config/site.ts`. The rule there is the same one the trust band follows:
+only claims we can evidence. "1,000 travellers" is a fine badge the day the
+thousandth traveller comes home and a lie the day before.
+
+**Payment verification.** *(Dormant while `paymentsEnabled` is false.)* A
+Razorpay signature is an HMAC over
 `order_id|payment_id` — it proves a payment belongs to an order and nothing
 more. It says nothing about *what was bought*, so nothing that determines price
 is taken from the browser. `create-order` stamps the trip, departure, headcount
@@ -288,16 +368,27 @@ dropped.
 
 ## Go-live checklist
 
-- [ ] Run `0001` → `0002` → `0003` → `0004` → `0005` → `seed.sql` against the
-      production project
+- [ ] Run `0001` → `0002` → `0003` → `0004` → `0005` → `0006` → `seed.sql`
+      → `seed-blog.sql` against the production project
 - [ ] Real photography dropped into `public/images` (or uploaded via admin)
 - [ ] Brand assets regenerated if the logo changed (`build-brand-assets.mjs`)
-- [ ] `NEXT_PUBLIC_SITE_URL` set to the real domain, no trailing slash
-- [ ] Razorpay live keys in, and one real booking made end to end
-- [ ] Razorpay webhook created for `payment.captured` pointing at
-      `/api/razorpay/webhook`, with its secret in `RAZORPAY_WEBHOOK_SECRET`
-      — without it, a customer who closes the tab mid-payment pays and gets
-      no booking
+- [ ] `NEXT_PUBLIC_SITE_URL=https://outway.club`, no trailing slash — then
+      **redeploy**, because `NEXT_PUBLIC_` vars are baked in at build time
+- [ ] `outway.club` + `www.outway.club` added in Vercel, www redirecting to the
+      apex, and the DNS records in [`docs/production-setup.md`](docs/production-setup.md)
+      live at Porkbun
+- [ ] Zoho mailboxes reachable — send a mail to `hello@` from an outside
+      address and confirm it lands
+- [ ] `outway.club` verified in Resend, and SPF/DKIM/DMARC checked with a mail
+      to a Gmail address (Show original → all three `PASS`)
+- [ ] One booking request sent end to end, and the ops alert email received
+- [ ] Razorpay items below only apply when `site.paymentsEnabled` is flipped
+      back to `true`:
+  - [ ] Razorpay live keys in, and one real booking made end to end
+  - [ ] Razorpay webhook created for `payment.captured` pointing at
+        `/api/razorpay/webhook`, with its secret in `RAZORPAY_WEBHOOK_SECRET`
+        — without it, a customer who closes the tab mid-payment pays and gets
+        no booking
 - [ ] Resend API key set, **and** Supabase SMTP pointed at it
 - [ ] Supabase Auth Site URL + `/auth/callback` redirect URL configured
 - [ ] `NEXT_PUBLIC_CONTACT_PHONE` and `NEXT_PUBLIC_BUSINESS_ADDRESS` filled in

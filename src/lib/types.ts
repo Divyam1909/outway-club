@@ -183,6 +183,40 @@ export interface Enquiry {
   trip?: Pick<Trip, "title" | "slug"> | null;
 }
 
+export type TripRequestStatus = "new" | "contacted" | "confirmed" | "closed";
+
+/**
+ * A booking request: the two-minute form that replaced checkout while payments
+ * are off. Nothing is held and no seat moves until ops confirm it by hand.
+ * Answer values are the ones defined in src/config/trip-request.ts.
+ */
+export interface TripRequest {
+  id: string;
+  trip_id: string;
+  departure_id: string | null;
+  user_id: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  num_travelers: number;
+  origin_city: string;
+  /** Only set when origin_city is "other". */
+  origin_city_other: string | null;
+  travel_help: string;
+  travel_style: string;
+  pace: string;
+  evenings: string;
+  group_type: string;
+  social_energy: string;
+  age_band: string;
+  deal_breakers: string | null;
+  notes: string | null;
+  status: TripRequestStatus;
+  created_at: string;
+  trip?: Pick<Trip, "title" | "slug"> | null;
+  departure?: Pick<Departure, "start_date" | "end_date"> | null;
+}
+
 export interface Subscriber {
   id: string;
   email: string;

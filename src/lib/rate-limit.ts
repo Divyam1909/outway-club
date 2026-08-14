@@ -5,9 +5,17 @@
  * than in memory, because serverless instances don't share memory — an
  * in-process Map would reset on every cold start and let a bot straight
  * through. The table is only ever touched by the service role.
+ *
+ * Server-only, and enforced: this module reaches the service-role client, so a
+ * client component importing it would drag that module into the browser
+ * bundle. If you want the honeypot field name in a form, import
+ * `@/lib/honeypot` — that's exactly why it's a separate file.
  */
 
+import "server-only";
+
 import { createAdminClient } from "@/lib/supabase/admin";
+import { HONEYPOT_FIELD } from "@/lib/honeypot";
 
 export interface RateLimitRule {
   /** Namespace, so one IP's contact-form budget is separate from its orders. */
@@ -20,6 +28,9 @@ export interface RateLimitRule {
 
 export const RATE_LIMITS = {
   contact: { bucket: "contact", limit: 3, windowSeconds: 600 },
+  // Slightly looser than contact: a group of friends booking from one office
+  // wifi genuinely sends several of these in a row.
+  tripRequest: { bucket: "trip_request", limit: 5, windowSeconds: 900 },
   newsletter: { bucket: "newsletter", limit: 5, windowSeconds: 3600 },
   createOrder: { bucket: "create_order", limit: 8, windowSeconds: 600 },
   // Generous: a real customer hits this once per payment, but a retrying
@@ -94,8 +105,13 @@ export const TOO_MANY_REQUESTS = {
  * Honeypot: a field hidden from humans by CSS. Anything that fills it in is
  * a form-filling bot. We return success to the caller so the bot doesn't
  * learn it was caught, but skip the write.
+ *
+ * The field NAME lives in `@/lib/honeypot`, which imports nothing — the forms
+ * that render it are client components, and importing it from here would pull
+ * the service-role client into the browser bundle. Re-exported so existing
+ * server-side callers keep working.
  */
-export const HONEYPOT_FIELD = "company_website";
+export { HONEYPOT_FIELD };
 
 export function isBotSubmission(body: Record<string, unknown>): boolean {
   const trap = body[HONEYPOT_FIELD];

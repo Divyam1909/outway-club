@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, MessageSquare, Newspaper, Star } from "lucide-react";
+import { ArrowRight, ClipboardList, MessageSquare, Newspaper, Star } from "lucide-react";
 import { getAdminStats, getAllBookingsForAdmin } from "@/lib/data";
 import { formatDate, formatINR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -40,10 +40,19 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      {(stats.newEnquiryCount > 0 ||
+      {(stats.newRequestCount > 0 ||
+        stats.newEnquiryCount > 0 ||
         stats.pendingReviewCount > 0 ||
         stats.pendingCommentCount > 0) && (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {stats.newRequestCount > 0 && (
+            <ActionCard
+              icon={<ClipboardList size={18} />}
+              href="/admin/requests"
+              title={`${stats.newRequestCount} booking request${stats.newRequestCount === 1 ? "" : "s"} waiting`}
+              body="No seat is held until you confirm one of these."
+            />
+          )}
           {stats.newEnquiryCount > 0 && (
             <ActionCard
               icon={<MessageSquare size={18} />}

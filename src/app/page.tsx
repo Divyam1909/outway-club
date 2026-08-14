@@ -205,7 +205,7 @@ export default async function HomePage() {
                       See dates and book <ArrowRight size={18} />
                     </Link>
                     <p className="mt-3 text-xs text-cream-100/55">
-                      Secure checkout via Razorpay · UPI, cards, netbanking
+                      A two-minute form, then we confirm your seat. Nothing charged online.
                     </p>
                   </div>
                 </div>

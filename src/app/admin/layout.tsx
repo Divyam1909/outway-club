@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  ClipboardList,
   Globe2,
   LayoutDashboard,
   MapPinned,
@@ -16,6 +17,7 @@ import { getAdminStats } from "@/lib/data";
 
 const LINKS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, badge: null },
+  { href: "/admin/requests", label: "Requests", icon: ClipboardList, badge: "newRequestCount" },
   { href: "/admin/bookings", label: "Bookings", icon: Receipt, badge: null },
   { href: "/admin/trips", label: "Trips", icon: MapPinned, badge: null },
   { href: "/admin/destinations", label: "Destinations", icon: Globe2, badge: null },

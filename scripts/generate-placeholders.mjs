@@ -7,7 +7,7 @@
  *
  *   node scripts/generate-placeholders.mjs
  *
- * Prompts for the real images are in docs/photography-prompts.md.
+ * Prompts for the real images are in docs/image-prompts.md.
  */
 import fs from "node:fs";
 import path from "node:path";

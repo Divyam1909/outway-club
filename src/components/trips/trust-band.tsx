@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { CreditCard, Landmark, Lock, Smartphone } from "lucide-react";
-import { REFUND_TIERS } from "@/config/site";
+import { CreditCard, Landmark, Lock, ShieldCheck, Smartphone } from "lucide-react";
+import { REFUND_TIERS, site } from "@/config/site";
 
 /**
  * The three things a stranger wants to know at the moment they are about to
@@ -10,7 +10,9 @@ import { REFUND_TIERS } from "@/config/site";
  * The refund figures are read from REFUND_TIERS, which is the same array the
  * cancellation API computes against — this band and the money can't drift.
  * No badge here claims anything we can't evidence: the payment marks name
- * methods Razorpay actually accepts, and nothing else.
+ * methods Razorpay actually accepts, and nothing else — which is also why the
+ * whole row disappears while `site.paymentsEnabled` is false. Nobody can pay
+ * on this site today, so nothing here may imply they can.
  */
 
 const METHODS = [
@@ -29,34 +31,53 @@ function tierTone(percent: number): string {
 export function TrustBand({
   /** `compact` drops the refund ladder — for the sidebar, where space is tight. */
   variant = "full",
+  /**
+   * False where the full Payment details block is already on screen. Saying
+   * "nothing is charged here" twice in one viewport reads as nervousness, not
+   * reassurance.
+   */
+  showPayment = true,
   className,
 }: {
   variant?: "full" | "compact";
+  showPayment?: boolean;
   className?: string;
 }) {
   return (
     <div className={className}>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-700">
-          <Lock size={13} className="text-pine" aria-hidden="true" />
-          Secured by Razorpay
-        </span>
-        <ul className="flex flex-wrap items-center gap-2">
-          {METHODS.map((method) => (
-            <li
-              key={method.label}
-              className="flex items-center gap-1.5 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-ink-700"
-            >
-              <method.icon size={13} className="text-ink-500" aria-hidden="true" />
-              {method.label}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {!showPayment ? null : site.paymentsEnabled ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-700">
+            <Lock size={13} className="text-pine" aria-hidden="true" />
+            Secured by Razorpay
+          </span>
+          <ul className="flex flex-wrap items-center gap-2">
+            {METHODS.map((method) => (
+              <li
+                key={method.label}
+                className="flex items-center gap-1.5 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-ink-700"
+              >
+                <method.icon size={13} className="text-ink-500" aria-hidden="true" />
+                {method.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="flex items-start gap-2 text-xs font-medium leading-relaxed text-ink-700">
+          <ShieldCheck size={14} className="mt-0.5 shrink-0 text-pine" aria-hidden="true" />
+          Nothing is charged on this site. We confirm your seat with you first, then arrange
+          payment directly.
+        </p>
+      )}
 
       {variant === "full" && (
         <>
-          <div className="mt-4 grid grid-cols-3 gap-1.5" role="group" aria-label="Refund ladder">
+          <div
+            className={`grid grid-cols-3 gap-1.5 ${showPayment ? "mt-4" : ""}`}
+            role="group"
+            aria-label="Refund ladder"
+          >
             {REFUND_TIERS.map((tier) => (
               <div
                 key={tier.minDaysBefore}
@@ -84,8 +105,9 @@ export function TrustBand({
       )}
 
       <p className="mt-3 text-xs leading-relaxed text-ink-500">
-        The total above is the total. No convenience fee, no card surcharge, and we never see your
-        card details.
+        {site.paymentsEnabled
+          ? "The total above is the total. No convenience fee, no card surcharge, and we never see your card details."
+          : "The total above is the total. No convenience fee, no booking fee, nothing added later."}
       </p>
     </div>
   );

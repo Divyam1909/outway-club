@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
+import { MessageCircleQuestion } from "lucide-react";
 import { DepartureBoard } from "@/components/trips/departure-board";
-import { TrustBand } from "@/components/trips/trust-band";
+import { EnquiryLinks } from "@/components/trips/enquiry-links";
+import { TrustPoints } from "@/components/trips/trust-points";
 import { Modal } from "@/components/ui/modal";
 import { Stepper } from "@/components/ui/stepper";
 import { formatDateRange, formatINR, seatsLeft } from "@/lib/utils";
@@ -24,11 +27,11 @@ import type { Departure, Trip } from "@/lib/types";
 export function MobileBookingBar({
   trip,
   departures,
-  isSignedIn,
 }: {
   trip: Pick<
     Trip,
     | "slug"
+    | "title"
     | "price_per_person"
     | "discounted_price"
     | "trip_type"
@@ -36,7 +39,6 @@ export function MobileBookingBar({
     | "is_group_trip"
   >;
   departures: Departure[];
-  isSignedIn: boolean;
 }) {
   const router = useRouter();
   const [shown, setShown] = useState(false);
@@ -66,7 +68,7 @@ export function MobileBookingBar({
   const price = selected?.price_override ?? basePrice;
   const remaining = selected ? seatsLeft(selected.total_seats, selected.seats_booked) : null;
   const soldOut = selected?.status === "sold_out" || remaining === 0;
-  const canBookDirectly = trip.trip_type === "group";
+  const isFixedDeparture = trip.trip_type === "group";
 
   const maxTravelers = useMemo(() => {
     if (!trip.is_group_trip || !selected) return trip.group_size_max;
@@ -76,22 +78,17 @@ export function MobileBookingBar({
     );
   }, [selected, trip.group_size_max, trip.is_group_trip]);
 
-  function goToCheckout() {
-    if (!canBookDirectly) {
-      router.push(`/contact?trip=${trip.slug}`);
-      return;
-    }
-
+  /** The two-minute questionnaire, carrying the date and headcount picked here. */
+  function goToRequestForm() {
     const params = new URLSearchParams({ travelers: String(travelers) });
     if (departureId) params.set("departureId", departureId);
 
-    const target = `/booking/${trip.slug}?${params.toString()}`;
-    router.push(isSignedIn ? target : `/login?redirect=${encodeURIComponent(target)}`);
+    router.push(`/booking/${trip.slug}?${params.toString()}`);
   }
 
   // With no dates on sale there is nothing to pick, so the button skips the
   // sheet and goes straight where it would have sent them anyway.
-  const hasChoices = canBookDirectly && departures.length > 0;
+  const hasChoices = departures.length > 0;
 
   return (
     <>
@@ -124,15 +121,30 @@ export function MobileBookingBar({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => (hasChoices ? setSheetOpen(true) : goToCheckout())}
-            disabled={soldOut}
-            tabIndex={shown ? 0 : -1}
-            className="btn-accent shrink-0"
-          >
-            {soldOut ? "Sold out" : canBookDirectly ? "Book now" : "Enquire"}
-          </button>
+          {/* Two actions, same size. The enquiry route can't be a footnote
+              here either — on a phone this bar is the whole of the booking
+              UI, so "I just want to ask something" has to be one tap from it. */}
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href={`/contact?trip=${trip.slug}`}
+              tabIndex={shown ? 0 : -1}
+              aria-label="Enquire about this trip"
+              className="btn-outline shrink-0 px-4"
+            >
+              <MessageCircleQuestion size={16} aria-hidden="true" />
+              <span className="sr-only sm:not-sr-only">Enquire</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => (hasChoices ? setSheetOpen(true) : goToRequestForm())}
+              disabled={soldOut}
+              tabIndex={shown ? 0 : -1}
+              className="btn-accent shrink-0 px-5"
+            >
+              {soldOut ? "Sold out" : isFixedDeparture ? "Book now" : "Request"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -182,11 +194,23 @@ export function MobileBookingBar({
           </output>
         </div>
 
-        <button type="button" onClick={goToCheckout} className="btn-accent btn-lg mt-5 w-full">
-          Continue to checkout
+        <TrustPoints align="start" className="mt-4" />
+
+        <button type="button" onClick={goToRequestForm} className="btn-accent btn-lg mt-5 w-full">
+          Continue
         </button>
 
-        <TrustBand variant="compact" className="mt-4" />
+        <p className="mt-3 text-center text-xs leading-relaxed text-ink-500">
+          Next is a two-minute form, not a payment page. We confirm your seat before anything is
+          charged.
+        </p>
+
+        <EnquiryLinks
+          tripSlug={trip.slug}
+          tripTitle={trip.title}
+          align="center"
+          className="mt-4 border-t border-border pt-4"
+        />
       </Modal>
     </>
   );

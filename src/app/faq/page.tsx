@@ -60,20 +60,36 @@ const GROUPS = [
     heading: "Booking and payment",
     faqs: [
       {
-        q: "How do I pay, and is it secure?",
-        a: "Through Razorpay, which supports UPI, credit and debit cards, netbanking and wallets. Your card details go directly from your browser to Razorpay, they never touch our servers and we never store them.",
+        q: "How does booking actually work?",
+        a: "Press 'Book now' on a trip page and you'll get a two-minute form: the date, how many of you, how you're getting there, and a handful of questions about how you like to travel. Nothing is charged there. A person reads it, checks the seats are genuinely free, and comes back to you within one business day to confirm the seat and arrange payment.",
+      },
+      {
+        q: "Why do I have to answer questions before booking?",
+        a: "Because the group is the product. Eighteen people on one bus works when the eighteen wanted roughly the same weekend, and falls apart when half came to rest and half came to party. The questions take about two minutes and they're the whole reason our departures feel like they were put together on purpose.",
+      },
+      {
+        q: "How do I pay?",
+        a: "By UPI or a bank transfer, to the account printed in the 'Payment details' block on the trip page — send us the screenshot on WhatsApp afterwards and we'll confirm. Nothing is charged on this website: you send the request, we confirm the seat and the exact amount, and only then does anything leave your account. We will never ask you to pay a different UPI ID or a personal account, so if anyone does, it isn't us.",
       },
       {
         q: "Is the price really the final price?",
-        a: "Yes. The figure on the trip page is per person, inclusive of all applicable taxes, and it's what you'll be charged. There is no convenience fee, booking fee or service charge added at checkout.",
+        a: "Yes. The figure on the trip page is per person, inclusive of all applicable taxes, and it's what you'll be asked for. There is no convenience fee, booking fee or service charge added later. Flights and trains to the start point are separate and are never marked up.",
+      },
+      {
+        q: "Can you book my flight or train?",
+        a: "Yes, and plenty of people ask us to. Tell us which city you're starting from in the booking form and pick the option you want: we book it, we quote you first and you decide, or you travel on your own. When we book it you pay the fare, at cost, and you travel with the rest of the group.",
       },
       {
         q: "What confirms my seat?",
-        a: "Full payment. The moment it clears you'll get a confirmation email with a booking reference, and the booking appears in your account on this site. Nothing is held for you before payment: seat counts on the site are live but not reserved.",
+        a: "Payment, after we've replied. Sending the form does not hold anything: seat counts on the site are live but not reserved, and until we've confirmed and you've paid, the seat can still go to someone else.",
+      },
+      {
+        q: "Are the timings on the itinerary fixed?",
+        a: "The route, the stays and everything included are fixed. The clock times are indicative and marked with an asterisk on every trip page, because they genuinely move: weather, traffic on the ghat roads, and monument or temple hours all shift a day around. Your trip captain tells the group the actual plan each morning.",
       },
       {
         q: "When do I get the joining details?",
-        a: "A few days before departure we email the exact reporting point, timings, your trip captain's phone number, the hotel addresses and a final packing note.",
+        a: "A few days before departure we email the exact reporting point, the day's timings, your trip captain's phone number, the hotel addresses and a final packing note.",
       },
     ],
   },
