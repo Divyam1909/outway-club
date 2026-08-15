@@ -3,16 +3,15 @@
 /**
  * Downscales and re-encodes a photo in the browser before it is uploaded.
  *
- * Why this exists: Next.js's image optimizer is a Vercel platform feature. On
- * Cloudflare Workers there is no equivalent on the free plan, so `next/image`
- * runs unoptimized and whatever is in Supabase Storage is what reaches the
- * visitor — a 6MB DSLR JPEG included, on a phone, on Indian mobile data.
+ * Why this exists: a trip photo is uploaded once and served thousands of times,
+ * so resizing once on the way in is strictly less work than resizing on every
+ * request — and it keeps a 6MB DSLR JPEG out of storage in the first place.
  *
- * Optimising on the way out is the wrong place to fix that anyway. A trip photo
- * is uploaded once and served thousands of times; resizing once at upload is
- * strictly less work than resizing on every request, and it shrinks the storage
- * bill too. This helps on Vercel as well — it is not a Cloudflare workaround
- * that gets reverted later.
+ * This is not a Cloudflare workaround. It predates the Images binding and it
+ * survives it: `next/image` optimization is back on for both platforms (see
+ * next.config.mjs), but that only changes what gets *delivered*. Without this,
+ * the original still sits in Supabase Storage at full size, and every distinct
+ * width the optimizer is asked for still has to be derived from it.
  *
  * Deliberately not a hard guarantee: if anything here fails, the original file
  * is returned and the upload proceeds. A slightly-too-large photo is a much

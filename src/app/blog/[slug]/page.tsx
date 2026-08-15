@@ -17,6 +17,7 @@ import {
   getRelatedPosts,
 } from "@/lib/blog";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { optimizeArticleImages } from "@/lib/optimize-article-images";
 import { formatDate } from "@/lib/utils";
 import { site } from "@/config/site";
 
@@ -193,11 +194,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {/* --- Body ------------------------------------------------------------ */}
       <Container className="max-w-[42rem] pt-10 sm:pt-14">
         {/* Sanitised on the server against a tag allowlist before it was
-            stored — see src/lib/sanitize-html.ts. */}
+            stored — see src/lib/sanitize-html.ts. The images are routed
+            through Cloudflare on the way out, because <img> tags in stored
+            HTML never reach next/image — see src/lib/optimize-article-images.ts. */}
         <div
           className="post-prose"
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: post.content_html }}
+          dangerouslySetInnerHTML={{ __html: optimizeArticleImages(post.content_html) }}
         />
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-7">

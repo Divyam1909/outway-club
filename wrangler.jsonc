@@ -12,6 +12,23 @@
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
 	},
+	// Backs next/image on Workers. The OpenNext adapter routes /_next/image
+	// through this binding, which restores per-device srcset and AVIF/WebP
+	// negotiation — the things `images.unoptimized` used to switch off.
+	//
+	// Billed as Image Transformations, not as Cloudflare Images storage: we
+	// transform files we already serve from ASSETS rather than storing them in
+	// Cloudflare's image bucket. The Free plan covers 5,000 unique
+	// transformations a month and this site needs about 112, so it does not
+	// currently cost anything.
+	//
+	// REQUIRES Images to be enabled for the zone in the Cloudflare dashboard.
+	// The binding resolves at deploy time but transformations fail at request
+	// time if the zone toggle is off, which takes out every image on the site
+	// at once. Enable it before the first deploy that carries this block.
+	"images": {
+		"binding": "IMAGES"
+	},
 	// NEXT_INC_CACHE_KV and NEXT_TAG_CACHE_D1 are not our choice of label — they
 	// are the exact names the OpenNext adapter looks up. Rename either and the
 	// override finds nothing.

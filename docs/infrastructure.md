@@ -314,13 +314,32 @@ copy.
 
 ## Things that differ from Vercel
 
-**Image optimization is gone.** `next/image` optimization is a Vercel platform
-feature with no free equivalent on Workers. `CF_BUILD=1` sets
-`images.unoptimized`, so images serve at their stored size. Uploads are now
-downscaled in the browser first (`src/lib/resize-image.ts`), but that only
-applies going forward — **photos uploaded before that change are still full size
-and now served full size.** Re-upload the homepage hero and the live trip's
-gallery through the admin editor and they get shrunk on the way in.
+**Image optimization runs on the Images binding, not on Vercel.** This entry
+used to read "image optimization is gone", on the premise that `next/image`
+optimization was a Vercel platform feature with no free equivalent on Workers.
+That premise was wrong. Cloudflare Image Transformations includes **5,000 unique
+transformations per month on the Free plan**, and this site needs roughly 112 —
+16 images across 7 `deviceSizes`. A unique transformation is one image at one
+set of options for one month, so traffic does not move that number; only adding
+images or device sizes does.
+
+`wrangler.jsonc` therefore declares an `images` binding, the OpenNext adapter
+routes `/_next/image` through it, and `images.unoptimized` is gone from
+`next.config.mjs` — both platforms optimize now.
+
+> **Enable Images for the zone in the Cloudflare dashboard before deploying
+> this.** The binding resolves at deploy time regardless, but transformations
+> fail at request time when the zone toggle is off, and that takes out every
+> image on the site simultaneously.
+
+Uploads are still downscaled in the browser first (`src/lib/resize-image.ts`).
+That is not made redundant by the above: resizing once at upload is less work
+than resizing on every request and it keeps the storage bill down.
+
+Note that the old advice here — re-upload the homepage hero and the live trip
+gallery through the admin editor — had no target. Every image the site
+references is a static file in `public/images`; nothing has ever been uploaded
+to Supabase Storage.
 
 **Cold starts replace warm lambdas.** Workers start faster than Node lambdas,
 but `routePreloadingBehavior` is left at `"none"` because preloading trades cold

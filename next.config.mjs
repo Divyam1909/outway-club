@@ -68,18 +68,26 @@ const nextConfig = {
     deviceSizes: [400, 640, 828, 1080, 1200, 1600, 1920],
     minimumCacheTTL: 60 * 60 * 24 * 30,
 
-    // Next's image optimizer is a Vercel platform feature, not part of Next
-    // itself. On Cloudflare Workers there is no free equivalent, and leaving
-    // this false there does not degrade gracefully — every <Image> requests a
-    // /_next/image route that cannot serve it. Set CF_BUILD=1 in the Cloudflare
-    // build only, so the Vercel deploy keeps optimising while both run.
+    // Optimization is ON for both platforms. It used to be disabled here on
+    // Cloudflare (`unoptimized: process.env.CF_BUILD === "1"`) on the premise
+    // that Workers had no free equivalent to Vercel's optimizer. That premise
+    // was wrong: Cloudflare Image Transformations includes 5,000 unique
+    // transformations per month on the Free plan, and this site needs roughly
+    // 112 of them — 16 images across 7 deviceSizes. A unique transformation is
+    // one image at one set of options for one month, so traffic volume does not
+    // move that number; only adding images or deviceSizes does.
     //
-    // What stops this being a straight downgrade is that uploads are now
-    // downscaled in the browser first (src/lib/resize-image.ts), so the stored
-    // original is already roughly what we would have served anyway. Photos
-    // uploaded BEFORE that change are still full size — worth re-uploading the
-    // handful on the homepage and the live trip.
-    unoptimized: process.env.CF_BUILD === "1",
+    // On Cloudflare the work is done by the Images binding declared in
+    // wrangler.jsonc, which the OpenNext adapter routes /_next/image through.
+    //
+    //   DEPLOY ORDER MATTERS. The binding needs Images enabled on the zone in
+    //   the Cloudflare dashboard. Deploy this without enabling it first and
+    //   every <Image> on the site fails at once. Enable, then deploy.
+    //
+    // Uploads are still downscaled in the browser before they are stored
+    // (src/lib/resize-image.ts). That is not redundant with this — resizing
+    // once at upload beats resizing on every request, and it keeps the storage
+    // bill down.
   },
 
   async redirects() {
