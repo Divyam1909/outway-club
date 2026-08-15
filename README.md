@@ -180,19 +180,25 @@ Replace the file in `assets/brand/` and re-run to change the logo everywhere.
 
 ## Photography
 
-Every image path the site expects — trip, destination, Journal and brand — is
-listed with a paragraph generation prompt in
-[`docs/image-prompts.md`](docs/image-prompts.md), which also tracks which files
-are real photos and which are still placeholders.
+Every image path the site expects — trip, destination and Journal — is listed
+with its aspect ratio and usage in
+[`public/images/README.md`](public/images/README.md), alongside the house style
+and the export settings. Every slot currently holds real photography.
 
-Branded placeholders ship at each path so nothing is ever broken. Drop real
-photos over them using the same filenames, or upload through the admin trip
+Drop replacements in using the same filenames, or upload through the admin trip
 editor (Admin → Trips → edit → Content), which writes to Supabase Storage and
-needs no redeploy. Regenerate the placeholders with:
+needs no redeploy. Journal figures are the exception: the article body lives in
+Postgres, so changing one also means editing `supabase/seed-blog.sql` and
+re-running `node scripts/db.mjs supabase/seed-blog.sql`.
+
+Branded pine-green fallback panels can be rebuilt with:
 
 ```bash
 node scripts/generate-placeholders.mjs
 ```
+
+It skips any path that already has a file, so it will not overwrite real
+photography. Pass `--force` if you actually want the placeholders back.
 
 ## Admin access
 

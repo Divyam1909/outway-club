@@ -7,7 +7,10 @@
  *
  *   node scripts/generate-placeholders.mjs
  *
- * Prompts for the real images are in docs/image-prompts.md.
+ * Existing files are left alone, because every slot now holds real photography
+ * and a blind re-run would overwrite the lot. Pass --force to rebuild anyway.
+ *
+ * The paths each layout expects are listed in public/images/README.md.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -106,9 +109,20 @@ function svg({ w, h, label, sub }) {
 }
 
 const root = path.join(process.cwd(), "public", "images");
+const force = process.argv.includes("--force");
+
+let written = 0;
+let kept = 0;
 
 for (const target of TARGETS) {
   const destination = path.join(root, target.file);
+
+  if (!force && fs.existsSync(destination)) {
+    console.log(`${target.file.padEnd(30)} kept — file already present`);
+    kept += 1;
+    continue;
+  }
+
   fs.mkdirSync(path.dirname(destination), { recursive: true });
 
   await sharp(Buffer.from(svg(target)))
@@ -117,7 +131,8 @@ for (const target of TARGETS) {
 
   const { size } = fs.statSync(destination);
   console.log(`${target.file.padEnd(30)} ${target.w}×${target.h}  ${(size / 1024).toFixed(0)}KB`);
+  written += 1;
 }
 
-console.log(`\n${TARGETS.length} placeholders written to public/images.`);
-console.log("Overwrite them with real photography using the same filenames.");
+console.log(`\n${written} placeholder(s) written to public/images, ${kept} left in place.`);
+if (kept > 0) console.log("Re-run with --force to replace the files that already exist.");

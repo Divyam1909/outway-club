@@ -48,8 +48,8 @@ insert into blog_posts (
 </ul>
 
 <figure>
-  <img src="/images/udaipur/gallery-3.jpg" alt="A single wooden boat crossing a pale, misty Lake Pichola with the Taj Lake Palace faint on the horizon" />
-  <figcaption>First light on Pichola. The lake is at its flattest and emptiest before about seven, which is the one hour of the day the city belongs to the people who live in it.</figcaption>
+  <img src="/images/escape-001/gallery-2.jpg" alt="A wet ghat road curving down through deep green monsoon hills in the Aravallis, with low cloud caught along the ridges above" />
+  <figcaption>The Aravallis in August. These are the eight weeks a year the hills look like this, and it is the entire reason we run the trip in monsoon rather than in December.</figcaption>
 </figure>
 
 <h2>The City Palace, and how to actually see it</h2>
@@ -57,6 +57,11 @@ insert into blog_posts (
 <p>Udai Singh began it in 1559 and his successors kept adding for close to four hundred years, which is why it does not read as a building so much as a stack of them — courtyards inside courtyards, staircases that were clearly cut as afterthoughts, balconies added by one maharana to look down on a garden built by another. It is the largest palace complex in Rajasthan and it rewards a slow walk far more than a fast one.</p>
 
 <p>Two hours is the honest minimum. Go at opening or leave it until after three; the middle of the day is when every tour group in the city is funnelled through the same three courtyards. The rooms worth slowing down for are the mirrored and glass-inlaid chambers on the upper floors, and any window on the lake side — the palace was designed so that the view is rationed, appearing suddenly through a screen or an arch rather than all at once.</p>
+
+<figure>
+  <img src="/images/blog/udaipur-travel-guide/01-city-palace.jpg" alt="An upper gallery inside the City Palace in Udaipur, scalloped arches receding in layers, a mirror-inlaid window on the right, a stone staircase cut into the thick wall, and a small arched window framing Lake Pichola beyond" />
+  <figcaption>The view is rationed on purpose. The lake arrives through an arch at the end of a corridor rather than all at once, which is why the complex is worth walking slowly.</figcaption>
+</figure>
 
 <p>The Crystal Gallery is ticketed separately and is the strangest thing in the city. In 1877 Maharana Sajjan Singh ordered an enormous consignment of cut crystal from F&amp;C Osler of Birmingham — furniture, decanters, fountains, even a crystal bed. He died before it arrived. The crates sat unopened for over a century before anyone put it on display. It is a room full of English glass ordered by a man who never saw a single piece of it, and it is worth the extra ticket for that fact alone.</p>
 
@@ -67,7 +72,7 @@ insert into blog_posts (
 <p>Boats run through the day; the one that matters leaves around half past five and gets you onto open water for the last of the light. You pass Jag Mandir, the island palace where Prince Khurram sheltered in the 1620s after rebelling against his father — he would later rule as Shah Jahan — and then Jag Niwas, built as a summer palace in the 1740s and now the Taj Lake Palace. A note worth having in advance: you cannot visit the Lake Palace unless you are staying or have a dinner booking. Every year a great many people arrive expecting otherwise.</p>
 
 <figure>
-  <img src="/images/escape-001/hero.jpg" alt="Sunset over Lake Pichola with a small boat on the water and the City Palace lit gold along the far shore under monsoon cloud" />
+  <img src="/images/blog/udaipur-travel-guide/02-pichola-dusk.jpg" alt="A canopied wooden passenger boat crossing Lake Pichola at dusk, the Lake Palace sitting low on the water and the City Palace lit gold along the hillside behind" />
   <figcaption>The half-five boat, monsoon sky. The palace lights come on a few minutes before the light fully goes, and for about ninety seconds both are working at once.</figcaption>
 </figure>
 
@@ -80,7 +85,7 @@ insert into blog_posts (
 <p>Nearby, Bagore Ki Haveli was built in the eighteenth century for a prime minister of Mewar and now runs the Dharohar show at seven each evening — Rajasthan''s classical and folk repertoire in one courtyard, including Kalbeliya and the pot dance performed with eight or nine brass pots balanced on the head. It is unapologetically for visitors. It is also very good, and an hour long, which is the correct length.</p>
 
 <figure>
-  <img src="/images/udaipur/gallery-2.jpg" alt="A narrow old city lane in Udaipur with whitewashed walls, hanging textiles, clay pots, a blue scooter and a woman in a teal sari walking away over wet flagstones" />
+  <img src="/images/blog/udaipur-travel-guide/03-old-city-lane.jpg" alt="A narrow old city lane in Udaipur after rain, with whitewashed and ochre walls, blue and green painted doors, a carved wooden balcony overhead, stacked clay pots and a woman in a pink sari walking away over wet flagstones" />
   <figcaption>The lanes behind the ghats after rain. No monument in the city photographs as well as this does at four in the afternoon.</figcaption>
 </figure>
 
@@ -93,7 +98,7 @@ insert into blog_posts (
 <p>Breakfast is street food: <strong>pyaaz kachori</strong> or a <strong>mirchi vada</strong> from a stall that has a queue, with a <strong>makhaniya lassi</strong> thick enough to stand a spoon in. In monsoon, order the kachori from wherever the oil is visibly moving.</p>
 
 <figure>
-  <img src="/images/udaipur/gallery-4.jpg" alt="A brass thali with dal, kadhi, a seasonal vegetable, raita, rice, chutney and bajra roti, viewed from above on a wooden table" />
+  <img src="/images/blog/udaipur-travel-guide/04-thali.jpg" alt="A brass thali viewed from above with dal, kadhi, a seasonal vegetable, cumin raita, red chilli pickle, rice, a wedge of lime and two bajra rotis, a hand reaching in from the lower edge of the frame" />
   <figcaption>A working Rajasthani thali — dal, kadhi, a seasonal sabzi, raita and bajra roti. Cheaper than any rooftop, and usually better.</figcaption>
 </figure>
 
@@ -134,7 +139,7 @@ insert into blog_posts (
 <p>Remember while you are looking at it that none of this was built to be looked at. It was a calculation about where to put the water, made by a man who had just watched what happens to a fort with no way to supply itself. The beauty was a by-product. It usually is.</p>
 
 <p class="post-small">We run this city — and the four-hour drive west into the Aravallis behind it — as <a href="/trips/udaipur-mount-abu">Escape 001</a>, in August, for exactly the reasons above. More on the region in our <a href="/destinations/udaipur">Udaipur destination guide</a>.</p>',
-  '/images/udaipur/hero.jpg',
+  '/images/blog/udaipur-travel-guide/cover.jpg',
   'Dusk over the old city, the City Palace lit along the far edge of Lake Pichola and monsoon cloud sitting on the Aravallis.',
   'Outway Club',
   'Field notes, Escape 001',
