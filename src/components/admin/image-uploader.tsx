@@ -5,6 +5,7 @@ import { GripVertical, ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-re
 import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import { SmartImage } from "@/components/ui/smart-image";
+import { resizeForUpload } from "@/lib/resize-image";
 import { friendlyError } from "@/lib/error-messages";
 
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -68,15 +69,21 @@ export function ImageUploader({
         continue;
       }
 
+      setProgress(`Preparing ${index + 1} of ${list.length}…`);
+
+      // Downscaled here rather than at request time: nothing resizes these on
+      // the way out, so what is stored is what a phone downloads.
+      const upload = await resizeForUpload(file);
+
       setProgress(`Uploading ${index + 1} of ${list.length}…`);
 
-      const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const extension = upload.name.split(".").pop()?.toLowerCase() ?? "jpg";
       const path = `${new Date().getFullYear()}/${crypto.randomUUID()}.${extension}`;
 
       try {
         const { error: uploadError } = await supabase.storage
           .from(bucket)
-          .upload(path, file, { cacheControl: "31536000", upsert: false });
+          .upload(path, upload, { cacheControl: "31536000", upsert: false });
 
         if (uploadError) {
           failures.push(
