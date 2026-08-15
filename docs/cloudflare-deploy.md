@@ -64,18 +64,45 @@ is invisible to code that already compiled. In Cloudflare's dashboard these go
 under Workers & Pages → your worker → Settings → **Variables and Secrets**, and
 they must also exist in the build environment:
 
-```
-NEXT_PUBLIC_SUPABASE_URL          NEXT_PUBLIC_LEGAL_NAME
-NEXT_PUBLIC_SUPABASE_ANON_KEY     NEXT_PUBLIC_CONTACT_EMAIL
-NEXT_PUBLIC_SITE_URL              NEXT_PUBLIC_CONTACT_PHONE
-NEXT_PUBLIC_RAZORPAY_KEY_ID       NEXT_PUBLIC_WHATSAPP_NUMBER
-NEXT_PUBLIC_UPI_ID                NEXT_PUBLIC_BUSINESS_ADDRESS
-NEXT_PUBLIC_BANK_*                NEXT_PUBLIC_BUSINESS_CITY
-NEXT_PUBLIC_INSTAGRAM_URL         NEXT_PUBLIC_GSTIN
-NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-```
+Most of these are **optional**. `src/config/site.ts` reads every one through a
+helper that falls back to a sensible default, and treats an empty string as
+unset — so a variable left blank behaves exactly as if it were absent. Only
+three genuinely have to be set.
 
-Plus the server-side non-secrets: `EMAIL_FROM`, `OPS_EMAIL`.
+**Required — the site is wrong or broken without them:**
+
+| Variable | Why |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | No default. Without it the app renders the "setup required" screen. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same. |
+| `NEXT_PUBLIC_SITE_URL` | Defaults to `http://localhost:3000`, which is worse than missing — it silently poisons every canonical tag, the sitemap, and every link and logo in outbound email. |
+
+**Optional, already correct by default.** Set them only to override:
+
+| Variable | Falls back to |
+|---|---|
+| `NEXT_PUBLIC_LEGAL_NAME` | `Outway Club` |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | `hello@outway.club` |
+| `NEXT_PUBLIC_BUSINESS_CITY` | `Udaipur, Rajasthan` |
+| `NEXT_PUBLIC_INSTAGRAM_URL` | `https://instagram.com/outway.club` |
+| `EMAIL_FROM` | `Outway Club <hello@outway.club>` |
+| `OPS_EMAIL` | whatever `NEXT_PUBLIC_CONTACT_EMAIL` resolves to |
+
+> Setting one of these to a *wrong* value is worse than leaving it out, because
+> it overrides a correct default. `NEXT_PUBLIC_CONTACT_EMAIL=hello@outwayclub.com`
+> — the wrong domain, and not one Resend has verified — is the live example.
+
+**Optional, blank hides the feature.** No default and none wanted; the UI omits
+them rather than printing a placeholder: `NEXT_PUBLIC_CONTACT_PHONE`,
+`NEXT_PUBLIC_WHATSAPP_NUMBER`, `NEXT_PUBLIC_BUSINESS_ADDRESS`,
+`NEXT_PUBLIC_GSTIN`, `NEXT_PUBLIC_YOUTUBE_URL`,
+`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_BING_SITE_VERIFICATION`.
+
+**Deliberately unset while payments are off.** `NEXT_PUBLIC_RAZORPAY_KEY_ID`,
+`NEXT_PUBLIC_UPI_ID`, `NEXT_PUBLIC_BANK_*`. Leaving `RAZORPAY_KEY_ID` unset is
+what keeps `isRazorpayConfigured()` false, which is the intended state — adding
+a placeholder value here does not enable anything, it just makes the intent
+harder to read.
 
 ---
 
