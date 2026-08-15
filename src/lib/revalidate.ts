@@ -51,7 +51,6 @@ const DETAIL_PREFIX: Partial<Record<ContentScope, string>> = {
 };
 
 export function revalidateContent(scope: ContentScope, slug?: string | null): void {
-  if (process.env.OUTWAY_DISABLE_REVALIDATE) return;
   const paths = [...LIST_PATHS[scope]];
 
   const prefix = DETAIL_PREFIX[scope];

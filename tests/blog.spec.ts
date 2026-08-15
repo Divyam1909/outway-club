@@ -122,7 +122,19 @@ test.describe("writing, reading and moderating a post", () => {
   // One long journey rather than several short tests: each step depends on
   // state the previous one left behind.
   test("full lifecycle", async ({ page }, testInfo) => {
-    test.slow();
+    // 3 minutes, not test.slow()'s 90 seconds.
+    //
+    // Public pages are prerendered now, so every admin write is followed by an
+    // on-demand cache purge and the next view regenerates from the database
+    // (src/lib/revalidate.ts). This journey makes ~20 admin navigations against
+    // a remote Supabase, and each one pays that regeneration — it went from
+    // ~25s to ~80s and started failing about half the time on a 90s budget.
+    //
+    // The extra time is real work, not a hang, and it is paid by editors rather
+    // than readers: a reader's page is served from the prerender cache in
+    // single-digit milliseconds. If this ever exceeds three minutes, look for a
+    // genuine regression rather than raising it again.
+    test.setTimeout(180_000);
 
     // Unique per project *and* per run: the two projects execute in parallel,
     // and a slug left behind by an interrupted run must not block the next one
