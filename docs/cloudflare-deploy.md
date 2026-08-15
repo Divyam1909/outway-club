@@ -98,11 +98,23 @@ them rather than printing a placeholder: `NEXT_PUBLIC_CONTACT_PHONE`,
 `NEXT_PUBLIC_GSTIN`, `NEXT_PUBLIC_YOUTUBE_URL`,
 `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_BING_SITE_VERIFICATION`.
 
-**Deliberately unset while payments are off.** `NEXT_PUBLIC_RAZORPAY_KEY_ID`,
-`NEXT_PUBLIC_UPI_ID`, `NEXT_PUBLIC_BANK_*`. Leaving `RAZORPAY_KEY_ID` unset is
-what keeps `isRazorpayConfigured()` false, which is the intended state — adding
-a placeholder value here does not enable anything, it just makes the intent
-harder to read.
+**The two payment paths are independent — do not confuse them.**
+
+`NEXT_PUBLIC_RAZORPAY_KEY_ID` is **deliberately unset**. It gates automated card
+checkout, and leaving it empty is what keeps `isRazorpayConfigured()` false,
+which is the intended state. A placeholder value here enables nothing and only
+obscures the intent.
+
+`NEXT_PUBLIC_UPI_ID` and `NEXT_PUBLIC_BANK_*` are **the opposite: set them.**
+They have nothing to do with Razorpay. They drive
+`src/components/trips/payment-details.tsx`, which renders on every trip and
+booking page and is how customers actually pay while card checkout is off — the
+component's own copy tells the reader to transfer to the account shown. It
+returns `null` when none are set, so leaving them blank does not degrade to a
+fallback: the trip page simply offers no way to pay.
+
+UPI renders on its own. The bank block is all-or-nothing — account name, bank
+name, account number and IFSC must all be present or none of it shows.
 
 ---
 
