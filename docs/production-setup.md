@@ -413,9 +413,103 @@ Submit a booking request on the live site with your own Gmail address, then:
 - [ ] The link goes to `outway.club`, not `localhost:3000`
 
 **Search**
-- [ ] Domain added to Google Search Console (verify with a TXT record — you're
-      already in Porkbun's DNS panel)
-- [ ] `https://outway.club/sitemap.xml` submitted
+- [ ] Domain property verified in Google Search Console (section 10)
+- [ ] `https://outway.club/sitemap.xml` submitted and reporting Success
+
+---
+
+## 10. Google Search Console
+
+Until this is done Google has no reason to look at the site, and you have no way
+to tell whether it has. Everything else in this document is plumbing that works
+whether or not anyone finds you; this is the part that decides whether anyone
+does.
+
+### 10a. Verify ownership
+
+Two methods. **Use the first.**
+
+**Domain property (DNS TXT) — recommended.** Covers the apex, `www`, every
+subdomain and both http and https in one property, and it survives redeploys.
+
+1. [search.google.com/search-console](https://search.google.com/search-console)
+   → **Add property** → choose the **Domain** box (the left one, not "URL
+   prefix").
+2. Enter `outway.club` — no `https://`, no `www`.
+3. Google shows a TXT record like
+   `google-site-verification=AbC123...`.
+4. Porkbun → DNS → add: **Type** TXT, **Host** blank, **Value** the whole
+   string Google gave you.
+5. Wait a minute or two, then click **Verify**.
+
+You already have TXT records on the root (SPF, Zoho verification). That is
+fine — unlike SPF, multiple unrelated TXT records on one host are normal and do
+not conflict.
+
+If verification fails on the first try, check the record actually published
+before touching anything in the dashboard:
+
+```bash
+nslookup -type=txt outway.club 8.8.8.8
+```
+
+```powershell
+Resolve-DnsName outway.club -Type TXT -Server 8.8.8.8
+```
+
+**URL-prefix property (HTML tag) — the fallback.** Only if DNS is somehow not an
+option. Google gives you a `<meta name="google-site-verification" content="…">`
+tag; the app renders it for you — set the **token only**, not the whole tag:
+
+```
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=AbC123...
+```
+
+in Vercel → Settings → Environment Variables (Production), then **redeploy**.
+`NEXT_PUBLIC_*` is baked in at build time, so the tag will not appear until you
+do — and Google will report verification failed. Same applies to
+`NEXT_PUBLIC_BING_SITE_VERIFICATION` for Bing Webmaster Tools.
+
+Verify it landed:
+
+```bash
+curl -s https://outway.club | grep google-site-verification
+```
+
+### 10b. Submit the sitemap
+
+Search Console → **Sitemaps** → enter `sitemap.xml` → **Submit**.
+
+Status should read **Success** with a discovered-URL count matching what
+`https://outway.club/sitemap.xml` lists. "Couldn't fetch" almost always means it
+was submitted against an unverified property, or with the full URL typed into a
+field that wants the path.
+
+### 10c. Ask for the homepage to be crawled
+
+**URL Inspection** → paste `https://outway.club/` → **Request indexing**. Do the
+same for `/trips` and the live trip page. This is a nudge, not a guarantee, and
+the quota is a few per day — spending it on the three pages that matter beats
+spending it on `/terms`.
+
+### 10d. What to expect
+
+Indexing takes days to a few weeks for a brand-new domain with no inbound links.
+That is normal and there is no way to buy speed here. What actually moves it:
+
+- **Inbound links.** One real link from a site Google already crawls does more
+  than any on-page change. The Instagram bio link is the obvious first one.
+- **Content.** One trip and one journal post is very little surface area. Pages
+  are what rank; there is no substitute.
+- **Google Business Profile.** For a travel business with a physical base in
+  Udaipur this is worth more than most SEO work, and it is free.
+
+Check back in **Search Console → Pages** after a week or two. "Crawled –
+currently not indexed" on a thin page is expected early on, not a bug to chase.
+
+> Bing is a ten-minute job once Google is done: Bing Webmaster Tools can import
+> the whole property straight from Search Console. It is a small share of Indian
+> search traffic, but it is also nearly free to claim.
 
 ---
 

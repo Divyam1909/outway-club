@@ -83,8 +83,13 @@ function layout(options: { preheader: string; heading: string; body: string }): 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.cream};padding:32px 16px;">
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid ${COLORS.border};border-radius:16px;overflow:hidden;">
-        <tr><td style="background:${COLORS.pine};padding:24px 32px;">
-          <p style="margin:0;font-size:15px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${COLORS.cream};">${site.name}</p>
+        <!-- Cream band rather than pine: the mark is a near-black disc, which
+             disappears against a dark header. width/height are set as attributes
+             AND in the style because Outlook ignores the CSS and Gmail ignores
+             nothing. -->
+        <tr><td align="center" style="background:${COLORS.cream};padding:22px 32px;border-bottom:3px solid ${COLORS.pine};">
+          <img src="${site.url}/brand/logo-email.png" width="64" height="64" alt="${site.name}"
+               style="display:block;width:64px;height:64px;border:0;outline:none;text-decoration:none;border-radius:50%;">
         </td></tr>
         <tr><td style="padding:32px;">
           <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;font-weight:600;color:${COLORS.ink};">${escapeHtml(options.heading)}</h1>
@@ -430,7 +435,11 @@ export function waitlistWelcomeEmail(data: { email: string; name?: string | null
         paragraph(
           `No weekly newsletter, no drip campaign. You'll hear from us when there's an actual trip to hear about.`
         ),
-        button(`${site.url}/trips/${"escape-001-udaipur-mount-abu"}`, "See what's running now"),
+        // The catalogue, not a specific trip. This pointed at a hardcoded slug
+        // that had already been renamed once and only still worked because a
+        // permanent redirect was catching it — a link in an email outlives the
+        // trip it names, so it should name the list instead.
+        button(`${site.url}/trips`, "See what's running now"),
       ].join(""),
     }),
   };

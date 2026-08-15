@@ -66,6 +66,31 @@ async function build() {
   // --- Site UI: navbar, footer, auth screens, structured data ---------------
   await roundPng(512, path.join(BRAND_DIR, "logo.png"));
 
+  // --- Email header ---------------------------------------------------------
+  // Deliberately not the 512px logo.png. Two reasons, both of which show up as
+  // a broken-looking email rather than an obvious error:
+  //
+  //  1. Weight. logo.png is ~170KB. Gmail clips a message once it passes about
+  //     102KB and hides the rest behind "View entire message" — a logo must not
+  //     be what costs you the call-to-action.
+  //  2. Alpha. The mark is near-black, and several clients (older Outlook in
+  //     particular) composite PNG transparency onto black or drop it entirely.
+  //     A black mark on a black background is an invisible logo. Flattening
+  //     onto cream here means what you see is what every client renders, and it
+  //     sits on the cream header band in the templates without a visible seam.
+  const emailLogoSize = 144;
+  const emailMark = await trimmed()
+    .resize(emailLogoSize, emailLogoSize, { fit: "cover" })
+    .png()
+    .toBuffer();
+
+  await sharp(emailMark)
+    .composite([{ input: circleMask(emailLogoSize), blend: "dest-in" }])
+    .flatten({ background: CREAM })
+    .png({ compressionLevel: 9, palette: true })
+    .toFile(path.join(BRAND_DIR, "logo-email.png"));
+  report(path.join(BRAND_DIR, "logo-email.png"));
+
   // --- Opaque square, for anywhere alpha isn't supported --------------------
   await trimmed()
     .resize(1024, 1024, { fit: "cover" })

@@ -123,6 +123,12 @@ Three providers touch one domain, and they do **not** overlap:
    `https://outway.club/auth/callback` to **Redirect URLs**, or password-reset
    and confirmation links will bounce to localhost.
 
+   SMTP settings change *who the mail is from*, not what it looks like — the
+   bodies stay on Supabase's unbranded defaults until you paste ours in.
+   Ready-to-use templates for all six auth emails, and an explanation of the
+   three different things people mean by "the logo isn't showing", are in
+   [`docs/supabase-auth-emails.md`](docs/supabase-auth-emails.md).
+
 ## The itinerary PDF
 
 The customer-facing brochure is generated from the trip's own rows, not drawn
@@ -391,6 +397,10 @@ dropped.
         no booking
 - [ ] Resend API key set, **and** Supabase SMTP pointed at it
 - [ ] Supabase Auth Site URL + `/auth/callback` redirect URL configured
+- [ ] Branded auth email templates pasted into Supabase
+      ([`docs/supabase-auth-emails.md`](docs/supabase-auth-emails.md))
+- [ ] Google Search Console domain property verified and sitemap submitted
+      ([`docs/production-setup.md`](docs/production-setup.md), section 10)
 - [ ] `NEXT_PUBLIC_CONTACT_PHONE` and `NEXT_PUBLIC_BUSINESS_ADDRESS` filled in
       — Razorpay activation requires a published phone number and address
 - [ ] First admin promoted, then `/admin/users` verified
