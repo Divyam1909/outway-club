@@ -74,14 +74,19 @@ Every variable is documented in `.env.example`. The ones that matter most:
 
 ## Deployment
 
-The site is on **Vercel**, at **https://outway.club** (apex is canonical;
-`www` 301-redirects to it). DNS is managed at **Porkbun**; mailboxes are
-**Zoho Mail**; app-sent email is **Resend**.
+The site is on **Cloudflare Workers**, at **https://outway.club** (apex is
+canonical; `www` 301-redirects to it via a Cloudflare Redirect Rule). DNS is
+managed at **Cloudflare**; Porkbun is the registrar only. Mailboxes are **Zoho
+Mail**; app-sent email is **Resend**.
 
-Full step-by-step — DNS records, Zoho, Resend, Supabase, the env vars to set in
-Vercel and the order to do it all in — is in
-[`docs/production-setup.md`](docs/production-setup.md). Read that before
-touching DNS.
+It ran on Vercel until 15 August 2026, when the Hobby plan's ban on commercial
+use forced the move.
+
+The DNS record set, the deploy commands and their two npm traps, the KV and D1
+cache bindings, and how to roll back are all in
+[`docs/infrastructure.md`](docs/infrastructure.md). Read that before touching
+DNS. What is still outstanding is in
+[`docs/still-to-do.md`](docs/still-to-do.md).
 
 ## Production email
 
@@ -341,8 +346,10 @@ submissions fail. The Razorpay checkout is parked, not deleted: render
 pages: UPI ID, bank account, and a screenshot on WhatsApp. It renders nothing
 unless a UPI ID or a *complete* account is configured — a payment section with
 half an account number is worse than none. Because the vars are
-`NEXT_PUBLIC_`, they are inlined at build time: set them in Vercel as well as
-locally, and redeploy after changing them.
+`NEXT_PUBLIC_`, they are inlined at build time: set them in `.env.local`, then
+rebuild and redeploy — changing them anywhere else has no effect. They are all
+still blank, which is why the block is invisible in production
+([`docs/still-to-do.md`](docs/still-to-do.md)).
 
 **Trust points.** The three lines under the price come from `TRUST_POINTS` in
 `src/config/site.ts`. The rule there is the same one the trust band follows:
@@ -372,37 +379,14 @@ departure does overshoot, the seat is still allocated — the money is already
 taken — and the overshoot is logged loudly for ops rather than silently
 dropped.
 
-## Go-live checklist
+## Go-live
 
-- [ ] Run `0001` → `0002` → `0003` → `0004` → `0005` → `0006` → `seed.sql`
-      → `seed-blog.sql` against the production project
-- [ ] Real photography dropped into `public/images` (or uploaded via admin)
-- [ ] Brand assets regenerated if the logo changed (`build-brand-assets.mjs`)
-- [ ] `NEXT_PUBLIC_SITE_URL=https://outway.club`, no trailing slash — then
-      **redeploy**, because `NEXT_PUBLIC_` vars are baked in at build time
-- [ ] `outway.club` + `www.outway.club` added in Vercel, www redirecting to the
-      apex, and the DNS records in [`docs/production-setup.md`](docs/production-setup.md)
-      live at Porkbun
-- [ ] Zoho mailboxes reachable — send a mail to `hello@` from an outside
-      address and confirm it lands
-- [ ] `outway.club` verified in Resend, and SPF/DKIM/DMARC checked with a mail
-      to a Gmail address (Show original → all three `PASS`)
-- [ ] One booking request sent end to end, and the ops alert email received
-- [ ] Razorpay items below only apply when `site.paymentsEnabled` is flipped
-      back to `true`:
-  - [ ] Razorpay live keys in, and one real booking made end to end
-  - [ ] Razorpay webhook created for `payment.captured` pointing at
-        `/api/razorpay/webhook`, with its secret in `RAZORPAY_WEBHOOK_SECRET`
-        — without it, a customer who closes the tab mid-payment pays and gets
-        no booking
-- [ ] Resend API key set, **and** Supabase SMTP pointed at it
-- [ ] Supabase Auth Site URL + `/auth/callback` redirect URL configured
-- [ ] Branded auth email templates pasted into Supabase
-      ([`docs/supabase-auth-emails.md`](docs/supabase-auth-emails.md))
-- [ ] Google Search Console domain property verified and sitemap submitted
-      ([`docs/production-setup.md`](docs/production-setup.md), section 10)
-- [ ] `NEXT_PUBLIC_CONTACT_PHONE` and `NEXT_PUBLIC_BUSINESS_ADDRESS` filled in
-      — Razorpay activation requires a published phone number and address
-- [ ] First admin promoted, then `/admin/users` verified
-- [ ] `/terms`, `/privacy`, `/refund-policy` read end to end and approved
-- [ ] Sitemap submitted to Google Search Console
+Done. The site has been live at **https://outway.club** since August 2026, on
+Vercel first and on Cloudflare Workers from the 15th. Migrations are run, the
+mail chain is verified, the auth templates are in, and Search Console is
+verified by DNS.
+
+What is still outstanding — payment details, phone, address, GSTIN, DNSSEC and
+the post-cutover housekeeping — is tracked in
+[`docs/still-to-do.md`](docs/still-to-do.md). How the whole thing is wired is in
+[`docs/infrastructure.md`](docs/infrastructure.md).

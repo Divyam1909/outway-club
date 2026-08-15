@@ -49,7 +49,8 @@ Project Settings → **Authentication → SMTP Settings**:
 
 The DNS side of this is already live and verified — SPF, DMARC, both DKIM keys
 and the Zoho/Resend MX split are all in place (see
-[`production-setup.md`](production-setup.md)). Nothing to add at Porkbun.
+[`infrastructure.md`](infrastructure.md)). Nothing to add — and note that DNS
+now lives at Cloudflare, not Porkbun.
 
 > **The built-in sender is not a production option.** Supabase rate-limits it to
 > a handful of messages an hour and says so in their own docs. On a launch day

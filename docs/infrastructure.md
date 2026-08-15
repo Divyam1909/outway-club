@@ -1,0 +1,382 @@
+# Infrastructure
+
+Where **https://outway.club** actually runs, as of **15 August 2026**. This file
+replaces the old `production-setup.md` and `cloudflare-deploy.md`, both of which
+described setups that no longer exist.
+
+| Concern | Provider | Notes |
+|---|---|---|
+| Hosting | **Cloudflare Workers** | via `@opennextjs/cloudflare`. Was Vercel until 15 Aug 2026. |
+| DNS | **Cloudflare** | Nameservers moved off Porkbun on 15 Aug 2026. |
+| Registrar | Porkbun | Domain only. DNS records are **not** edited here any more. |
+| Mailboxes | Zoho Mail (India DC) | Receives. `hello@`, `bookings@`, `divyam@`, `noreply@`. |
+| App email | Resend | Sends. `src/lib/email.ts`. |
+| Auth email | Supabase → Resend SMTP | Signup, reset, magic link. |
+| Database / auth / storage | Supabase | Unchanged throughout. |
+
+**Why not Vercel.** Vercel's Hobby plan forbids commercial use, and a site that
+sells trips is commercial regardless of whether checkout is switched on. The
+compliant options were Pro at $20/month or leaving. Cloudflare's Workers free
+plan explicitly permits commercial use, which makes it the one genuinely free
+*and* legitimate host until funding lands.
+
+**Why the nameservers had to move.** A Worker custom domain requires the zone to
+live inside Cloudflare. There is no CNAME-only option on the free plan. That is
+the whole reason DNS left Porkbun — it was not a preference.
+
+Running cost is now **~$12/year**, the domain renewal, and nothing else.
+
+---
+
+## The DNS record set
+
+Managed at **Cloudflare → DNS → Records**. Thirteen records.
+
+| Type | Name | Value | Proxy |
+|---|---|---|---|
+| A/AAAA | `@` | *managed by Cloudflare* — created by the Worker custom domain | Proxied |
+| AAAA | `www` | `100::` | **Proxied** |
+| MX 10 | `@` | `mx.zoho.in` | — |
+| MX 20 | `@` | `mx2.zoho.in` | — |
+| MX 50 | `@` | `mx3.zoho.in` | — |
+| MX 10 | `send` | `feedback-smtp.ap-northeast-1.amazonses.com` | — |
+| TXT | `@` | `v=spf1 include:zoho.in ~all` | — |
+| TXT | `@` | `zoho-verification=zb43079232.zmverify.zoho.in` | — |
+| TXT | `@` | `google-site-verification=K0vi31qJi2SO3tDJOh_cpPUqIk-U4Smk4YtELZwDxnM` | — |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` | — |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:divyam@outway.club; fo=1` | — |
+| TXT | `zmail._domainkey` | Zoho DKIM (1024-bit RSA) | — |
+| TXT | `resend._domainkey` | Resend DKIM | — |
+
+Rules that break things when violated:
+
+- **Exactly one SPF record on the root.** Two produces a `permerror` and
+  receivers may reject everything. The root SPF only needs Zoho — Resend's SPF
+  lives on `send.outway.club`, a different name, so they never compete. Do
+  **not** add `include:_spf.resend.com` to the root; it is redundant and burns
+  one of SPF's ten permitted lookups.
+- **Exactly one DMARC record.** Multiple unrelated TXT records on the root are
+  fine (SPF, Zoho, Google all coexist) — SPF and DMARC are the two exceptions.
+- **The MX split is deliberate.** Zoho's MX sits on the root, Resend's on
+  `send.`. MX records only affect the exact name they sit on, so both work.
+- **Never enable Cloudflare Email Routing.** Cloudflare offers it prominently
+  and it overwrites the Zoho MX records. This is the single most likely way to
+  break inbound mail on this domain.
+- **Never proxy the mail records.** MX and TXT are DNS-only by nature; if a
+  future A record for a mail host appears, it must stay grey-cloud.
+
+### `www`
+
+`www.outway.club` is **not** a Worker custom domain — adding it as one would
+serve the site on both hostnames and split the SEO. Instead:
+
+- a proxied `AAAA` on `www` pointing at `100::`, Cloudflare's documented
+  placeholder for a redirect-only hostname. Nothing is ever sent there.
+- a **Redirect Rule** (Rules → Redirect Rules): when `http.host eq
+  "www.outway.club"`, dynamic redirect to
+  `concat("https://outway.club", http.request.uri.path)`, **301**, preserve
+  query string on.
+
+Redirect Rules run at the edge *before* Workers, so this costs no Worker
+request.
+
+### SSL
+
+SSL/TLS mode is **Full (strict)**, Always Use HTTPS on. Universal SSL covers the
+apex and `www`. There is no origin server behind Cloudflare — the Worker *is*
+the origin — so the origin-certificate and post-quantum settings underneath the
+encryption mode are inert here.
+
+### DNSSEC — pending
+
+Cloudflare has signed the zone. The DS record is entered at Porkbun (Domain
+Management → `outway.club` → DNSSEC) but **had not propagated to the `.club`
+registry as of 15 Aug 2026**. Values, for reference if it needs re-entering:
+
+```
+Key Tag 2371 · Algorithm 13 (ECDSA/SHA-256) · Digest Type 2 (SHA-256)
+Digest A864D8399EE39EE99495FC7CBBA329AA80CD6524BC0A1E1E8DF929DC86267786
+```
+
+Porkbun rejects the submission if the **keyData** block (Flags, Protocol, Key
+Data Algorithm, Public Key) is filled in — `.club` runs on a registry that takes
+**dsData only**. Leave keyData empty, and leave *Max Sig Life* empty too.
+
+Check whether it has landed by asking the registry directly, which no cache can
+fool:
+
+```powershell
+Resolve-DnsName outway.club -Type DS -Server 37.209.192.10 -DnsOnly   # a.nic.club
+```
+
+A `DS` row with key tag `2371` means done. An `SOA` row means not yet.
+
+---
+
+## Deploying
+
+```bash
+npm run cf:build     # builds Next, then bundles the Worker
+npm run cf:preview   # runs it locally in workerd, not Node
+npm run cf:deploy    # pushes to Cloudflare
+```
+
+`cf:preview` matters more than it looks: `npm run dev` runs in Node and will
+happily use APIs that do not exist in the Workers runtime. The preview is the
+first place a difference shows up.
+
+### Two npm traps on this machine
+
+**`--include=dev` is not optional here.** `NODE_ENV=production` is set globally
+on this machine, which makes npm silently skip every devDependency — including
+the adapter, wrangler, typescript and tailwind. `npm install` reports "up to
+date" and installs nothing. Always `npm install --include=dev`. The symptom is
+`Cannot find module 'tailwindcss'`, followed by a wall of "Can't resolve
+'@/components/…'" once typescript is gone too.
+
+Never pass `NODE_ENV=development` to `next build` itself — that breaks `/404`
+prerendering with a misleading `<Html> should not be imported` error.
+
+**`npm run cf:deploy` fails here with `Wrangler kv bulk put command failed`,**
+preceded by npm usage text and `npm@2.15.12 C:\Users\divya\node_modules\npm`.
+
+Nothing is wrong with the adapter. `npm run` prepends `node_modules/.bin` from
+the project **and every ancestor directory** to `PATH`. There is a stray
+`C:\Users\divya\node_modules` — left over from an accidental `npm install
+concurrently` in the home folder — containing **npm 2.15.12**, and because the
+project lives under `C:\Users\divya\`, that decade-old npm shadows the real 11.x
+inside every npm script. The adapter shells out to `npm exec wrangler`, npm 2
+has no `exec`, and it prints usage and exits.
+
+Workaround — invoke the CLI directly so npm never rewrites `PATH`:
+
+```bash
+CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js preview
+CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
+```
+
+Real fix — delete `C:\Users\divya\node_modules`, `C:\Users\divya\package.json`
+and `C:\Users\divya\package-lock.json`. Nothing depends on them; they only
+declare `irm` and `concurrently`. Doing so also makes `outputFileTracingRoot` in
+`next.config.mjs` unnecessary. Cloudflare's own builders have no such folder.
+
+### Deploying from GitHub instead — not set up
+
+Workers Builds (Workers & Pages → your worker → Settings → Builds → Connect) is
+the equivalent of Vercel's git integration. It is **not connected**, and nothing
+is broken without it.
+
+- **Build command:** `npm install --include=dev && npm run cf:build`
+- **Deploy command:** `npx opennextjs-cloudflare deploy`
+- Every `NEXT_PUBLIC_*` must be set in the **build** environment, not only in
+  the worker's variables — see the build-time note below.
+
+> **Do not use plain `npx wrangler deploy` as the deploy command.** It uploads
+> the worker happily and skips the populate-cache step that creates the D1
+> `revalidations` table and seeds KV with the prerendered pages. The result is a
+> site that deploys green, serves correctly, never caches, and whose admin
+> console appears to have stopped publishing. `opennextjs-cloudflare deploy`
+> wraps `wrangler deploy` and does both.
+
+### `NEXT_PUBLIC_*` is baked in at build time
+
+Not read at runtime. **Building locally means the bundle is built from
+`.env.local`** — which is gitignored, so production's build configuration
+currently exists as one untracked file on one laptop. Back it up somewhere
+durable. This is the same failure mode as
+[`supabase-auth-emails.md`](supabase-auth-emails.md): no export, no history, one
+copy.
+
+The exception is `NEXT_PUBLIC_SITE_URL`, which is also declared in
+`wrangler.jsonc` because a wrong value there is the most damaging single
+misconfiguration in the app — it poisons every canonical tag, the sitemap, and
+every link and logo in outbound email.
+
+---
+
+## Storage bindings and the cache
+
+`wrangler.jsonc` holds two bindings whose names are **not** ours to choose —
+they are exactly what the OpenNext adapter looks up.
+
+| Binding | What breaks without it | How it shows up |
+|---|---|---|
+| `NEXT_INC_CACHE_KV` | Nothing caches; every visit re-queries Supabase | **Silent.** The adapter treats the missing binding as ignorable. The site just gets slow. |
+| `NEXT_TAG_CACHE_D1` | `revalidatePath` does nothing | **Loud.** Deploy fails with `No D1 binding "NEXT_TAG_CACHE_D1" found!` |
+
+Read [`open-next.config.ts`](../open-next.config.ts) before changing anything
+here. The short version: on Vercel these were provided invisibly by the
+platform; on Workers they are hand-wired, and skipping them does not error, it
+just makes the site slow and the admin console appear to stop publishing.
+
+`wrangler d1 create` offers to add the binding for you and appends a *second*
+entry under its own generated name rather than filling in the one already there.
+Decline it.
+
+**Verified working 15 Aug 2026:** unpublishing the live trip removed it from
+`/`, `/trips`, `/destinations` and `/sitemap.xml` in under five seconds, and
+republishing restored it just as fast. That is the D1 tag cache doing its job.
+Re-run that check after any change to the adapter, the bindings, or
+`src/lib/revalidate.ts` — it is the one regression that hides.
+
+### The variables block is authoritative
+
+A deploy replaces the Worker's entire variable set with exactly what is listed
+in `wrangler.jsonc`, **silently deleting anything added through the dashboard**.
+Add runtime variables there, not in the UI.
+
+Secrets are stored separately and survive a deploy. Anything not prefixed
+`NEXT_PUBLIC_` goes in with `wrangler secret put`:
+
+```bash
+npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+npx wrangler secret put RESEND_API_KEY
+```
+
+`RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` are **deliberately unset** —
+see below.
+
+---
+
+## Supabase
+
+**Authentication → URL Configuration**
+
+| Field | Value |
+|---|---|
+| Site URL | `https://outway.club` |
+| Redirect URLs | `https://outway.club/auth/callback` |
+
+Without this, every password-reset and confirmation link emails the user a
+`localhost:3000` URL. They will not be able to log in and they will not tell you
+why — they will just leave.
+
+**Authentication → SMTP Settings** — so auth mail comes from the domain rather
+than Supabase's shared sender, which is rate-limited to a handful an hour and is
+explicitly not for production:
+
+| Field | Value |
+|---|---|
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | the `RESEND_API_KEY` |
+| Sender email | `noreply@outway.club` |
+| Sender name | `Outway Club` |
+
+The six email bodies live in
+[`supabase-auth-emails.md`](supabase-auth-emails.md), which is their **only**
+copy.
+
+---
+
+## Things that differ from Vercel
+
+**Image optimization is gone.** `next/image` optimization is a Vercel platform
+feature with no free equivalent on Workers. `CF_BUILD=1` sets
+`images.unoptimized`, so images serve at their stored size. Uploads are now
+downscaled in the browser first (`src/lib/resize-image.ts`), but that only
+applies going forward — **photos uploaded before that change are still full size
+and now served full size.** Re-upload the homepage hero and the live trip's
+gallery through the admin editor and they get shrunk on the way in.
+
+**Cold starts replace warm lambdas.** Workers start faster than Node lambdas,
+but `routePreloadingBehavior` is left at `"none"` because preloading trades cold
+start CPU for it, and the free plan meters CPU.
+
+**Cloudflare injects things into responses.** Two known cases, both new since
+the move:
+
+- `robots.txt` now carries a Cloudflare "Managed content" block that disallows
+  `GPTBot`, `ClaudeBot`, `CCBot`, `Google-Extended`, `Bytespider`, `Amazonbot`
+  and others, plus a `Content-Signal` header. Googlebot is untouched, so search
+  indexing is unaffected. Turn it off under AI Crawl Control if the file should
+  be only what `src/app/robots.ts` emits.
+- The Web Analytics beacon (`static.cloudflareinsights.com/beacon.min.js`) is
+  injected and then **blocked by the app's own CSP**, so it collects nothing.
+  Either add the host to `script-src` in `next.config.mjs` or turn the automatic
+  injection off. Leaving it is harmless but produces a console error on every
+  page load.
+
+**Razorpay is not configured, and that is intended.** No Razorpay account exists
+yet, so both Razorpay secrets are unset on Cloudflare and
+`NEXT_PUBLIC_RAZORPAY_KEY_ID` is left empty — that emptiness is what keeps
+`isRazorpayConfigured()` false. `site.paymentsEnabled` is `false` besides.
+Checkout answers 503 with "Payments aren't switched on yet, please email us";
+the webhook and refund routes log and bail. Nothing crashes and nothing needs
+stubbing.
+
+> **When Razorpay is switched on, re-test the webhook on Workers before trusting
+> it.** Signature verification reads the raw request body, and body handling is
+> exactly the sort of thing that differs between Node and workerd. A webhook
+> that fails signature checks does not look broken from the outside: the
+> customer pays, Razorpay reports success, and the booking is never marked
+> confirmed. Send a test event from the Razorpay dashboard at the deployed URL
+> and confirm the booking row actually flips.
+
+---
+
+## Rolling back to Vercel
+
+The Vercel project is still deployed and still has the domain attached — it just
+shows "Invalid Configuration" because DNS no longer points at it. Keep it until
+about **22 August 2026**, then it can be deleted.
+
+To roll back:
+
+1. Cloudflare → Workers & Pages → `outway-club` → Settings → Domains & Routes →
+   remove the `outway.club` custom domain.
+2. Cloudflare → DNS: add `A @ 216.198.79.1` **grey-cloud (DNS only)** and
+   `CNAME www → 311ef17e3ad17a5a.vercel-dns-017.com`, grey-cloud.
+3. Disable the www Redirect Rule.
+
+Cloudflare TTLs are short, so this takes seconds. Nothing in the repo needs
+reverting — the Cloudflare config is inert on Vercel and `CF_BUILD` is only set
+by the `cf:*` scripts.
+
+---
+
+## Checking things yourself
+
+Every provider's status icon is a cached scan and they lie in both directions.
+DNS is the only source of truth. Pointing at `8.8.8.8` skips your own cache; on
+this machine, **use fully-qualified names or PowerShell**, because the router
+appends its own search domain and `nslookup outway.club` silently resolves
+`outway.club.iballbatonwifi.com` instead.
+
+```powershell
+Resolve-DnsName outway.club -Type NS  -Server 8.8.8.8
+Resolve-DnsName outway.club -Type MX  -Server 8.8.8.8
+Resolve-DnsName outway.club -Type TXT -Server 8.8.8.8
+Resolve-DnsName zmail._domainkey.outway.club  -Type TXT -Server 8.8.8.8
+Resolve-DnsName resend._domainkey.outway.club -Type TXT -Server 8.8.8.8
+```
+
+```bash
+curl -sI https://outway.club | grep -iE "^server|^cf-ray"      # cloudflare
+curl -sI https://www.outway.club | grep -iE "^HTTP|^location"  # 301 to apex
+curl -s https://outway.club/sitemap.xml | grep -c "<loc>"      # apex URLs only
+```
+
+A value coming back means it is published and the dashboard is simply stale.
+`NXDOMAIN` means the record is not there.
+
+---
+
+## Gotchas, collected
+
+| Symptom | Cause |
+|---|---|
+| Canonical/OG/sitemap show the wrong URL | `NEXT_PUBLIC_*` is build-time. Rebuild and redeploy. |
+| Site deploys green but never caches; admin appears to stop publishing | `wrangler deploy` was used instead of `opennextjs-cloudflare deploy`, or the KV binding is missing. |
+| `No D1 binding "NEXT_TAG_CACHE_D1" found!` | The binding was renamed, or `wrangler d1 create` added a duplicate under a generated name. |
+| A variable set in the Cloudflare dashboard vanished | `wrangler.jsonc` `vars` is authoritative and a deploy overwrote it. |
+| Mail to `hello@` bounces | An MX record was changed — most likely Cloudflare Email Routing got enabled. |
+| App email lands in spam | SPF or DKIM failing. Check **Show original** in Gmail before blaming content. |
+| SPF permerror / "too many DNS lookups" | Two SPF records on the root, or `include:_spf.resend.com` added unnecessarily. |
+| Zoho's DNS Mapping shows red on every row | Zoho caches its last scan. Verify against DNS itself, then hit Verify and ignore the icon. |
+| Zoho DKIM stays red | Nine times in ten the record was never saved. Confirm with `Resolve-DnsName`; `NXDOMAIN` means it isn't there. |
+| Password reset links go to localhost | Supabase Site URL not updated. |
+| Can't add Zoho to Outlook or iPhone Mail | Correct — the free plan has no IMAP/POP. Use Zoho's webmail or app. |
+| `nslookup` returns a bogus SPF record for everything | The router's search domain got appended. Use a trailing dot or `Resolve-DnsName`. |
+| Console error about `cloudflareinsights.com` being blocked | Expected. Cloudflare's beacon vs. the app's CSP — see above. |
