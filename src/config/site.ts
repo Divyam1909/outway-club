@@ -50,6 +50,22 @@ export const site = {
     youtube: env("NEXT_PUBLIC_YOUTUBE_URL"),
   },
 
+  /**
+   * Search Console / Webmaster Tools ownership tokens.
+   *
+   * Only the bare token, not the whole <meta> tag — Next builds the tag. Empty
+   * means no tag is rendered at all, which is correct: an empty content
+   * attribute is a failed verification rather than an absent one.
+   *
+   * The DNS TXT method is the better one for the apex domain (it survives a
+   * redeploy and covers every subdomain); this exists because the HTML-tag
+   * method is the path of least resistance if you're already in the dashboard.
+   */
+  verification: {
+    google: env("NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION"),
+    bing: env("NEXT_PUBLIC_BING_SITE_VERIFICATION"),
+  },
+
   /** Responded-within promise used in copy and auto-replies. Keep honest. */
   responseTime: "one business day",
 

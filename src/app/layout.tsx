@@ -78,6 +78,16 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
+  // Rendered only when a token is actually set, so an unverified site ships no
+  // tag rather than an empty one.
+  ...(site.verification.google || site.verification.bing
+    ? {
+        verification: {
+          ...(site.verification.google ? { google: site.verification.google } : {}),
+          ...(site.verification.bing ? { other: { "msvalidate.01": site.verification.bing } } : {}),
+        },
+      }
+    : {}),
   formatDetection: { telephone: false },
 };
 
