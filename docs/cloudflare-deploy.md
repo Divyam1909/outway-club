@@ -19,21 +19,30 @@ slow and the admin console appears to stop publishing. Read
 
 ### 1. Create the two storage resources
 
+Already done for the current account — the ids are committed in
+[`wrangler.jsonc`](../wrangler.jsonc). They are identifiers, not credentials, so
+committing them is fine. Recreate only if moving to a different Cloudflare
+account:
+
 ```bash
 npx wrangler login
 npx wrangler kv namespace create NEXT_INC_CACHE_KV
 npx wrangler d1 create outway-club-tags
 ```
 
-Each prints an id. Paste them into
-[`wrangler.jsonc`](../wrangler.jsonc), replacing `REPLACE_WITH_KV_NAMESPACE_ID`
-and `REPLACE_WITH_D1_DATABASE_ID`. Both ids are safe to commit — they are
-identifiers, not credentials.
+Both prompt "would you like Wrangler to add it on your behalf?". **Say no to
+the D1 one.** It appends a second `d1_databases` entry under a generated binding
+name instead of filling in the existing `NEXT_TAG_CACHE_D1` entry, and the
+adapter only reads the latter.
 
-| Binding | What breaks without it |
-|---|---|
-| `NEXT_INC_CACHE_KV` | Nothing caches. Every visit re-queries Supabase. |
-| `NEXT_TAG_CACHE_D1` | `revalidatePath` does nothing. Editors wait 5 minutes to see any change. |
+| Binding | What breaks without it | How it shows up |
+|---|---|---|
+| `NEXT_INC_CACHE_KV` | Nothing caches; every visit re-queries Supabase | **Silent** — the adapter treats the missing binding as ignorable. The site just gets slow. |
+| `NEXT_TAG_CACHE_D1` | `revalidatePath` does nothing | **Loud** — deploy fails with `No D1 binding "NEXT_TAG_CACHE_D1" found!` |
+
+The D1 table itself (`revalidations`) is created automatically, but only by
+`opennextjs-cloudflare deploy` — see the deploy section below, because this is
+the easy way to get a half-working setup.
 
 ### 2. Set the secrets
 
@@ -95,7 +104,14 @@ Workers Builds (Cloudflare dashboard → Workers & Pages → Create → Connect 
 Git) is the equivalent of Vercel's git integration.
 
 - **Build command:** `npm install --include=dev && npm run cf:build`
-- **Deploy command:** `npx wrangler deploy`
+- **Deploy command:** `npx opennextjs-cloudflare deploy`
+
+> **Do not use plain `npx wrangler deploy` as the deploy command.** It uploads
+> the worker perfectly happily, and skips the populate-cache step that creates
+> the D1 `revalidations` table and seeds KV with the prerendered pages. The
+> result is a site that deploys green, serves correctly, never caches, and whose
+> admin console appears to have stopped publishing. `opennextjs-cloudflare
+> deploy` wraps `wrangler deploy` and does both.
 
 ---
 

@@ -1,49 +1,52 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "outway-club",
-  "main": ".open-next/worker.js",
-
-  // nodejs_compat is required by the adapter, and the compatibility date must
-  // be 2024-09-23 or later or the Node built-ins it relies on are not present.
-  "compatibility_date": "2025-08-01",
-  "compatibility_flags": ["nodejs_compat"],
-
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-
-  // The two IDs below are placeholders. Create the real resources once, with
-  // the account this will live on, and paste the ids they print:
-  //
-  //   npx wrangler kv namespace create NEXT_INC_CACHE_KV
-  //   npx wrangler d1 create outway-club-tags
-  //
-  // See docs/cloudflare-deploy.md. Neither is optional: without the KV
-  // namespace nothing caches, and without D1 every revalidatePath is a no-op.
-  "kv_namespaces": [
-    {
-      "binding": "NEXT_INC_CACHE_KV",
-      "id": "REPLACE_WITH_KV_NAMESPACE_ID"
-    }
-  ],
-
-  "d1_databases": [
-    {
-      "binding": "NEXT_TAG_CACHE_D1",
-      "database_name": "outway-club-tags",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
-    }
-  ],
-
-  // Public values only. Everything secret (service role key, Razorpay secret,
-  // Resend key) is set with `wrangler secret put` and must never appear here —
-  // this file is committed.
-  "vars": {
-    "NEXT_PUBLIC_SITE_URL": "https://outway.club"
-  },
-
-  "observability": {
-    "enabled": true
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "outway-club",
+	"main": ".open-next/worker.js",
+	// nodejs_compat is required by the adapter, and the compatibility date must
+	// be 2024-09-23 or later or the Node built-ins it relies on are not present.
+	"compatibility_date": "2025-08-01",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	// NEXT_INC_CACHE_KV and NEXT_TAG_CACHE_D1 are not our choice of label — they
+	// are the exact names the OpenNext adapter looks up. Rename either and the
+	// override finds nothing.
+	//
+	// The two fail very differently, which is worth knowing before debugging one:
+	//   KV  — throws an error the adapter classes as ignorable, so the site works
+	//         and simply never caches. Silent.
+	//   D1  — `opennextjs-cloudflare deploy` fails outright with
+	//         `No D1 binding "NEXT_TAG_CACHE_D1" found!`. Loud.
+	//
+	// `wrangler d1 create` offers to add the binding for you and appends a SECOND
+	// entry under its own generated name rather than filling in the one already
+	// here. Decline it, or delete the extra afterwards.
+	//
+	// See docs/cloudflare-deploy.md.
+	"kv_namespaces": [
+		{
+			"binding": "NEXT_INC_CACHE_KV",
+			"id": "c4ce3b900b2e4c549243381c3d5231d4"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "NEXT_TAG_CACHE_D1",
+			"database_name": "outway-club-tags",
+			"database_id": "0c86c8ab-bc95-4366-9096-090dff4f5e1b"
+		}
+	],
+	// Public values only. Everything secret (service role key, Razorpay secret,
+	// Resend key) is set with `wrangler secret put` and must never appear here —
+	// this file is committed.
+	"vars": {
+		"NEXT_PUBLIC_SITE_URL": "https://outway.club"
+	},
+	"observability": {
+		"enabled": true
+	}
 }
