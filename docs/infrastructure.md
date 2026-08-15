@@ -9,14 +9,16 @@ that no longer exist.
 >
 > Everything else here is done and verified. These three are not:
 >
-> 1. **DNSSEC** — signed at Cloudflare, DS entered at Porkbun, **not yet
->    published by the `.club` registry**. [Details and the check
->    command](#dnssec--pending).
+> 1. **Always Use HTTPS is off.** `http://outway.club/` answers 200 on port 80
+>    with no redirect, so every page is reachable on both schemes. One toggle:
+>    SSL/TLS → Edge Certificates.
 > 2. **GitHub is not connected** to Cloudflare, so deploys run from this laptop
->    and the production bundle is built from a gitignored `.env.local`.
->    [Details](#deploying-from-github-instead--not-set-up).
+>    and the production bundle is built from a gitignored `.env.local`. Pushing
+>    to `main` ships nothing. [Details](#deploying-from-github-instead--not-set-up).
 > 3. **The Vercel project still exists**, undomained, as the rollback path.
 >    Delete after 22 Aug 2026. [Details](#rolling-back-to-vercel).
+>
+> DNSSEC came off this list on 15 Aug — [it is live](#dnssec--live).
 >
 > Product-level gaps — payment details, phone, address — are in
 > [`still-to-do.md`](still-to-do.md).
@@ -104,11 +106,12 @@ apex and `www`. There is no origin server behind Cloudflare — the Worker *is*
 the origin — so the origin-certificate and post-quantum settings underneath the
 encryption mode are inert here.
 
-### DNSSEC — pending
+### DNSSEC — live
 
-Cloudflare has signed the zone. The DS record is entered at Porkbun (Domain
-Management → `outway.club` → DNSSEC) but **had not propagated to the `.club`
-registry as of 15 Aug 2026**. Values, for reference if it needs re-entering:
+Done as of 15 Aug 2026. Cloudflare has signed the zone, the DS record is entered
+at Porkbun (Domain Management → `outway.club` → DNSSEC), and it has reached the
+`.club` registry — `a.nic.club` returns the `DS` row for key tag 2371 when asked
+directly. Values, for reference if it ever needs re-entering:
 
 ```
 Key Tag 2371 · Algorithm 13 (ECDSA/SHA-256) · Digest Type 2 (SHA-256)
@@ -119,14 +122,13 @@ Porkbun rejects the submission if the **keyData** block (Flags, Protocol, Key
 Data Algorithm, Public Key) is filled in — `.club` runs on a registry that takes
 **dsData only**. Leave keyData empty, and leave *Max Sig Life* empty too.
 
-Check whether it has landed by asking the registry directly, which no cache can
-fool:
+To re-check it at any time, ask the registry directly — no cache can fool this:
 
 ```powershell
 Resolve-DnsName outway.club -Type DS -Server 37.209.192.10 -DnsOnly   # a.nic.club
 ```
 
-A `DS` row with key tag `2371` means done. An `SOA` row means not yet.
+A `DS` row with key tag `2371` means live. An `SOA` row means it has gone.
 
 ---
 
@@ -444,7 +446,7 @@ A value coming back means it is published and the dashboard is simply stale.
 | `nslookup` returns a bogus SPF record for everything | The router's search domain got appended. Use a trailing dot or `Resolve-DnsName`. |
 | Console error about `cloudflareinsights.com` being blocked | The CSP in `next.config.mjs` lost one of the two Cloudflare hosts, or the build predates 15 Aug 2026. |
 | Web Analytics dashboard stays empty though the beacon loads | `cloudflareinsights.com` is missing from `connect-src`. The script runs and its POST is blocked. |
-| Booking alert didn't arrive in `bookings@` | `OPS_EMAIL` in `wrangler.jsonc` is `hello@outway.club`. Look there. |
+| Booking alert didn't arrive in `bookings@` | Check `OPS_EMAIL` in `wrangler.jsonc` — the `vars` block there is what production reads, not `.env.local`. Both addresses are aliases onto one mailbox, so also check whether a filter moved it. |
 
 ---
 
@@ -458,16 +460,21 @@ day; nothing here predates it.
 | Hosting | Vercel → **Cloudflare Workers**, via `@opennextjs/cloudflare`. Driven by Hobby's ban on commercial use. |
 | DNS | Porkbun → **Cloudflare**. Forced, not chosen: a Worker custom domain requires the zone to live in Cloudflare. All thirteen records moved intact. |
 | `www` | Vercel redirect → Cloudflare **Redirect Rule** + proxied `AAAA 100::`. |
-| SSL | **Full (strict)**, Always Use HTTPS on, Universal SSL covering apex and `www`. |
-| DNSSEC | Zone signed at Cloudflare, DS entered at Porkbun. **Not yet live at the registry.** |
+| SSL | **Full (strict)**, Universal SSL covering apex and `www`. Always Use HTTPS is **off** — see the correction below. |
+| DNSSEC | Zone signed at Cloudflare, DS entered at Porkbun, **live at the registry**. Done. |
 | CSP | Added `static.cloudflareinsights.com` to `script-src` and `cloudflareinsights.com` to `connect-src` so Cloudflare Web Analytics works instead of being blocked. |
 | Docs | `production-setup.md` and `cloudflare-deploy.md` merged into this file; `IMPORTANT.md` became [`still-to-do.md`](still-to-do.md). |
 
 Corrected on the same day, having been wrong in the old docs:
 
 - Resend's MX region is **`ap-northeast-1`**, not `ap-south-1`.
-- `OPS_EMAIL` is now `hello@outway.club`, not `bookings@` — an unintended
-  side-effect of the migration, still [open](still-to-do.md).
+- **Always Use HTTPS is off**, though this table said it was on. `http://outway.club/`
+  answers 200 on port 80 with no redirect, so every page is reachable on both
+  schemes. [Open](still-to-do.md) — one toggle under SSL/TLS → Edge Certificates.
+- `OPS_EMAIL` was left as `hello@outway.club` by the migration, an unintended
+  side-effect. Now deliberately `bookings@outway.club` in `wrangler.jsonc`.
+  Setting it in `.env.local` does nothing in production: it is read at request
+  time on the Worker, from the `vars` block.
 - `opennextjs-cloudflare deploy` **does not build**. The old docs implied it
   did.
 

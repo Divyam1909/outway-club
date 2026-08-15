@@ -78,7 +78,15 @@
 		// on the Worker. A real mailbox, deliberately not noreply@: three of the
 		// templates in src/lib/email.ts tell the reader to reply to the message.
 		"EMAIL_FROM": "Outway Club <hello@outway.club>",
-		"OPS_EMAIL": "hello@outway.club"
+
+		// Where booking alerts land. `bookings@` and `hello@` are aliases onto
+		// one mailbox, so this is about which address the alert is addressed to,
+		// not which inbox it reaches — it keeps ops mail filterable.
+		//
+		// Setting this in .env.local does NOT change production: that file is
+		// only read when building on this machine, and OPS_EMAIL is read at
+		// request time on the Worker, from this block.
+		"OPS_EMAIL": "bookings@outway.club"
 	},
 	"observability": {
 		"enabled": true

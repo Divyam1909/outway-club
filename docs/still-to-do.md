@@ -30,6 +30,22 @@ printing a placeholder, so an unfilled value is invisible, not "TBD".
 
 # Open
 
+> ### Four commits are on GitHub and none of them are live
+>
+> GitHub is not connected to Cloudflare, so pushing deploys nothing. Confirmed
+> on 15 Aug: the live Journal article still serves plain `<img>` tags, with none
+> of the `/cdn-cgi/image/` rewrites that `optimize-article-images.ts` adds.
+> Waiting to ship: the Images binding, the article-image rewriting, the sitemap
+> `lastmod` fix, and `OPS_EMAIL`.
+>
+> ```bash
+> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js build
+> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
+> ```
+>
+> Images is already enabled on the zone, so the binding has what it needs and
+> the deploy order problem noted in `wrangler.jsonc` no longer applies.
+
 ## 1. Nobody can pay you
 
 Online checkout is off (`site.paymentsEnabled = false`), so the plan is UPI or
@@ -80,24 +96,15 @@ anywhere — the channel most Indian travellers reach for first.
 Shows on: contact page, terms, privacy, footer, structured data.
 **Also required for Razorpay activation.**
 
-## 4. Where should ops alerts land?
+## 4. Housekeeping
 
-`OPS_EMAIL` is `hello@outway.club` in `wrangler.jsonc`; on Vercel it was
-`bookings@outway.club`. The migration moved booking alerts into the general
-inbox — which is the exact thing a separate `bookings@` mailbox existed to
-prevent, an operational alert getting lost under a general question.
-
-Visible in the Resend log: the 15 Aug 05:22 alert went to `bookings@`, the 11:16
-one to `hello@`. Both mailboxes exist and both deliver. Pick one deliberately
-and set it in [`wrangler.jsonc`](../wrangler.jsonc), not the dashboard.
-
-## 5. Housekeeping
-
-- [ ] **DNSSEC is half-done.** Cloudflare has signed the zone and the DS record
-      is entered at Porkbun, but it had not reached the `.club` registry as of
-      15 Aug. Check with the command in
-      [`infrastructure.md`](infrastructure.md#dnssec--pending). If it is still
-      missing after a day, delete and re-create the record at Porkbun.
+- [ ] **Turn on Always Use HTTPS.** `http://outway.club/` answers **200 with no
+      redirect** — checked on port 80 on 15 Aug, despite the docs having claimed
+      otherwise. Every page is therefore reachable on both schemes, which is a
+      duplicate-content signal to Google and sends the first request of a new
+      visitor's session in the clear. Cloudflare → SSL/TLS → Edge Certificates →
+      **Always Use HTTPS**. The HSTS header is already set, but it only protects
+      browsers that have been to the site before, and never protects crawlers.
 - [ ] **Delete the Vercel project** — not before **22 Aug 2026**. It is the
       rollback path and costs nothing to keep. See
       [`infrastructure.md`](infrastructure.md#rolling-back-to-vercel).
@@ -109,28 +116,30 @@ and set it in [`wrangler.jsonc`](../wrangler.jsonc), not the dashboard.
       quit and relaunch from the Start menu clears both. The first disables TLS
       certificate validation for every Node process; the second is what makes
       `npm install` silently skip Tailwind and TypeScript.
-- [ ] **Decide on the managed `robots.txt`.** Cloudflare prepends a block
-      disallowing `GPTBot`, `ClaudeBot`, `Google-Extended` and friends. Harmless
-      for SEO — Googlebot is untouched — but the served file is no longer what
-      `src/app/robots.ts` emits.
 - [ ] **Connect GitHub to Cloudflare** (optional). Removes the local npm 2.15.12
       bug from the deploy path and stops production depending on one laptop's
       `.env.local`. Settings in [`infrastructure.md`](infrastructure.md).
 
-## 6. Search
+## 5. Search
 
 Google Search Console is verified by DNS TXT and the record survived the
-nameserver move. The sitemap is live with 14 URLs.
+nameserver move. The sitemap is live with 14 URLs and serves 200 as
+`application/xml` in under a second, to Googlebot's user agent as well.
 
-- [ ] Confirm the sitemap is submitted and reporting **Success**
-- [ ] Request indexing for `/`, `/trips` and `/trips/udaipur-mount-abu`
+- [ ] **Sitemap says "Couldn't fetch"** — submitted 15 Aug, `Last read` blank,
+      `Discovered pages 0`, type `Unknown`. The endpoint itself is fine, so this
+      is Google not having fetched it yet rather than a fault to chase. Give it
+      24–48h; if it persists, remove the sitemap and re-submit as `sitemap.xml`.
+- [ ] Request indexing for `/trips/udaipur-mount-abu`, `/blog/udaipur-travel-guide`,
+      `/destinations/udaipur`, `/trips` and `/blog`. Only `/` is indexed so far
+      and the quota is about ten URLs a day.
 - [ ] Bing Webmaster Tools — can import the whole property from Search Console
 
 `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` and `NEXT_PUBLIC_BING_SITE_VERIFICATION`
 are deliberately blank: verification is done at DNS instead, which survives
 redeploys and covers every subdomain. Leave them blank on purpose.
 
-## 7. Longer-lived
+## 6. Longer-lived
 
 - [ ] **DMARC** is at `p=none`. Move to `p=quarantine` around **29 Aug 2026**,
       once the reports at `divyam@outway.club` come back clean:
@@ -139,9 +148,6 @@ redeploys and covers every subdomain. Leave them blank on purpose.
       [`supabase-auth-emails.md`](supabase-auth-emails.md#about-the-logo).
 - [ ] **`npm audit`** — 4 high-severity advisories in `sharp` via libvips. The
       fix is `next@16`, a breaking upgrade. Post-launch work.
-- [ ] **Re-upload the homepage hero and the live trip's gallery** through the
-      admin editor. Photos uploaded before browser-side downscaling landed are
-      still full size, and Workers has no image optimizer to compensate.
 - [ ] **`NEXT_PUBLIC_YOUTUBE_URL`** — blank hides the footer link and drops it
       from `sameAs` in structured data. Set it when there is a channel.
 - [ ] **Payments.** When checkout is switched back on, `site.paymentsEnabled`
@@ -150,7 +156,7 @@ redeploys and covers every subdomain. Leave them blank on purpose.
       re-tested on Workers** before it is trusted — see
       [`infrastructure.md`](infrastructure.md#things-that-differ-from-vercel).
 
-## 8. Test data still in the database
+## 7. Test data still in the database
 
 Left in place deliberately, safe to remove whenever:
 
@@ -185,6 +191,34 @@ Decisions taken and things verified. Not to be re-litigated.
 - **BIMI is not worth chasing yet.** The grey circle beside the sender name in
   Gmail is not a template setting; it needs DMARC at `p=quarantine` **and** a
   paid Verified Mark Certificate requiring a registered trademark.
+- **Ops alerts go to `bookings@outway.club`.** Set in
+  [`wrangler.jsonc`](../wrangler.jsonc), which is the only place that counts —
+  `OPS_EMAIL` is read at request time on the Worker, so `.env.local` changes it
+  for local dev only. `bookings@` and `hello@` are aliases onto one mailbox, so
+  this decides what the alert is addressed to, not where it arrives; the value
+  is that ops mail stays filterable. `EMAIL_FROM` deliberately stays
+  `hello@outway.club` — that is the *sender*, it is what Resend has verified,
+  and three templates ask the reader to reply to it.
+- **Cloudflare's managed `robots.txt` stays enabled.** It blocks *training*
+  crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot`, `Bytespider`,
+  `Amazonbot`, `Applebot-Extended`, `meta-externalagent`) and leaves every
+  crawler that sends traffic alone — `Googlebot`, `Bingbot`, `OAI-SearchBot`,
+  `Claude-SearchBot`, `PerplexityBot`, `Applebot`. So AI assistants can still
+  find and cite the site; only harvesting into training sets is refused, and
+  nothing there was going to send a visitor. Note `Google-Extended` does **not**
+  affect AI Overviews, which run off `Googlebot`.
+  - The served file therefore carries two `User-agent: *` groups, Cloudflare's
+    ahead of the one `src/app/robots.ts` emits. Same-agent groups are merged
+    per RFC 9309, so the `/admin`, `/account` and `/booking/` disallows still
+    apply — confirmed against the live file.
+- **The "re-upload the hero and gallery" task was retired, not done.** It had no
+  target and would have made things worse. Every image path in the database is a
+  static `/images/…` file in this repo — all 16 checked on 15 Aug — and nothing
+  has ever been uploaded to Supabase Storage. The admin editor uploads *to*
+  Supabase Storage, so doing it would have moved files off Cloudflare's `ASSETS`
+  binding onto a remote host that then needs whitelisting in the zone's Images
+  sources. Its premise is also gone: Workers optimizes images now. And no file
+  needed shrinking — the largest is 692KB against a 1.5MB house limit.
 
 ## Verified 15 August 2026
 
@@ -202,10 +236,20 @@ Decisions taken and things verified. Not to be re-litigated.
   the reset link resolving to `outway.club` rather than `localhost:3000`.
 - **Supabase** — Site URL, the single `/auth/callback` redirect, SMTP through
   Resend, and the six branded templates.
-- **Baked-in config** — `NEXT_PUBLIC_SITE_URL`, `EMAIL_FROM`, `OPS_EMAIL`,
-  Instagram, legal name and business city all correct in the deployed bundle,
-  and no stray Razorpay test key.
-- **Google Search Console** domain-property verification.
+- **Baked-in config** — `NEXT_PUBLIC_SITE_URL`, `EMAIL_FROM`, Instagram, legal
+  name and business city all correct in the deployed bundle, and no stray
+  Razorpay test key. (`OPS_EMAIL` was verified too, but has since been changed
+  to `bookings@` and is waiting on the pending deploy.)
+- **Google Search Console** domain-property verification, and `https://outway.club/`
+  reporting **URL is on Google / Page is indexed**.
+- **DNSSEC is live.** The DS record reached the `.club` registry and Cloudflare
+  reports the zone protected. This is now done, not pending.
+- **Cloudflare image transformations work**, measured on the live site against
+  `escape-001/hero.jpg` (427KB original): `/cdn-cgi/image/width=640` returned
+  37KB, and `/_next/image?…&w=828` returned **29KB of AVIF**. That is the zone
+  toggle doing the work — it is a Cloudflare feature, not something this repo's
+  build has to ship, which is why it started working before the pending deploy
+  at the top of this file.
 
 ---
 
@@ -216,9 +260,15 @@ Decisions taken and things verified. Not to be re-litigated.
   Cloudflare. Replaced `production-setup.md` and `cloudflare-deploy.md` with
   [`infrastructure.md`](infrastructure.md).
 - This file replaced `IMPORTANT.md` and was reordered so open items lead.
-- Added: the ops-email question (§4), DNSSEC (§5), the VS Code environment
-  variables (§5), the `robots.txt` decision (§5).
-- Resolved: Cloudflare Web Analytics CSP, the demo-admin decision, and the
-  whole mail-delivery verification chain.
+- Added: the VS Code environment variables (§4), and — later the same day — the
+  undeployed-commits warning at the top, Always Use HTTPS (§4) and the sitemap's
+  "Couldn't fetch" state (§5).
+- Resolved: Cloudflare Web Analytics CSP, the demo-admin decision, the whole
+  mail-delivery verification chain, DNSSEC, the ops-email question (now
+  `bookings@`), the managed `robots.txt` decision (keep it), and Cloudflare
+  image optimization.
+- Retired: the "re-upload the hero and gallery" task, which had no target — see
+  Settled. Sections renumbered after it and the ops-email section were removed.
 - Corrected: Resend's MX region is `ap-northeast-1`, not `ap-south-1` as the
-  old docs claimed.
+  old docs claimed. **Always Use HTTPS is off**, not on as the docs said — port
+  80 answers 200 with no redirect.
