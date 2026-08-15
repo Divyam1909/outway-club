@@ -86,10 +86,12 @@ cheap.
       15 Aug. Check with the command in
       [`infrastructure.md`](infrastructure.md#dnssec--pending). If it is still
       missing after a day, delete and re-create the record at Porkbun.
-- [ ] **Demote the demo admin.** `demoaccdn02@gmail.com` was promoted to admin
-      on 15 Aug so the cutover could be tested end to end. Its password is
-      written down in this repo, which means anyone with repo access has admin
-      on production. Undo it when you no longer need it:
+- [x] **The demo admin stays.** `demoaccdn02@gmail.com` was promoted to admin on
+      15 Aug so the cutover could be tested end to end, and the decision is to
+      leave it that way. Be aware of what that means: its password is written
+      down in section 7 of this file, in a committed repo, so **anyone with
+      repo access has admin on production**. If the repo is ever shared or made
+      public, change that password first. To undo:
       `node scripts/make-admin.mjs demote demoaccdn02@gmail.com`
 - [ ] **Delete the Vercel project** — not before **22 Aug 2026**. It is the
       rollback path and it costs nothing to keep. See
@@ -99,11 +101,20 @@ cheap.
       domain was pointed at the Worker.
 - [ ] **Back up `.env.local`** somewhere durable. It is gitignored, and it is
       now the only copy of production's build-time configuration.
-- [ ] **Decide on the Cloudflare beacon.** `static.cloudflareinsights.com` is
-      injected into every page and blocked by the app's CSP, so Web Analytics
-      collects nothing and every page logs a console error. Either add the host
-      to `script-src` in `next.config.mjs` or turn the injection off in
-      Cloudflare.
+- [ ] **Decide where ops alerts should land.** `OPS_EMAIL` is
+      `hello@outway.club` in `wrangler.jsonc`; on Vercel it was
+      `bookings@outway.club`. The migration moved booking alerts into the
+      general inbox, which is the exact thing a separate `bookings@` mailbox
+      existed to prevent — an operational alert getting lost under a general
+      question. Both mailboxes exist and both work; pick one deliberately and
+      set it in `wrangler.jsonc`, not the dashboard.
+- [x] **Cloudflare Web Analytics is allowed through the CSP.** Fixed in
+      `next.config.mjs` on 15 Aug — `static.cloudflareinsights.com` in
+      `script-src`, `cloudflareinsights.com` in `connect-src`. **Takes effect
+      only on the next deploy**, since headers ship with the build. Confirm
+      afterwards: the console error on page load should be gone, and Cloudflare
+      → Analytics & Logs → Web Analytics should start showing visits within a
+      few minutes.
 - [ ] **Decide on the managed `robots.txt`.** Cloudflare prepends a block
       disallowing `GPTBot`, `ClaudeBot`, `Google-Extended` and friends. Harmless
       for SEO — Googlebot is untouched — but it means the served file is no

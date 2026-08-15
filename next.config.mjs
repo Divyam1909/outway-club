@@ -14,9 +14,18 @@ import { fileURLToPath } from "node:url";
  * every relative URL, and plugins are off. Those close the clickjacking and
  * form-hijack routes, which are the ones that matter for a payment page.
  *
- * The allowed hosts are: Razorpay (checkout script + the iframe it opens) and
- * Supabase (REST, auth, realtime, storage). Fonts are self-hosted by
- * next/font at build time, so no font CDN is needed.
+ * The allowed hosts are: Razorpay (checkout script + the iframe it opens),
+ * Supabase (REST, auth, realtime, storage), and Cloudflare Web Analytics.
+ * Fonts are self-hosted by next/font at build time, so no font CDN is needed.
+ *
+ * Cloudflare injects its analytics beacon into every response at the edge, so
+ * the script arrives whether or not this policy allows it — omitting the host
+ * does not prevent the request, it only guarantees the browser blocks it and
+ * logs a CSP violation on every page load while the analytics silently collect
+ * nothing. Two hosts are needed and they are not the same one: the script is
+ * served from `static.cloudflareinsights.com`, and it POSTs its beacon to
+ * `cloudflareinsights.com/cdn-cgi/rum`. Allow only the script host and the
+ * dashboard stays empty.
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -29,8 +38,8 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   `script-src 'self' 'unsafe-inline' ${
     process.env.NODE_ENV === "development" ? "'unsafe-eval' " : ""
-  }https://checkout.razorpay.com https://*.razorpay.com`,
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com",
+  }https://checkout.razorpay.com https://*.razorpay.com https://static.cloudflareinsights.com`,
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://cloudflareinsights.com",
   "frame-src https://*.razorpay.com",
 ]
   .join("; ")

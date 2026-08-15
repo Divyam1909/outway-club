@@ -293,10 +293,11 @@ the move:
   indexing is unaffected. Turn it off under AI Crawl Control if the file should
   be only what `src/app/robots.ts` emits.
 - The Web Analytics beacon (`static.cloudflareinsights.com/beacon.min.js`) is
-  injected and then **blocked by the app's own CSP**, so it collects nothing.
-  Either add the host to `script-src` in `next.config.mjs` or turn the automatic
-  injection off. Leaving it is harmless but produces a console error on every
-  page load.
+  injected at the edge, so it arrives whether the CSP allows it or not.
+  `next.config.mjs` allows it as of 15 Aug — the script host in `script-src`
+  and `cloudflareinsights.com` in `connect-src`, which are two different hosts
+  and both are required. Remove either and the beacon loads but reports
+  nothing, or is blocked and logs a CSP violation on every page load.
 
 **Razorpay is not configured, and that is intended.** No Razorpay account exists
 yet, so both Razorpay secrets are unset on Cloudflare and
@@ -379,4 +380,6 @@ A value coming back means it is published and the dashboard is simply stale.
 | Password reset links go to localhost | Supabase Site URL not updated. |
 | Can't add Zoho to Outlook or iPhone Mail | Correct — the free plan has no IMAP/POP. Use Zoho's webmail or app. |
 | `nslookup` returns a bogus SPF record for everything | The router's search domain got appended. Use a trailing dot or `Resolve-DnsName`. |
-| Console error about `cloudflareinsights.com` being blocked | Expected. Cloudflare's beacon vs. the app's CSP — see above. |
+| Console error about `cloudflareinsights.com` being blocked | The CSP in `next.config.mjs` lost one of the two Cloudflare hosts, or the build predates 15 Aug 2026. |
+| Web Analytics dashboard stays empty though the beacon loads | `cloudflareinsights.com` is missing from `connect-src`. The script runs and its POST is blocked. |
+| Booking alert didn't arrive in `bookings@` | `OPS_EMAIL` in `wrangler.jsonc` is `hello@outway.club`. Look there. |
