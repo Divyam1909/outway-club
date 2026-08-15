@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildBlogPostPayload } from "@/lib/blog-payload";
+import { revalidateContent } from "@/lib/revalidate";
 
 /**
  * Create a journal post.
@@ -45,6 +46,8 @@ export async function POST(request: Request) {
     console.error("[admin/blog] insert failed:", error.message);
     return NextResponse.json({ error: "Couldn't save the post." }, { status: 500 });
   }
+
+  revalidateContent("post", data.slug);
 
   return NextResponse.json({ ok: true, id: data.id, slug: data.slug });
 }

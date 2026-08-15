@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, Star } from "lucide-react";
 import { clsx } from "clsx";
 import { HONEYPOT_FIELD } from "@/lib/honeypot";
 import { messageFromResponse, networkError } from "@/lib/error-messages";
+import { useSession } from "@/lib/use-session";
 
 const RATING_LABELS = ["", "Not for me", "Some of it landed", "Useful", "Really good", "Sending this to a friend"];
 
@@ -15,26 +16,32 @@ const RATING_LABELS = ["", "Not for me", "Some of it landed", "Useful", "Really 
  * so gating it behind sign-up would just mean nobody ever leaves one. Spam is
  * handled by the honeypot, the rate limiter and moderation instead.
  */
-export function CommentForm({
-  postId,
-  defaultAuthorName,
-  defaultAuthorEmail,
-}: {
-  postId: string;
-  defaultAuthorName: string;
-  defaultAuthorEmail: string;
-}) {
+export function CommentForm({ postId }: { postId: string }) {
   const mountedAt = useRef(Date.now());
+  // Prefill comes from the browser session rather than from a server render:
+  // reading the signed-in user during render would make the whole article page
+  // uncacheable to save a signed-in reader two keystrokes.
+  const { fullName, email } = useSession();
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
-  const [authorName, setAuthorName] = useState(defaultAuthorName);
-  const [authorEmail, setAuthorEmail] = useState(defaultAuthorEmail);
+  const [authorName, setAuthorName] = useState("");
+  const [authorEmail, setAuthorEmail] = useState("");
+  const edited = useRef(false);
   const [body, setBody] = useState("");
   const [trap, setTrap] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
   const shown = hovered || rating;
+
+  // Fill the identity fields once the session resolves, but never overwrite
+  // what the reader has already typed — a signed-in reader is allowed to
+  // comment under a different name.
+  useEffect(() => {
+    if (edited.current) return;
+    if (fullName) setAuthorName((value) => value || fullName);
+    if (email) setAuthorEmail((value) => value || email);
+  }, [fullName, email]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -144,7 +151,10 @@ export function CommentForm({
             required
             maxLength={80}
             value={authorName}
-            onChange={(event) => setAuthorName(event.target.value)}
+            onChange={(event) => {
+              edited.current = true;
+              setAuthorName(event.target.value);
+            }}
             className="field"
             placeholder="Ananya I."
           />
@@ -160,7 +170,10 @@ export function CommentForm({
             autoComplete="email"
             maxLength={254}
             value={authorEmail}
-            onChange={(event) => setAuthorEmail(event.target.value)}
+            onChange={(event) => {
+              edited.current = true;
+              setAuthorEmail(event.target.value);
+            }}
             className="field"
             placeholder="you@email.com"
           />

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildBlogPostPayload } from "@/lib/blog-payload";
+import { revalidateContent } from "@/lib/revalidate";
 
 /** Update a journal post. Body is re-sanitised on every save. */
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -44,6 +45,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return NextResponse.json({ error: "That post no longer exists." }, { status: 404 });
   }
 
+  revalidateContent("post", data.slug);
+
   return NextResponse.json({ ok: true, id: data.id, slug: data.slug });
 }
 
@@ -53,12 +56,23 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
 
   const { id } = await context.params;
   const admin = createAdminClient();
+
+  // Read the slug before the row goes, or there is nothing left to purge with
+  // and the deleted post keeps serving from cache until its timer expires.
+  const { data: existing } = await admin
+    .from("blog_posts")
+    .select("slug")
+    .eq("id", id)
+    .maybeSingle();
+
   const { error } = await admin.from("blog_posts").delete().eq("id", id);
 
   if (error) {
     console.error("[admin/blog] delete failed:", error.message);
     return NextResponse.json({ error: "Couldn't delete that post." }, { status: 500 });
   }
+
+  revalidateContent("post", existing?.slug ?? null);
 
   return NextResponse.json({ ok: true });
 }

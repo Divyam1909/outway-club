@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { revalidatePublicPages } from "@/lib/revalidate-client";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { friendlyError, networkError } from "@/lib/error-messages";
 import { slugify } from "@/lib/utils";
@@ -309,6 +310,11 @@ export function TripEditorForm({
       }
 
       setSaving(false);
+      await revalidatePublicPages("trip", tripPayload.slug);
+      // A rename leaves the old address cached and still serving the trip.
+      if (initialTrip && initialTrip.slug !== tripPayload.slug) {
+        await revalidatePublicPages("trip", initialTrip.slug);
+      }
       router.push("/admin/trips");
       router.refresh();
     } catch (caught) {

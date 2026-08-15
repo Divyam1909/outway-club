@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { BlogComment, BlogCommentWithPost, BlogPost } from "@/lib/types";
@@ -15,7 +16,7 @@ export async function getPublishedPosts(options: { tag?: string; limit?: number 
   BlogPost[]
 > {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   let query = supabase
     .from("blog_posts")
@@ -37,7 +38,7 @@ export async function getPublishedPosts(options: { tag?: string; limit?: number 
 /** The post pinned to the top of /blog — newest featured, else newest. */
 export async function getFeaturedPost(): Promise<BlogPost | null> {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -54,7 +55,7 @@ export async function getFeaturedPost(): Promise<BlogPost | null> {
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -70,7 +71,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
 /** Approved comments on a post, oldest first so a thread reads top to bottom. */
 export async function getApprovedComments(postId: string): Promise<BlogComment[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("blog_comments")
@@ -89,7 +90,7 @@ export async function getApprovedComments(postId: string): Promise<BlogComment[]
  */
 export async function getRelatedPosts(post: BlogPost, limit = 3): Promise<BlogPost[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -119,10 +120,28 @@ export async function getRelatedPosts(post: BlogPost, limit = 3): Promise<BlogPo
     .map((entry) => entry.candidate);
 }
 
+/**
+ * Slugs for `generateStaticParams`. Never throws — see the note on
+ * `getPublishedTripSlugs` in src/lib/data.ts.
+ */
+export async function getPublishedPostSlugs(): Promise<string[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const { data } = await createPublicClient()
+      .from("blog_posts")
+      .select("slug")
+      .eq("status", "published");
+    return (data ?? []).map((row) => row.slug as string);
+  } catch (error) {
+    console.error("[blog] post slugs unavailable at build:", error);
+    return [];
+  }
+}
+
 /** Every tag in use on published posts, with counts, most used first. */
 export async function getPostTags(): Promise<{ tag: string; count: number }[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("blog_posts")

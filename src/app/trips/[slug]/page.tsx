@@ -18,13 +18,27 @@ import { TrustBand } from "@/components/trips/trust-band";
 import { BookingWidget } from "@/components/trips/booking-widget";
 import { MobileBookingBar } from "@/components/trips/mobile-booking-bar";
 import { BreadcrumbJsonLd, TripJsonLd } from "@/components/seo/json-ld";
-import { getTripBySlug } from "@/lib/data";
-import { getCurrentUser } from "@/lib/auth";
+import { getPublishedTripSlugs, getTripBySlug } from "@/lib/data";
+import { SignedInOnly } from "@/components/auth/signed-in-only";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { CATEGORY_LABELS, DIFFICULTY_LABELS, formatDateRange } from "@/lib/utils";
 import { site } from "@/config/site";
 
 export const revalidate = 300;
+
+/**
+ * Prerender every published escape at build time. These are the pages search
+ * traffic lands on, and the difference between a prerendered hit and an
+ * on-demand render is the difference between a page that is already there and
+ * one that has to talk to Postgres first.
+ *
+ * A trip published after this build still works: `dynamicParams` defaults to
+ * true, so an unlisted slug renders on demand and is cached from then on.
+ */
+export async function generateStaticParams() {
+  const slugs = await getPublishedTripSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -69,7 +83,6 @@ export default async function TripDetailPage({
   const trip = await getTripBySlug(slug);
   if (!trip) notFound();
 
-  const currentUser = await getCurrentUser();
   const departure = trip.departures[0] ?? null;
   const hasReviews = trip.review_count > 0;
 
@@ -211,14 +224,14 @@ export default async function TripDetailPage({
             <section className="mt-12">
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="heading-sm text-xl text-ink">Traveller reviews</h2>
-                {currentUser && (
+                <SignedInOnly>
                   <Link
                     href={`/trips/${trip.slug}/review`}
                     className="text-sm font-medium text-clay hover:underline"
                   >
                     Travelled with us? Write a review
                   </Link>
-                )}
+                </SignedInOnly>
               </div>
               <ReviewsSection
                 reviews={trip.reviews}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { revalidatePublicPages } from "@/lib/revalidate-client";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { friendlyError, networkError } from "@/lib/error-messages";
 import { slugify } from "@/lib/utils";
@@ -91,6 +92,11 @@ export function DestinationEditorForm({
       }
 
       setSaving(false);
+      await revalidatePublicPages("destination", payload.slug);
+      // A rename leaves the old address cached and still serving the place.
+      if (destination && destination.slug !== payload.slug) {
+        await revalidatePublicPages("destination", destination.slug);
+      }
       router.push("/admin/destinations");
       router.refresh();
     } catch (caught) {

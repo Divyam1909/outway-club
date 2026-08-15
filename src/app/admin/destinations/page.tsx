@@ -100,6 +100,7 @@ export default async function AdminDestinationsPage() {
                     destinationId={destination.id}
                     name={destination.name}
                     tripCount={destination.trip_count}
+                    slug={destination.slug}
                   />
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError, messageFromResponse, networkError } from "@/lib/error-messages";
+import { clearProfileCache } from "@/lib/use-session";
 
 type Status = "idle" | "loading" | "done";
 
@@ -69,6 +70,8 @@ function ProfileForm({ fullName, phone }: { fullName: string; phone: string }) {
       }
 
       setStatus("done");
+      // The navbar greets people by the name it cached for this tab.
+      clearProfileCache();
       router.refresh();
       setTimeout(() => setStatus("idle"), 2500);
     } catch {

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { NETWORK_ERROR, friendlyError } from "@/lib/error-messages";
@@ -16,6 +16,7 @@ function safeRedirect(value: string | null): string {
 }
 
 export function SignupForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   // Where they were going before they were asked to make an account. Carried
   // through the confirmation link too, so the email lands them in checkout
@@ -42,7 +43,7 @@ export function SignupForm() {
 
     try {
       const supabase = createClient();
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
@@ -56,6 +57,19 @@ export function SignupForm() {
           friendlyError(signUpError, "account", "We couldn't create your account. Please try again.")
         );
         setLoading(false);
+        return;
+      }
+
+      // Whether a session comes back is decided in the Supabase dashboard, not
+      // here: with "Confirm email" ON, signUp returns a user and no session, and
+      // the inbox panel below is correct. With it OFF, the account is live
+      // immediately — and telling that person to go and check their email would
+      // strand them on a dead-end screen waiting for a mail that never sends.
+      if (data.session) {
+        router.push(redirect);
+        // Server components still holding the signed-out render need to be
+        // rebuilt, or /account would paint as though nobody were signed in.
+        router.refresh();
         return;
       }
 

@@ -5,7 +5,12 @@ import { MapPin, CalendarDays } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { TripCard } from "@/components/trips/trip-card";
-import { getDestinationBySlug, getTripsByDestination } from "@/lib/data";
+import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import {
+  getDestinationBySlug,
+  getDestinationSlugs,
+  getTripsByDestination,
+} from "@/lib/data";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 export async function generateMetadata({
@@ -20,7 +25,16 @@ export async function generateMetadata({
   return {
     title: destination.name,
     description: destination.tagline ?? destination.description ?? undefined,
+    alternates: { canonical: `/destinations/${destination.slug}` },
   };
+}
+
+export const revalidate = 300;
+
+/** Prerender every destination — see the note on the trip page. */
+export async function generateStaticParams() {
+  const slugs = await getDestinationSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export default async function DestinationPage({
@@ -36,6 +50,13 @@ export default async function DestinationPage({
 
   return (
     <div>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Destinations", path: "/destinations" },
+          { name: destination.name, path: `/destinations/${destination.slug}` },
+        ]}
+      />
       {/* Fixed at 26rem this ate a whole phone screen before a word of copy. */}
       <section className="relative flex h-[18rem] items-end sm:h-[26rem]">
         <SmartImage

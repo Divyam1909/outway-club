@@ -7,20 +7,26 @@ import { SmartImage } from "@/components/ui/smart-image";
 import { PostCard } from "@/components/blog/post-card";
 import { ShareButtons } from "@/components/blog/share-buttons";
 import { CommentsSection } from "@/components/blog/comments-section";
+import { RecordView } from "@/components/blog/record-view";
 import { BlogPostJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import {
   getApprovedComments,
   getPostBySlug,
+  getPublishedPostSlugs,
   getRelatedPosts,
-  recordPostView,
 } from "@/lib/blog";
-import { getCurrentUser } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { formatDate } from "@/lib/utils";
 import { site } from "@/config/site";
 
 export const revalidate = 300;
+
+/** Prerender published posts — see the note on the trip page. */
+export async function generateStaticParams() {
+  const slugs = await getPublishedPostSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -68,13 +74,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   if (!post) notFound();
 
-  // recordPostView swallows its own errors — a view counter must never be the
-  // reason an article fails to render.
-  const [comments, related, currentUser] = await Promise.all([
+  // View counting moved to <RecordView>, and comment prefill to the form
+  // itself: both used to run here, and between them they made this page
+  // uncacheable and its view count a measure of cache expiry. Neither is worth
+  // a per-request render of an article that changes every few months.
+  const [comments, related] = await Promise.all([
     getApprovedComments(post.id),
     getRelatedPosts(post),
-    getCurrentUser(),
-    recordPostView(post.slug),
   ]);
 
   const rated = comments.filter((comment) => comment.rating !== null);
@@ -88,6 +94,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <article className="pb-20 sm:pb-24">
+      <RecordView slug={post.slug} />
       <BlogPostJsonLd post={post} />
       <BreadcrumbJsonLd
         items={[
@@ -221,13 +228,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         {/* --- Comments ------------------------------------------------------ */}
         <div className="mt-14">
-          <CommentsSection
-            postId={post.id}
-            comments={comments}
-            averageRating={averageRating}
-            defaultAuthorName={currentUser?.profile?.full_name ?? ""}
-            defaultAuthorEmail={currentUser?.profile?.email ?? currentUser?.user.email ?? ""}
-          />
+          <CommentsSection postId={post.id} comments={comments} averageRating={averageRating} />
         </div>
       </Container>
 

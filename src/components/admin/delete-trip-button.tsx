@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { revalidatePublicPages } from "@/lib/revalidate-client";
 import { friendlyError, networkError } from "@/lib/error-messages";
 
 /**
@@ -14,7 +15,16 @@ import { friendlyError, networkError } from "@/lib/error-messages";
  * makes a blocked delete look like a successful one until the row reappears,
  * which reads as the console being broken rather than as a rule doing its job.
  */
-export function DeleteTripButton({ tripId, tripTitle }: { tripId: string; tripTitle: string }) {
+export function DeleteTripButton({
+  tripId,
+  tripTitle,
+  /** Needed to purge the trip's own cached page, not just the listings. */
+  tripSlug,
+}: {
+  tripId: string;
+  tripTitle: string;
+  tripSlug: string;
+}) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +49,7 @@ export function DeleteTripButton({ tripId, tripTitle }: { tripId: string; tripTi
         return;
       }
 
+      await revalidatePublicPages("trip", tripSlug);
       router.refresh();
       setDeleting(false);
     } catch {

@@ -48,7 +48,7 @@ export default async function AdminTripsPage() {
                     <Link href={`/admin/trips/${trip.id}/edit`} className="text-sm font-medium text-pine hover:underline">
                       Edit
                     </Link>
-                    <DeleteTripButton tripId={trip.id} tripTitle={trip.title} />
+                    <DeleteTripButton tripId={trip.id} tripTitle={trip.title} tripSlug={trip.slug} />
                   </div>
                 </td>
               </tr>

@@ -7,18 +7,10 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, X, User as UserIcon, ChevronDown, Settings, Ticket, LogOut } from "lucide-react";
 import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
+import { useSession } from "@/lib/use-session";
 
-export function NavbarClient({
-  links,
-  fullName,
-  isAdmin,
-  isSignedIn,
-}: {
-  links: { href: string; label: string }[];
-  fullName: string | null;
-  isAdmin: boolean;
-  isSignedIn: boolean;
-}) {
+export function NavbarClient({ links }: { links: { href: string; label: string }[] }) {
+  const { loading, isSignedIn, isAdmin, fullName } = useSession();
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -108,12 +100,16 @@ export function NavbarClient({
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          {isAdmin && (
+          {/* Auth resolves in the browser now, so this slot is briefly unknown.
+              Holding its width keeps the bar from reflowing under the cursor
+              at the exact moment someone is reaching for "Log in". */}
+          {loading && <span aria-hidden="true" className="h-10 w-[12.5rem]" />}
+          {!loading && isAdmin && (
             <Link href="/admin" className="text-sm font-medium text-ink-700 hover:text-pine">
               Admin
             </Link>
           )}
-          {isSignedIn ? (
+          {loading ? null : isSignedIn ? (
             <>
               <Link href="/account" className="text-sm font-medium text-ink-700 hover:text-pine">
                 My Bookings
@@ -209,12 +205,12 @@ export function NavbarClient({
           ))}
 
           <div className="mt-3 flex flex-col gap-2 border-t border-border/70 pt-4">
-            {isAdmin && (
+            {!loading && isAdmin && (
               <Link href="/admin" className="btn-outline">
                 Admin dashboard
               </Link>
             )}
-            {isSignedIn ? (
+            {loading ? null : isSignedIn ? (
               <>
                 <Link href="/account" className="btn-outline">
                   My Bookings

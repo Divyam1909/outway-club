@@ -8,14 +8,10 @@ export function CommentsSection({
   postId,
   comments,
   averageRating,
-  defaultAuthorName,
-  defaultAuthorEmail,
 }: {
   postId: string;
   comments: BlogComment[];
   averageRating: number;
-  defaultAuthorName: string;
-  defaultAuthorEmail: string;
 }) {
   const rated = comments.filter((comment) => comment.rating !== null);
 
@@ -73,11 +69,7 @@ export function CommentsSection({
         </div>
       )}
 
-      <CommentForm
-        postId={postId}
-        defaultAuthorName={defaultAuthorName}
-        defaultAuthorEmail={defaultAuthorEmail}
-      />
+      <CommentForm postId={postId} />
     </section>
   );
 }

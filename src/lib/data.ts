@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type {
   Departure,
@@ -25,10 +26,19 @@ const DETAIL_COLUMNS =
 // (src/components/setup-required.tsx) is the actual UI shown in that state —
 // this just keeps route segments from erroring while that guard decides not
 // to render them (Next.js still evaluates matched page segments eagerly).
+//
+// Which client each function uses is load-bearing, not incidental:
+//
+//   createPublicClient()  public content — no cookies, so the calling page
+//                         stays statically renderable and cacheable.
+//   createClient()        user-scoped reads that must respect the session.
+//
+// Moving a public read onto the cookie-bound client silently makes every page
+// that calls it dynamic. See src/lib/supabase/public.ts.
 
 export async function getFeaturedDestinations(): Promise<Destination[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("destinations")
     .select("*")
@@ -48,7 +58,7 @@ export type DestinationWithAvailability = Destination & { tripCount: number };
  */
 export async function getDestinationsWithAvailability(): Promise<DestinationWithAvailability[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const [{ data: destinations, error }, { data: trips }] = await Promise.all([
     supabase.from("destinations").select("*").order("is_featured", { ascending: false }).order("name"),
@@ -70,7 +80,7 @@ export async function getDestinationsWithAvailability(): Promise<DestinationWith
 
 export async function getAllDestinations(): Promise<Destination[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase.from("destinations").select("*").order("name");
 
   if (error) throw error;
@@ -79,7 +89,7 @@ export async function getAllDestinations(): Promise<Destination[]> {
 
 export async function getDestinationBySlug(slug: string): Promise<Destination | null> {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("destinations")
     .select("*")
@@ -92,7 +102,7 @@ export async function getDestinationBySlug(slug: string): Promise<Destination | 
 
 export async function getTripsByDestination(destinationId: string): Promise<Trip[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("trips")
     .select(TRIP_COLUMNS)
@@ -151,7 +161,7 @@ export async function getCatalogueTrips(
   filters: TripFilters = {}
 ): Promise<TripWithDepartures[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   let query = supabase
     .from("trips")
@@ -229,7 +239,7 @@ function sortTrips(trips: TripWithDepartures[], sort: TripFilters["sort"]) {
  */
 export async function getCurrentEscape(): Promise<TripWithDetails | null> {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("trips")
@@ -543,7 +553,7 @@ export type ReviewWithTrip = Review & {
  */
 export async function getApprovedReviews(limit?: number): Promise<ReviewWithTrip[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   let query = supabase
     .from("reviews")
@@ -561,7 +571,7 @@ export async function getApprovedReviews(limit?: number): Promise<ReviewWithTrip
 /** Highest-rated approved reviews, for the homepage strip. */
 export async function getFeaturedReviews(limit = 3): Promise<ReviewWithTrip[]> {
   if (!isSupabaseConfigured()) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("reviews")
     .select("*, trip:trips(title, slug, destination:destinations(name, slug))")
@@ -683,9 +693,42 @@ function hydrateTripDetails(trip: TripWithDetails): TripWithDetails {
   };
 }
 
+/**
+ * Slugs for `generateStaticParams`, so the pages that actually earn search
+ * traffic are built ahead of time rather than on the first visitor's request.
+ *
+ * Never throws. A build must not fail because the database blinked — returning
+ * nothing here just means those pages render on demand and cache from the first
+ * hit, which is the behaviour we had before anyway.
+ */
+export async function getPublishedTripSlugs(): Promise<string[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const { data } = await createPublicClient()
+      .from("trips")
+      .select("slug")
+      .eq("is_published", true);
+    return (data ?? []).map((row) => row.slug as string);
+  } catch (error) {
+    console.error("[data] trip slugs unavailable at build:", error);
+    return [];
+  }
+}
+
+export async function getDestinationSlugs(): Promise<string[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const { data } = await createPublicClient().from("destinations").select("slug");
+    return (data ?? []).map((row) => row.slug as string);
+  } catch (error) {
+    console.error("[data] destination slugs unavailable at build:", error);
+    return [];
+  }
+}
+
 export async function getTripBySlug(slug: string): Promise<TripWithDetails | null> {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("trips")
     .select(DETAIL_COLUMNS)

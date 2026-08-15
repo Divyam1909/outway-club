@@ -39,6 +39,10 @@ export const RATE_LIMITS = {
   review: { bucket: "review", limit: 5, windowSeconds: 3600 },
   cancelBooking: { bucket: "cancel_booking", limit: 5, windowSeconds: 3600 },
   blogComment: { bucket: "blog_comment", limit: 4, windowSeconds: 900 },
+  // Per IP *and* per slug (the caller passes the slug as the extra key), so
+  // this is really "one reader, one post, once an hour" — enough to stop a
+  // refresh loop inflating a number without penalising genuine re-reads.
+  blogView: { bucket: "blog_view", limit: 1, windowSeconds: 3600 },
 } as const satisfies Record<string, RateLimitRule>;
 
 /**

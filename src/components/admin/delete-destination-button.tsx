@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { revalidatePublicPages } from "@/lib/revalidate-client";
 import { friendlyError, networkError } from "@/lib/error-messages";
 
 /**
@@ -16,10 +17,13 @@ export function DeleteDestinationButton({
   destinationId,
   name,
   tripCount,
+  /** Needed to purge the destination's own cached page, not just the listings. */
+  slug,
 }: {
   destinationId: string;
   name: string;
   tripCount: number;
+  slug: string;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -60,6 +64,7 @@ export function DeleteDestinationButton({
         return;
       }
 
+      await revalidatePublicPages("destination", slug);
       router.refresh();
       setDeleting(false);
     } catch {
