@@ -45,3 +45,6 @@ next-env.d.ts
 /raw-images/
 
 .vercel
+
+# playwright-mcp session artifacts
+/.playwright-mcp/

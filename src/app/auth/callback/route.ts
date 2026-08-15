@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { friendlyError } from "@/lib/error-messages";
 
 /**
  * Landing point for every Supabase Auth email link — signup confirmation,
@@ -20,11 +19,7 @@ export async function GET(request: Request) {
   if (authError) {
     return redirectWithMessage(
       origin,
-      friendlyError(
-        { message: authError },
-        "link",
-        "That link didn't work. Please request a new one."
-      )
+      linkFailureMessage(authError, next, searchParams.get("error_code"))
     );
   }
 
@@ -38,14 +33,7 @@ export async function GET(request: Request) {
       }
 
       console.error("[auth/callback] code exchange failed:", error.message);
-      return redirectWithMessage(
-        origin,
-        friendlyError(
-          error,
-          "link",
-          "That link has expired or has already been used. Request a fresh one and it'll arrive in seconds."
-        )
-      );
+      return redirectWithMessage(origin, linkFailureMessage(error.message, next, null));
     } catch (caught) {
       // Supabase unreachable — never leave the visitor on a blank redirect.
       console.error("[auth/callback] code exchange threw:", caught);
@@ -56,15 +44,62 @@ export async function GET(request: Request) {
     }
   }
 
-  return redirectWithMessage(
-    origin,
-    "That link is no longer valid. Password and confirmation links work once and expire after an hour, request a new one below."
-  );
+  // Landed here with neither a code nor an error — a link that lost its query
+  // string, or someone opening /auth/callback directly.
+  return redirectWithMessage(origin, linkFailureMessage("invalid", next, null));
 }
 
 /** Bounce back to the login screen with a message it knows how to display. */
 function redirectWithMessage(origin: string, message: string) {
   return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(message)}`);
+}
+
+/**
+ * Turn a failed email link into something the person can act on.
+ *
+ * The subtlety this exists for: when a SIGNUP confirmation link fails, the
+ * account is usually already confirmed anyway. Two things cause it, and both
+ * consume the one-time token on the way past —
+ *
+ *   1. A mail scanner or browser prefetch opens the link first. Supabase marks
+ *      the address confirmed, then the human's real click finds the token
+ *      spent and reports `otp_expired`.
+ *   2. The link is opened on a different device from the one that signed up.
+ *      The PKCE `code_verifier` lives in a cookie in the ORIGINAL browser, so
+ *      the exchange has nothing to verify against — sign up on a laptop, open
+ *      the mail on your phone, and you land here.
+ *
+ * In both cases telling someone "that link expired, request a new one" is
+ * actively wrong: there is nothing to request, their account works, and they
+ * only need to log in. Requesting another link just repeats the loop.
+ *
+ * Password recovery is genuinely different — an unused reset link really is
+ * gone, and a fresh one is the correct next step — so it keeps that wording.
+ */
+function linkFailureMessage(raw: string, next: string, errorCode: string | null): string {
+  const text = `${raw} ${errorCode ?? ""}`.toLowerCase();
+  const isRecovery = next.startsWith("/reset-password");
+
+  // Cross-device PKCE: the verifier cookie is in another browser. Naming the
+  // cause is what stops someone retrying the same link on the same phone.
+  if (text.includes("code verifier") || text.includes("code_verifier")) {
+    return isRecovery
+      ? "Open the reset link in the same browser you requested it from, or request a fresh one below."
+      : "You opened that link on a different device from the one you signed up on. Your email is confirmed — just log in below.";
+  }
+
+  const usedOrExpired =
+    text.includes("expired") || text.includes("invalid") || text.includes("already");
+
+  if (usedOrExpired) {
+    return isRecovery
+      ? "That reset link has expired or has already been used. Links last one hour and work once — request a fresh one below."
+      : "That confirmation link has already been used. Your account is almost certainly active — log in below and you're in. If it isn't, reset your password to get a fresh link.";
+  }
+
+  return isRecovery
+    ? "That reset link didn't work. Request a fresh one below."
+    : "That confirmation link didn't work. Try logging in below — your account may already be active.";
 }
 
 /**
