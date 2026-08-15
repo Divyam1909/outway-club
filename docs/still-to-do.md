@@ -98,13 +98,6 @@ Shows on: contact page, terms, privacy, footer, structured data.
 
 ## 4. Housekeeping
 
-- [ ] **Turn on Always Use HTTPS.** `http://outway.club/` answers **200 with no
-      redirect** — checked on port 80 on 15 Aug, despite the docs having claimed
-      otherwise. Every page is therefore reachable on both schemes, which is a
-      duplicate-content signal to Google and sends the first request of a new
-      visitor's session in the clear. Cloudflare → SSL/TLS → Edge Certificates →
-      **Always Use HTTPS**. The HSTS header is already set, but it only protects
-      browsers that have been to the site before, and never protects crawlers.
 - [ ] **Delete the Vercel project** — not before **22 Aug 2026**. It is the
       rollback path and costs nothing to keep. See
       [`infrastructure.md`](infrastructure.md#rolling-back-to-vercel).
@@ -244,6 +237,12 @@ Decisions taken and things verified. Not to be re-litigated.
   reporting **URL is on Google / Page is indexed**.
 - **DNSSEC is live.** The DS record reached the `.club` registry and Cloudflare
   reports the zone protected. This is now done, not pending.
+- **Always Use HTTPS is on.** It had never actually been enabled, despite
+  `infrastructure.md` saying so — port 80 was answering 200 with no redirect.
+  Toggled on and re-checked on 15 Aug: `http://outway.club/` 301s to HTTPS, and
+  `http://www.outway.club/…` reaches the HTTPS apex in a **single hop** rather
+  than chaining through `https://www`. HSTS was already set but only ever
+  protected repeat browser visitors, never a crawler's first request.
 - **Cloudflare image transformations work**, measured on the live site against
   `escape-001/hero.jpg` (427KB original): `/cdn-cgi/image/width=640` returned
   37KB, and `/_next/image?…&w=828` returned **29KB of AVIF**. That is the zone
@@ -261,14 +260,15 @@ Decisions taken and things verified. Not to be re-litigated.
   [`infrastructure.md`](infrastructure.md).
 - This file replaced `IMPORTANT.md` and was reordered so open items lead.
 - Added: the VS Code environment variables (§4), and — later the same day — the
-  undeployed-commits warning at the top, Always Use HTTPS (§4) and the sitemap's
-  "Couldn't fetch" state (§5).
+  undeployed-commits warning at the top and the sitemap's "Couldn't fetch"
+  state (§5).
 - Resolved: Cloudflare Web Analytics CSP, the demo-admin decision, the whole
-  mail-delivery verification chain, DNSSEC, the ops-email question (now
-  `bookings@`), the managed `robots.txt` decision (keep it), and Cloudflare
-  image optimization.
+  mail-delivery verification chain, DNSSEC, Always Use HTTPS, the ops-email
+  question (now `bookings@`), the managed `robots.txt` decision (keep it), and
+  Cloudflare image optimization.
 - Retired: the "re-upload the hero and gallery" task, which had no target — see
   Settled. Sections renumbered after it and the ops-email section were removed.
-- Corrected: Resend's MX region is `ap-northeast-1`, not `ap-south-1` as the
-  old docs claimed. **Always Use HTTPS is off**, not on as the docs said — port
-  80 answers 200 with no redirect.
+- Corrected: Resend's MX region is `ap-northeast-1`, not `ap-south-1` as the old
+  docs claimed. Always Use HTTPS was **off** while the docs said it was on —
+  since fixed, but worth remembering that table recorded intentions rather than
+  measurements.

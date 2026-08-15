@@ -9,16 +9,13 @@ that no longer exist.
 >
 > Everything else here is done and verified. These three are not:
 >
-> 1. **Always Use HTTPS is off.** `http://outway.club/` answers 200 on port 80
->    with no redirect, so every page is reachable on both schemes. One toggle:
->    SSL/TLS → Edge Certificates.
-> 2. **GitHub is not connected** to Cloudflare, so deploys run from this laptop
+> 1. **GitHub is not connected** to Cloudflare, so deploys run from this laptop
 >    and the production bundle is built from a gitignored `.env.local`. Pushing
 >    to `main` ships nothing. [Details](#deploying-from-github-instead--not-set-up).
-> 3. **The Vercel project still exists**, undomained, as the rollback path.
+> 2. **The Vercel project still exists**, undomained, as the rollback path.
 >    Delete after 22 Aug 2026. [Details](#rolling-back-to-vercel).
 >
-> DNSSEC came off this list on 15 Aug — [it is live](#dnssec--live).
+> Both DNSSEC and Always Use HTTPS came off this list on 15 Aug.
 >
 > Product-level gaps — payment details, phone, address — are in
 > [`still-to-do.md`](still-to-do.md).
@@ -460,7 +457,7 @@ day; nothing here predates it.
 | Hosting | Vercel → **Cloudflare Workers**, via `@opennextjs/cloudflare`. Driven by Hobby's ban on commercial use. |
 | DNS | Porkbun → **Cloudflare**. Forced, not chosen: a Worker custom domain requires the zone to live in Cloudflare. All thirteen records moved intact. |
 | `www` | Vercel redirect → Cloudflare **Redirect Rule** + proxied `AAAA 100::`. |
-| SSL | **Full (strict)**, Universal SSL covering apex and `www`. Always Use HTTPS is **off** — see the correction below. |
+| SSL | **Full (strict)**, Always Use HTTPS **on**, Universal SSL covering apex and `www`. Port 80 301s to HTTPS; `http://www` reaches `https://` apex in a single hop, not a chain. |
 | DNSSEC | Zone signed at Cloudflare, DS entered at Porkbun, **live at the registry**. Done. |
 | CSP | Added `static.cloudflareinsights.com` to `script-src` and `cloudflareinsights.com` to `connect-src` so Cloudflare Web Analytics works instead of being blocked. |
 | Docs | `production-setup.md` and `cloudflare-deploy.md` merged into this file; `IMPORTANT.md` became [`still-to-do.md`](still-to-do.md). |
@@ -468,9 +465,10 @@ day; nothing here predates it.
 Corrected on the same day, having been wrong in the old docs:
 
 - Resend's MX region is **`ap-northeast-1`**, not `ap-south-1`.
-- **Always Use HTTPS is off**, though this table said it was on. `http://outway.club/`
-  answers 200 on port 80 with no redirect, so every page is reachable on both
-  schemes. [Open](still-to-do.md) — one toggle under SSL/TLS → Edge Certificates.
+- **Always Use HTTPS had never actually been on**, though this table claimed it
+  was: port 80 answered 200 with no redirect, leaving every page reachable on
+  both schemes. Toggled on the same day and re-checked — now a 301. The lesson
+  is that the table recorded an intention, not a measurement.
 - `OPS_EMAIL` was left as `hello@outway.club` by the migration, an unintended
   side-effect. Now deliberately `bookings@outway.club` in `wrangler.jsonc`.
   Setting it in `.env.local` does nothing in production: it is read at request
