@@ -10,6 +10,7 @@ const COLUMNS = [
     title: "Travel",
     links: [
       { href: "/trips", label: "All escapes" },
+      { href: "/destinations", label: "Destinations" },
       { href: "/trips#notify", label: "Notify me" },
       { href: "/testimonials", label: "Traveller reviews" },
     ],
