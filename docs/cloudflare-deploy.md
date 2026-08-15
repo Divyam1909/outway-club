@@ -135,6 +135,35 @@ preview is the first place a difference shows up.
 > including the adapter, wrangler, typescript and tailwind. `npm install`
 > reports "up to date" and installs nothing. Always `npm install --include=dev`.
 
+### `npm run cf:preview` / `cf:deploy` fail on this machine
+
+They die with `Wrangler kv bulk put command failed`, preceded by a wall of npm
+usage text and the line `npm@2.15.12 C:\Users\divya\node_modules\npm`.
+
+Nothing is wrong with the adapter. `npm run` prepends `node_modules/.bin` from
+the project **and every ancestor directory** to `PATH`. There is a stray
+`C:\Users\divya\node_modules` — left over from an accidental
+`npm install concurrently` in the home folder — containing **npm 2.15.12**, and
+because the project lives under `C:\Users\divya\`, that decade-old npm shadows
+the real 11.x inside every npm script. The adapter shells out to `npm exec
+wrangler`, npm 2 has no `exec` command, and it prints usage and exits.
+
+The same stray folder is what `outputFileTracingRoot` in `next.config.mjs`
+already exists to work around.
+
+**Workaround** — invoke the CLI directly so npm never rewrites `PATH`:
+
+```bash
+CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js preview
+CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
+```
+
+**Real fix** — delete `C:\Users\divya\node_modules`, `C:\Users\divya\package.json`
+and `C:\Users\divya\package-lock.json`. Nothing depends on them; they only
+declare `irm` and `concurrently`. Doing so also makes the `next.config.mjs`
+workaround unnecessary. This does not affect Cloudflare's own builds, where no
+such folder exists.
+
 ---
 
 ## Deploy from GitHub

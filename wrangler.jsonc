@@ -42,9 +42,26 @@
 	],
 	// Public values only. Everything secret (service role key, Razorpay secret,
 	// Resend key) is set with `wrangler secret put` and must never appear here —
-	// this file is committed.
+	// this file is committed. Secrets are stored separately by Cloudflare and
+	// survive a deploy; the plain vars below do NOT work that way.
+	//
+	// THIS BLOCK IS AUTHORITATIVE. A deploy replaces the Worker's entire variable
+	// set with exactly what is listed here, silently deleting anything added
+	// through the dashboard. Add variables here, not there, or the next deploy
+	// removes them.
+	//
+	// Only runtime-read values belong here. Every NEXT_PUBLIC_* is inlined into
+	// the bundle at build time and is already baked in, so listing them would be
+	// decoration — except NEXT_PUBLIC_SITE_URL, kept because a wrong value there
+	// is the single most damaging misconfiguration in this app.
 	"vars": {
-		"NEXT_PUBLIC_SITE_URL": "https://outway.club"
+		"NEXT_PUBLIC_SITE_URL": "https://outway.club",
+
+		// Read via process.env at request time, so these genuinely have to exist
+		// on the Worker. A real mailbox, deliberately not noreply@: three of the
+		// templates in src/lib/email.ts tell the reader to reply to the message.
+		"EMAIL_FROM": "Outway Club <hello@outway.club>",
+		"OPS_EMAIL": "hello@outway.club"
 	},
 	"observability": {
 		"enabled": true
