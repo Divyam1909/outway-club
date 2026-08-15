@@ -14,11 +14,25 @@ Supabase dashboard → **Authentication → Emails → Templates**.
 > Edit here first, then paste; never the other way round, or the two drift and
 > the dashboard copy silently wins.
 
-**Configured in production as of 15 August 2026:** SMTP is pointed at Resend,
-Site URL and the `/auth/callback` redirect are set, and
-`https://outway.club/brand/logo-email.png` is deployed and returning 200. What
-is *not* independently confirmed is delivery itself — see
-[Verifying](#verifying) at the end.
+## Still open
+
+Only one thing, and it is not a template setting:
+
+- [ ] **The grey circle beside the sender name in Gmail.** That is BIMI, not
+      anything in the HTML below. It needs DMARC at `p=quarantine` or
+      `p=reject` — we are at `p=none` until about 29 Aug 2026 — **and** a paid
+      Verified Mark Certificate, which requires a registered trademark. See
+      [About the logo](#about-the-logo). The logo *inside* the message body
+      renders correctly today; these are different things and get confused
+      constantly.
+
+Everything else is done. **Verified end to end on 15 August 2026** on the
+Cloudflare deployment: SMTP through Resend, Site URL and the `/auth/callback`
+redirect, `logo-email.png` serving, and real delivery — a password reset arrived
+in the Gmail inbox rather than spam, from `noreply@outway.club`, with the logo
+rendering, **SPF, DKIM and DMARC all PASS**, and the link resolving to
+`outway.club` rather than `localhost:3000`. The full checklist is at
+[Verifying](#verifying).
 
 ---
 
@@ -399,16 +413,25 @@ This one sends a **code**, not a link — `{{ .Token }}`. Do not paste a
 
 Configuration being right and mail actually arriving are different claims, and
 only the first can be checked from a dashboard. Run this after any change to
-SMTP, DNS, or the templates themselves:
+SMTP, DNS, or the templates themselves.
 
-- [ ] Sign up with a real Gmail address — mail arrives, logo renders, button works
-- [ ] Request a password reset — same
-- [ ] Gmail → **⋮ → Show original** shows SPF, DKIM and DMARC all `PASS`
-- [ ] Neither mail landed in spam
-- [ ] The confirmation link lands on `outway.club`, not `localhost:3000`
+**All five passed on 15 August 2026**, on Cloudflare, against a real Gmail
+account:
 
-Settled already, and worth not re-litigating: SMTP sender identity, Site URL and
-redirect, and the logo asset being deployed.
+- [x] Mail arrives, logo renders, button works
+- [x] Password reset — same
+- [x] Gmail → **⋮ → Show original** shows SPF, DKIM and DMARC all `PASS`
+- [x] Neither mail landed in spam
+- [x] The link lands on `outway.club`, not `localhost:3000`
+
+One thing that is **not** a failure, and looked like one during that test:
+opening a reset link in a different browser from the one that requested it
+gives "Open the reset link in the same browser you requested it from". That is
+PKCE working as designed — the code verifier lives in the requesting browser —
+and the app catches it with a readable message rather than a dead end.
+
+Settled and worth not re-litigating: SMTP sender identity, Site URL and
+redirect, the logo asset being deployed, and delivery itself.
 
 ### When the logo shows as a broken image
 

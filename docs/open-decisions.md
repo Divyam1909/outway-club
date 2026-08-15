@@ -5,6 +5,30 @@ them, and both change the business, not just the CSS — so they're written up
 rather than shipped. Each section says what's wrong now, what the options are,
 exactly what would have to change, and what it costs.
 
+## Status, 15 August 2026
+
+| | Decision | State |
+|---|---|---|
+| 1 | The signup wall in front of checkout | **Overtaken by events** — read the caveat below before acting on it |
+| 2 | Rebuilding `/trips` and the homepage around one product | **Still fully open.** Nothing has been done. |
+
+**On decision 1.** The seven-step funnel described below no longer exists.
+`src/app/booking/[slug]/page.tsx` has no `if (!currentUser)` redirect any more —
+it reads the current user only to prefill name, email and phone, and a signed-out
+stranger can complete a booking request without an account. The
+`trip_requests` questionnaire (migration `0006`) replaced the checkout path
+while payments are off, which dissolved the problem rather than solving it.
+
+So there is nothing to do **today**. But the wall comes back the moment
+`site.paymentsEnabled` flips to `true`, because real checkout needs an
+identity to attach a booking to. Re-read section 1 then, not now — the
+recommendation there, option (a), is still the right one.
+
+**On decision 2**, verified today: `CatalogueFilters` at
+`src/app/trips/page.tsx:106` still renders unconditionally, with one bookable
+escape. Five filters over one result. The cheap 20% at the end of section 2 —
+gate the filter bar, move the booking band up — is still the best value here.
+
 ---
 
 ## 1. The signup wall in front of checkout

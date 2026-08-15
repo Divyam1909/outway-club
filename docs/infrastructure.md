@@ -1,8 +1,25 @@
 # Infrastructure
 
-Where **https://outway.club** actually runs, as of **15 August 2026**. This file
-replaces the old `production-setup.md` and `cloudflare-deploy.md`, both of which
-described setups that no longer exist.
+Where **https://outway.club** actually runs. **Last updated 15 August 2026** —
+see the [change log](#change-log) at the bottom. This file replaces the old
+`production-setup.md` and `cloudflare-deploy.md`, both of which described setups
+that no longer exist.
+
+> ## Open on the infrastructure itself
+>
+> Everything else here is done and verified. These three are not:
+>
+> 1. **DNSSEC** — signed at Cloudflare, DS entered at Porkbun, **not yet
+>    published by the `.club` registry**. [Details and the check
+>    command](#dnssec--pending).
+> 2. **GitHub is not connected** to Cloudflare, so deploys run from this laptop
+>    and the production bundle is built from a gitignored `.env.local`.
+>    [Details](#deploying-from-github-instead--not-set-up).
+> 3. **The Vercel project still exists**, undomained, as the rollback path.
+>    Delete after 22 Aug 2026. [Details](#rolling-back-to-vercel).
+>
+> Product-level gaps — payment details, phone, address — are in
+> [`still-to-do.md`](still-to-do.md).
 
 | Concern | Provider | Notes |
 |---|---|---|
@@ -118,12 +135,37 @@ A `DS` row with key tag `2371` means done. An `SOA` row means not yet.
 ```bash
 npm run cf:build     # builds Next, then bundles the Worker
 npm run cf:preview   # runs it locally in workerd, not Node
-npm run cf:deploy    # pushes to Cloudflare
+npm run cf:deploy    # uploads the LAST BUILD — see below
 ```
+
+> ### `cf:deploy` does not build. Always build first.
+>
+> `opennextjs-cloudflare deploy` uploads whatever is already sitting in
+> `.open-next/`. It does **not** run `next build` first, and it gives no
+> indication that it hasn't — the log jumps straight to "Populating remote KV
+> incremental cache" and ends with a green "Deployed outway-club triggers".
+>
+> Deploy on its own after a source change therefore **re-ships the previous
+> build**, successfully and silently. This was hit for real on 15 Aug 2026: a
+> CSP change deployed clean and the old header was still being served.
+>
+> Always run both, in order:
+>
+> ```bash
+> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js build
+> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
+> ```
+>
+> And verify the thing you changed actually shipped, rather than trusting the
+> exit code — for a header, `curl -sI https://outway.club`.
 
 `cf:preview` matters more than it looks: `npm run dev` runs in Node and will
 happily use APIs that do not exist in the Workers runtime. The preview is the
 first place a difference shows up.
+
+The adapter prints `WARN OpenNext is not fully compatible with Windows` on every
+build. It has worked on every deploy so far; treat it as noise unless something
+actually fails.
 
 ### Two npm traps on this machine
 
@@ -368,6 +410,7 @@ A value coming back means it is published and the dashboard is simply stale.
 
 | Symptom | Cause |
 |---|---|
+| A source change deployed green but the old behaviour is still live | `deploy` doesn't build. Run `build` first — see [above](#deploying). |
 | Canonical/OG/sitemap show the wrong URL | `NEXT_PUBLIC_*` is build-time. Rebuild and redeploy. |
 | Site deploys green but never caches; admin appears to stop publishing | `wrangler deploy` was used instead of `opennextjs-cloudflare deploy`, or the KV binding is missing. |
 | `No D1 binding "NEXT_TAG_CACHE_D1" found!` | The binding was renamed, or `wrangler d1 create` added a duplicate under a generated name. |
@@ -383,3 +426,32 @@ A value coming back means it is published and the dashboard is simply stale.
 | Console error about `cloudflareinsights.com` being blocked | The CSP in `next.config.mjs` lost one of the two Cloudflare hosts, or the build predates 15 Aug 2026. |
 | Web Analytics dashboard stays empty though the beacon loads | `cloudflareinsights.com` is missing from `connect-src`. The script runs and its POST is blocked. |
 | Booking alert didn't arrive in `bookings@` | `OPS_EMAIL` in `wrangler.jsonc` is `hello@outway.club`. Look there. |
+
+---
+
+## Change log
+
+**15 August 2026 — the Cloudflare cutover.** Everything below happened on one
+day; nothing here predates it.
+
+| | |
+|---|---|
+| Hosting | Vercel → **Cloudflare Workers**, via `@opennextjs/cloudflare`. Driven by Hobby's ban on commercial use. |
+| DNS | Porkbun → **Cloudflare**. Forced, not chosen: a Worker custom domain requires the zone to live in Cloudflare. All thirteen records moved intact. |
+| `www` | Vercel redirect → Cloudflare **Redirect Rule** + proxied `AAAA 100::`. |
+| SSL | **Full (strict)**, Always Use HTTPS on, Universal SSL covering apex and `www`. |
+| DNSSEC | Zone signed at Cloudflare, DS entered at Porkbun. **Not yet live at the registry.** |
+| CSP | Added `static.cloudflareinsights.com` to `script-src` and `cloudflareinsights.com` to `connect-src` so Cloudflare Web Analytics works instead of being blocked. |
+| Docs | `production-setup.md` and `cloudflare-deploy.md` merged into this file; `IMPORTANT.md` became [`still-to-do.md`](still-to-do.md). |
+
+Corrected on the same day, having been wrong in the old docs:
+
+- Resend's MX region is **`ap-northeast-1`**, not `ap-south-1`.
+- `OPS_EMAIL` is now `hello@outway.club`, not `bookings@` — an unintended
+  side-effect of the migration, still [open](still-to-do.md).
+- `opennextjs-cloudflare deploy` **does not build**. The old docs implied it
+  did.
+
+Learned the same day and written up above: the stale-deploy trap, the two
+Cloudflare hosts the CSP needs, Cloudflare's managed `robots.txt` injection, and
+the router search-domain problem that makes bare `nslookup` lie on this machine.
