@@ -130,11 +130,20 @@ through the admin editor and they get shrunk on the way in.
 but `routePreloadingBehavior` is left at `"none"` because preloading trades cold
 start CPU for it, and the free plan meters CPU.
 
-**Razorpay's webhook needs re-testing, specifically.** Signature verification
-reads the raw request body, and body handling is exactly the sort of thing that
-differs between runtimes. A webhook that fails signature checks does not look
-broken from the outside — payments succeed and bookings never confirm. Send a
-test event from the Razorpay dashboard against the preview URL before cutover.
+**Razorpay is not configured yet, and that is fine.** No Razorpay account
+exists as of August 2026, so `RAZORPAY_KEY_SECRET` and
+`RAZORPAY_WEBHOOK_SECRET` are deliberately unset on Cloudflare. The app already
+guards for this — `isRazorpayConfigured()` gates every path, checkout answers
+503 with "Payments aren't switched on yet, please email us", and the webhook and
+refund routes log and bail. Nothing crashes and nothing needs stubbing.
+
+> **When Razorpay is switched on, the webhook must be re-tested on Workers
+> before it is trusted.** Signature verification reads the raw request body, and
+> body handling is exactly the sort of thing that differs between Node and
+> workerd. A webhook that fails signature checks does not look broken from the
+> outside: the customer pays, Razorpay reports success, and the booking is never
+> marked confirmed. Send a test event from the Razorpay dashboard at the
+> deployed URL and confirm the booking row actually flips.
 
 ---
 
@@ -144,11 +153,14 @@ Nothing here is irreversible until the last step.
 
 1. `npm run cf:preview` — click through trips, blog, a destination page.
 2. `npm run cf:deploy` — live on `*.workers.dev`, DNS untouched, Vercel still serving.
-3. On the workers.dev URL: sign up, confirm the email, reset a password.
-4. **Take a real booking through Razorpay in test mode**, and confirm the
-   webhook fires and the booking row is marked paid.
+3. On the workers.dev URL: sign up, confirm the email, reset a password. This
+   exercises Supabase auth *and* Resend, the two secrets that are set.
+4. Submit a trip request, and confirm the ops notification email arrives. With
+   payments off this is the actual conversion path, so it is the one that
+   matters most.
 5. Publish a trip in the admin console and confirm it appears on `/trips` within
-   seconds, not minutes. This is the check that proves the D1 tag cache works.
+   seconds, not minutes. This is the check that proves the D1 tag cache works —
+   and the one most likely to fail quietly, so do not skip it.
 6. Only now: add `outway.club` as a custom domain on the Worker, and update DNS.
 7. Leave the Vercel project deployed but undomained for a week. Rolling back is
    then a DNS change rather than a redeploy.
