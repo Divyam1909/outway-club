@@ -1,0 +1,49 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "outway-club",
+  "main": ".open-next/worker.js",
+
+  // nodejs_compat is required by the adapter, and the compatibility date must
+  // be 2024-09-23 or later or the Node built-ins it relies on are not present.
+  "compatibility_date": "2025-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  // The two IDs below are placeholders. Create the real resources once, with
+  // the account this will live on, and paste the ids they print:
+  //
+  //   npx wrangler kv namespace create NEXT_INC_CACHE_KV
+  //   npx wrangler d1 create outway-club-tags
+  //
+  // See docs/cloudflare-deploy.md. Neither is optional: without the KV
+  // namespace nothing caches, and without D1 every revalidatePath is a no-op.
+  "kv_namespaces": [
+    {
+      "binding": "NEXT_INC_CACHE_KV",
+      "id": "REPLACE_WITH_KV_NAMESPACE_ID"
+    }
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "outway-club-tags",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+
+  // Public values only. Everything secret (service role key, Razorpay secret,
+  // Resend key) is set with `wrangler secret put` and must never appear here —
+  // this file is committed.
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://outway.club"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

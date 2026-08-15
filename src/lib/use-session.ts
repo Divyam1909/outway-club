@@ -20,7 +20,16 @@ const SIGNED_OUT: SessionState = {
   isAdmin: false,
 };
 
-const LOADING: SessionState = { ...SIGNED_OUT, loading: true };
+// Spelled out rather than `{ ...SIGNED_OUT, loading: true }`: the bundler
+// inlines that spread into a literal with a duplicate `loading` key and warns
+// on every build. Same value, no warning.
+const LOADING: SessionState = {
+  loading: true,
+  isSignedIn: false,
+  fullName: null,
+  email: null,
+  isAdmin: false,
+};
 
 /**
  * Who's signed in, resolved once in the browser and shared by every consumer.
@@ -38,19 +47,23 @@ const LOADING: SessionState = { ...SIGNED_OUT, loading: true };
  * auth round trip *per component*, three times over on a trip page, every
  * navigation. One store, one resolution, everyone subscribes.
  *
- * Resolution is staged so the common case costs nothing:
+ * **This is display state, and only display state.** It reads the stored token
+ * with `getSession()` rather than verifying it with `getUser()`, which means no
+ * network round trip on a page load — `getUser()` per navigation measurably
+ * slowed every signed-in page, and it was buying nothing, because nothing here
+ * is a security boundary:
  *
- *   1. `getSession()` reads the stored token locally, with **no network call**.
- *      No token means signed out, settled — so an anonymous visitor (which is
- *      most traffic, and every crawler) makes zero auth requests.
- *   2. Only if a token exists: paint from it immediately, so a returning user
- *      never sees a "Log in" button flash.
- *   3. Then `getUser()` revalidates against the auth server, so a revoked or
- *      expired session corrects itself to signed out.
+ *   - `isAdmin` decides whether a link is *drawn*. Following it hits
+ *     `requireAdminPage` / `requireAdminApi`, which verify server-side against
+ *     the auth server and do not care what the navbar believed.
+ *   - A stale token therefore shows one wrong nav link until the next action,
+ *     which then correctly refuses.
  *
- * `isAdmin` here decides whether a link is *drawn*, never whether an action is
- * allowed. Authorisation stays on the server (`requireAdminPage`,
- * `requireAdminApi`) where it cannot be edited by the person it applies to.
+ * If you ever gate something that actually matters on this hook, that is the
+ * moment to stop and put the check on the server instead.
+ *
+ * An anonymous visitor — most traffic, and every crawler — makes zero auth
+ * requests: no stored token means signed out, settled locally.
  */
 
 let state: SessionState = LOADING;
@@ -118,9 +131,6 @@ function start(): void {
   started = true;
 
   const supabase = createClient();
-  // Once the auth server has answered, a late INITIAL_SESSION replay must not
-  // overwrite it with the token we already revalidated.
-  let verified = false;
 
   async function resolve(
     userId: string | null,
@@ -164,8 +174,8 @@ function start(): void {
     publish({ loading: false, isSignedIn: true, ...resolved });
   }
 
+  // Covers sign-in, sign-out and token refresh for the life of the page.
   supabase.auth.onAuthStateChange((event, session) => {
-    if (event === "INITIAL_SESSION" && verified) return;
     // Never let one person's cached role outlive their session on a shared
     // machine, even though the key is per-user.
     if (event === "SIGNED_OUT") clearProfileCache();
@@ -181,21 +191,10 @@ function start(): void {
       data: { session },
     } = await supabase.auth.getSession();
 
-    // No stored token: nobody is signed in, and there is nothing for the auth
-    // server to tell us. Stop here rather than spending a request per page view
-    // confirming that an anonymous visitor is anonymous.
-    if (!session) {
-      verified = true;
-      publish(SIGNED_OUT);
-      return;
-    }
-
-    const { data } = await supabase.auth.getUser();
-    verified = true;
     void resolve(
-      data.user?.id ?? null,
-      data.user?.user_metadata?.full_name,
-      data.user?.email ?? null
+      session?.user?.id ?? null,
+      session?.user?.user_metadata?.full_name,
+      session?.user?.email ?? null
     );
   })();
 }

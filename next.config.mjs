@@ -58,6 +58,19 @@ const nextConfig = {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [400, 640, 828, 1080, 1200, 1600, 1920],
     minimumCacheTTL: 60 * 60 * 24 * 30,
+
+    // Next's image optimizer is a Vercel platform feature, not part of Next
+    // itself. On Cloudflare Workers there is no free equivalent, and leaving
+    // this false there does not degrade gracefully — every <Image> requests a
+    // /_next/image route that cannot serve it. Set CF_BUILD=1 in the Cloudflare
+    // build only, so the Vercel deploy keeps optimising while both run.
+    //
+    // What stops this being a straight downgrade is that uploads are now
+    // downscaled in the browser first (src/lib/resize-image.ts), so the stored
+    // original is already roughly what we would have served anyway. Photos
+    // uploaded BEFORE that change are still full size — worth re-uploading the
+    // handful on the homepage and the live trip.
+    unoptimized: process.env.CF_BUILD === "1",
   },
 
   async redirects() {

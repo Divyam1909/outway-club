@@ -48,3 +48,7 @@ next-env.d.ts
 
 # playwright-mcp session artifacts
 /.playwright-mcp/
+
+# cloudflare
+/.open-next/
+.wrangler

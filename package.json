@@ -6,6 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "cf:build": "cross-env CF_BUILD=1 opennextjs-cloudflare build",
+    "cf:preview": "cross-env CF_BUILD=1 opennextjs-cloudflare preview",
+    "cf:deploy": "cross-env CF_BUILD=1 opennextjs-cloudflare deploy",
     "lint": "next lint",
     "db:migrate": "node scripts/db.mjs supabase/migrations/0002_launch.sql",
     "db:seed": "node scripts/db.mjs supabase/seed.sql",
@@ -25,13 +28,16 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.2",
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "autoprefixer": "^10.5.4",
+    "cross-env": "^10.1.0",
     "postcss": "^8.5.25",
     "tailwindcss": "^3.4.19",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.123.0"
   }
 }
