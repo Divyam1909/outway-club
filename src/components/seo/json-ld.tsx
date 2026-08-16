@@ -223,6 +223,12 @@ export function TripJsonLd({ trip }: { trip: TripWithDetails }) {
               },
             },
             organizer: { "@id": `${site.url}/#organization` },
+            // Same entity as the organizer, and deliberately so: on a guided
+            // small-group departure we both arrange the trip and lead it, so
+            // there is no third party to credit. Google lists `performer` as
+            // recommended for Event, and omitting it was the second of the two
+            // warnings Search Console raised on 16 Aug 2026.
+            performer: { "@id": `${site.url}/#organization` },
             offers: {
               "@type": "Offer",
               price: String(nextDeparture.price_override ?? price),
@@ -232,6 +238,10 @@ export function TripJsonLd({ trip }: { trip: TripWithDetails }) {
                 nextDeparture.status === "sold_out"
                   ? "https://schema.org/SoldOut"
                   : "https://schema.org/InStock",
+              // When the offer became bookable, which is when the departure row
+              // was created. The TouristTrip offer above already carried this;
+              // the Event one did not, which was the first warning.
+              validFrom: nextDeparture.created_at,
             },
           }}
         />
