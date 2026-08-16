@@ -30,21 +30,20 @@ printing a placeholder, so an unfilled value is invisible, not "TBD".
 
 # Open
 
-> ### Four commits are on GitHub and none of them are live
+> ### ~~Four commits are on GitHub and none of them are live~~ — shipped 16 Aug
 >
-> GitHub is not connected to Cloudflare, so pushing deploys nothing. Confirmed
-> on 15 Aug: the live Journal article still serves plain `<img>` tags, with none
-> of the `/cdn-cgi/image/` rewrites that `optimize-article-images.ts` adds.
-> Waiting to ship: the Images binding, the article-image rewriting, the sitemap
-> `lastmod` fix, and `OPS_EMAIL`.
+> Deployed by hand on 16 Aug, and GitHub is now connected to Cloudflare, so a
+> push to `main` builds and deploys on its own. See
+> [`infrastructure.md`](infrastructure.md#deploying-from-github--connected-16-aug-2026).
 >
-> ```bash
-> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js build
-> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
-> ```
+> The sitemap `lastmod` fix is verified live: `/about`, `/terms` and the other
+> undated pages now carry no `lastmod`, and `/trips` carries the real newest
+> trip date rather than the time of the last cache regeneration.
 >
-> Images is already enabled on the zone, so the binding has what it needs and
-> the deploy order problem noted in `wrangler.jsonc` no longer applies.
+> Worth repeating: `cf:deploy` **does not build**. The first attempt on 16 Aug
+> re-shipped the 15 Aug bundle, green and silent, and the fix only went live
+> after running `cf:build` first. CI runs both in order, which is the real
+> reason to keep using it.
 
 ## 1. Nobody can pay you
 

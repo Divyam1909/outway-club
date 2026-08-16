@@ -1,21 +1,19 @@
 # Infrastructure
 
-Where **https://outway.club** actually runs. **Last updated 15 August 2026** —
+Where **https://outway.club** actually runs. **Last updated 16 August 2026** —
 see the [change log](#change-log) at the bottom. This file replaces the old
 `production-setup.md` and `cloudflare-deploy.md`, both of which described setups
 that no longer exist.
 
 > ## Open on the infrastructure itself
 >
-> Everything else here is done and verified. These three are not:
+> Everything else here is done and verified. This one is not:
 >
-> 1. **GitHub is not connected** to Cloudflare, so deploys run from this laptop
->    and the production bundle is built from a gitignored `.env.local`. Pushing
->    to `main` ships nothing. [Details](#deploying-from-github-instead--not-set-up).
-> 2. **The Vercel project still exists**, undomained, as the rollback path.
+> 1. **The Vercel project still exists**, undomained, as the rollback path.
 >    Delete after 22 Aug 2026. [Details](#rolling-back-to-vercel).
 >
-> Both DNSSEC and Always Use HTTPS came off this list on 15 Aug.
+> DNSSEC and Always Use HTTPS came off this list on 15 Aug; GitHub → Cloudflare
+> on 16 Aug.
 >
 > Product-level gaps — payment details, phone, address — are in
 > [`still-to-do.md`](still-to-do.md).
@@ -131,6 +129,10 @@ A `DS` row with key tag `2371` means live. An `SOA` row means it has gone.
 
 ## Deploying
 
+Since 16 Aug 2026 the normal path is **push to `main`** and let Workers Builds
+do it — see [below](#deploying-from-github--connected-16-aug-2026). The local
+commands remain for previewing and for deploying when CI is not an option.
+
 ```bash
 npm run cf:build     # builds Next, then bundles the Worker
 npm run cf:preview   # runs it locally in workerd, not Node
@@ -201,32 +203,52 @@ and `C:\Users\divya\package-lock.json`. Nothing depends on them; they only
 declare `irm` and `concurrently`. Doing so also makes `outputFileTracingRoot` in
 `next.config.mjs` unnecessary. Cloudflare's own builders have no such folder.
 
-### Deploying from GitHub instead — not set up
+### Deploying from GitHub — connected 16 Aug 2026
 
-Workers Builds (Workers & Pages → your worker → Settings → Builds → Connect) is
-the equivalent of Vercel's git integration. It is **not connected**, and nothing
-is broken without it.
+Workers Builds (Workers & Pages → `outway-club` → Settings → Builds) is the
+equivalent of Vercel's git integration. A push to `main` now builds and deploys.
 
-- **Build command:** `npm install --include=dev && npm run cf:build`
-- **Deploy command:** `npx opennextjs-cloudflare deploy`
-- Every `NEXT_PUBLIC_*` must be set in the **build** environment, not only in
-  the worker's variables — see the build-time note below.
+| Setting | Value |
+|---|---|
+| Git account | `Divyam1909` — a **different** Google account from the Cloudflare one, which is fine: the GitHub App has its own sign-in and does not care who is logged into Cloudflare. No collaborator invite was needed. |
+| Repository / branch | `outway-club` / `main` |
+| Build command | `npm install --include=dev && npm run cf:build` |
+| Deploy command | `npx opennextjs-cloudflare deploy` |
+| Non-production branch deploy | `npx opennextjs-cloudflare upload` |
+| Path | `/` |
+| Build caching | on |
 
-> **Do not use plain `npx wrangler deploy` as the deploy command.** It uploads
-> the worker happily and skips the populate-cache step that creates the D1
-> `revalidations` table and seeds KV with the prerendered pages. The result is a
-> site that deploys green, serves correctly, never caches, and whose admin
-> console appears to have stopped publishing. `opennextjs-cloudflare deploy`
-> wraps `wrangler deploy` and does both.
+All 20 `NEXT_PUBLIC_*` are set as **build** variables, checked value-for-value
+against `.env.local` before connecting. `EMAIL_FROM` and `OPS_EMAIL` are also
+there but do nothing: they are read at request time from the `vars` block in
+`wrangler.jsonc`, which stays authoritative.
+
+> **Do not use plain `wrangler` for either command.** `npx wrangler deploy` and
+> the `npx wrangler versions upload` that Cloudflare pre-fills for non-production
+> branches both skip the populate-cache step that creates the D1 `revalidations`
+> table and seeds KV with the prerendered pages. The result is a site that
+> deploys green, serves correctly, never caches, and whose admin console appears
+> to have stopped publishing. The `opennextjs-cloudflare` commands wrap wrangler
+> and do both.
+
+Because CI runs `cf:build` before `cf:deploy`, the stale-deploy trap
+[above](#cfdeploy-does-not-build-always-build-first) cannot happen on a pushed
+commit. It still can when deploying by hand from this laptop.
 
 ### `NEXT_PUBLIC_*` is baked in at build time
 
-Not read at runtime. **Building locally means the bundle is built from
-`.env.local`** — which is gitignored, so production's build configuration
-currently exists as one untracked file on one laptop. Back it up somewhere
-durable. This is the same failure mode as
+Not read at runtime, so whichever machine runs `next build` supplies them.
+
+- **CI builds** read the build variables in Workers Builds. This is now the
+  path a pushed commit takes.
+- **Local builds** read `.env.local`, which is gitignored.
+
+Until 16 Aug 2026 that second file was the only copy of production's build
+configuration anywhere — the same failure mode as
 [`supabase-auth-emails.md`](supabase-auth-emails.md): no export, no history, one
-copy.
+laptop. Cloudflare now holds a second copy, but the two can drift silently,
+because a local build and a CI build of the same commit will happily produce
+different bundles. Change one, change the other.
 
 The exception is `NEXT_PUBLIC_SITE_URL`, which is also declared in
 `wrangler.jsonc` because a wrong value there is the most damaging single
@@ -448,6 +470,27 @@ A value coming back means it is published and the dashboard is simply stale.
 ---
 
 ## Change log
+
+**16 August 2026 — deploys moved to CI.**
+
+| | |
+|---|---|
+| Workers Builds | **Connected** to `Divyam1909/outway-club`, branch `main`. Deploys no longer depend on this laptop. |
+| Cross-account | The GitHub account and the Cloudflare account are different Google identities. This needed no collaborator invite: the Cloudflare GitHub App prompts for its own GitHub sign-in. |
+| Build variables | All 20 `NEXT_PUBLIC_*` copied into Workers Builds and diffed against `.env.local` — no drift. |
+| Non-production branches | Deploy command changed off Cloudflare's pre-filled `npx wrangler versions upload` to `npx opennextjs-cloudflare upload`, for the populate-cache reason already documented for `deploy`. |
+
+Also on 16 Aug: the stale-deploy trap **recurred**, exactly as written up on 15
+Aug. `cf:deploy` was run on its own and re-shipped the 15 Aug bundle — green
+log, new version ID, old code. Caught only by reading the live sitemap and
+noticing `/about` still carried a `lastmod`. Writing the trap down had not been
+enough to avoid it; CI running both steps in order is what actually fixes it.
+
+Google Search Console reported the sitemap as `Couldn't fetch`. The URL itself
+was fine throughout — 200, valid XML, not blocked — so the status was a stale
+record of one failed read at submission time, not a live error.
+
+---
 
 **15 August 2026 — the Cloudflare cutover.** Everything below happened on one
 day; nothing here predates it.
