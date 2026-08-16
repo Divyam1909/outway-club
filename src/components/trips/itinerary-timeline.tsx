@@ -1,5 +1,6 @@
 import { Coffee, Utensils, Moon, Home, MapPin } from "lucide-react";
 import { TIMINGS_NOTE } from "@/config/trip-request";
+import { ItineraryDescription } from "@/components/trips/itinerary-description";
 import type { ItineraryDay } from "@/lib/types";
 
 /**
@@ -34,7 +35,7 @@ export function ItineraryTimeline({ days }: { days: ItineraryDay[] }) {
             </span>
 
             <h3 className="heading-sm text-lg text-ink">{day.title}</h3>
-            <p className="mt-2 leading-relaxed text-ink-500">{day.description}</p>
+            <ItineraryDescription text={day.description} />
 
             {day.activities.length > 0 && (
               <ul className="mt-3 flex flex-wrap gap-2">
