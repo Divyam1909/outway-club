@@ -5,26 +5,38 @@ first, in the order of what it costs you to leave them undone. What has already
 been settled is at the bottom, so this file can be read top-down and stopped at
 any point.
 
-**Last updated: 15 August 2026** — see the [change log](#change-log).
+**Last updated: 16 August 2026** — see the [change log](#change-log).
 
 Nothing here is broken. `src/config/site.ts` omits anything unset rather than
 printing a placeholder, so an unfilled value is invisible, not "TBD".
 
 > ### Where these values go now
 >
-> **Not Vercel.** The site builds on this machine from `.env.local`, so every
-> `NEXT_PUBLIC_*` value below is baked into the bundle at build time. Setting
-> one means: edit `.env.local`, then **build and deploy** — and those are two
-> separate commands, because `deploy` on its own re-uploads the last build:
+> Every `NEXT_PUBLIC_*` below is baked into the bundle at **build** time, so
+> setting one means changing it wherever the build happens. Since 16 Aug 2026
+> that is **two places**:
+>
+> 1. **Workers Builds → Settings → Variables**, as a *build* variable. This is
+>    what a pushed commit uses, so this is the one that reaches production.
+> 2. **`.env.local`** on this laptop, for `npm run dev` and any hand-built
+>    deploy.
+>
+> Set both. They can drift silently, and a local build and a CI build of the
+> same commit will happily produce different bundles.
+>
+> Then just `git push`. To ship by hand instead, run two separate commands,
+> because `deploy` on its own re-uploads the last build:
 >
 > ```bash
-> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js build
-> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
+> npm run cf:build
+> npm run cf:deploy
 > ```
 >
-> Editing anything in the Cloudflare dashboard will not change a
-> `NEXT_PUBLIC_` value, and `wrangler.jsonc` overwrites dashboard edits on the
-> next deploy anyway. See [`infrastructure.md`](infrastructure.md).
+> Do not confuse the two Cloudflare variable screens. **Build** variables are
+> the ones above and they matter for `NEXT_PUBLIC_*`. The Worker's **runtime**
+> variables are a different screen, they have no effect on a `NEXT_PUBLIC_`
+> value, and `wrangler.jsonc` overwrites them on every deploy anyway. See
+> [`infrastructure.md`](infrastructure.md).
 
 ---
 
@@ -110,17 +122,23 @@ Shows on: contact page, terms, privacy, footer, structured data.
 - [ ] **Delete the Vercel project** — not before **22 Aug 2026**. It is the
       rollback path and costs nothing to keep. See
       [`infrastructure.md`](infrastructure.md#rolling-back-to-vercel).
-- [ ] **Back up `.env.local`** somewhere durable. It is gitignored, and it is
-      now the only copy of production's build-time configuration.
+- [ ] **Back up `.env.local`** somewhere durable — a password manager, not
+      another folder. Less urgent since 16 Aug, because Workers Builds now holds
+      a second copy of the same 20 values, but that copy is not exportable and
+      the two can drift. Still the only file with the *server* secrets in it.
 - [ ] **Restart VS Code from a clean shell.** `NODE_TLS_REJECT_UNAUTHORIZED=0`
       and `NODE_ENV=production` are inherited from the running `Code.exe`. They
       are not in the registry, any shell profile, or VS Code settings, so a full
       quit and relaunch from the Start menu clears both. The first disables TLS
       certificate validation for every Node process; the second is what makes
-      `npm install` silently skip Tailwind and TypeScript.
-- [ ] **Connect GitHub to Cloudflare** (optional). Removes the local npm 2.15.12
-      bug from the deploy path and stops production depending on one laptop's
-      `.env.local`. Settings in [`infrastructure.md`](infrastructure.md).
+      `npm install` silently skip Tailwind and TypeScript. **Still set as of 16
+      Aug** — both re-measured in this session, and the TLS one is the reason
+      every local build prints a `NODE_TLS_REJECT_UNAUTHORIZED` warning. CI is
+      unaffected; it never sees either.
+- [ ] **`outputFileTracingRoot` in `next.config.mjs` is now optional.** It was
+      pinned because of the stray `C:\Users\divya\node_modules`, which has since
+      been deleted. Harmless to keep and correct either way, so this is a
+      tidy-up, not a fix.
 
 ## 5. Search
 
@@ -129,9 +147,14 @@ nameserver move. The sitemap is live with 14 URLs and serves 200 as
 `application/xml` in under a second, to Googlebot's user agent as well.
 
 - [ ] **Sitemap says "Couldn't fetch"** — submitted 15 Aug, `Last read` blank,
-      `Discovered pages 0`, type `Unknown`. The endpoint itself is fine, so this
-      is Google not having fetched it yet rather than a fault to chase. Give it
-      24–48h; if it persists, remove the sitemap and re-submit as `sitemap.xml`.
+      `Discovered pages 0`, type `Unknown`. Not a fault to chase: on 16 Aug a
+      **Live Test** in URL Inspection returned *URL is available to Google /
+      Page can be indexed*, and the endpoint answers 200 `application/xml` to
+      Googlebot's user agent, unredirected and unblocked. The report is a stale
+      record of one failed read at submission time. Resubmit from **Sitemaps**
+      and leave it; do not use *Request indexing*, which is for pages and does
+      nothing for a sitemap. If it is still `Couldn't fetch` after 48h, remove
+      the entry and re-add it.
 - [ ] Request indexing for `/trips/udaipur-mount-abu`, `/blog/udaipur-travel-guide`,
       `/destinations/udaipur`, `/trips` and `/blog`. Only `/` is indexed so far
       and the quota is about ten URLs a day.
@@ -182,8 +205,8 @@ Decisions taken and things verified. Not to be re-litigated.
 
 - **`demoaccdn02@gmail.com` stays an admin.** Promoted so the cutover could be
   tested end to end, and deliberately left that way. Be aware what it means:
-  its password is in section 8 above, in a committed repo, so **anyone with
-  repo access has admin on production**. If the repo is ever shared or made
+  its password is in [section 7](#7-test-data-still-in-the-database) above, in a
+  committed repo, so **anyone with repo access has admin on production**. If the repo is ever shared or made
   public, change that password first. To undo:
   `node scripts/make-admin.mjs demote demoaccdn02@gmail.com`
 - **Cloudflare Web Analytics is allowed through the CSP** rather than switched
@@ -240,8 +263,8 @@ Decisions taken and things verified. Not to be re-litigated.
   Resend, and the six branded templates.
 - **Baked-in config** — `NEXT_PUBLIC_SITE_URL`, `EMAIL_FROM`, Instagram, legal
   name and business city all correct in the deployed bundle, and no stray
-  Razorpay test key. (`OPS_EMAIL` was verified too, but has since been changed
-  to `bookings@` and is waiting on the pending deploy.)
+  Razorpay test key. (`OPS_EMAIL` was verified too, then changed to `bookings@`
+  — which shipped on 16 Aug and is confirmed in the Worker's bindings.)
 - **Google Search Console** domain-property verification, and `https://outway.club/`
   reporting **URL is on Google / Page is indexed**.
 - **DNSSEC is live.** The DS record reached the `.club` registry and Cloudflare
@@ -256,12 +279,48 @@ Decisions taken and things verified. Not to be re-litigated.
   `escape-001/hero.jpg` (427KB original): `/cdn-cgi/image/width=640` returned
   37KB, and `/_next/image?…&w=828` returned **29KB of AVIF**. That is the zone
   toggle doing the work — it is a Cloudflare feature, not something this repo's
-  build has to ship, which is why it started working before the pending deploy
-  at the top of this file.
+  build has to ship, which is why it started working before the deploy that was
+  then still pending.
+
+## Verified 16 August 2026
+
+- **Workers Builds is connected and actually works.** Build `#2cc63f01` on
+  commit `a2a7626` went from push to a live version in 2m 9s, ran a real
+  `next build`, and produced version `5b869ca5`. Full breakdown in
+  [`infrastructure.md`](infrastructure.md#first-build-verified-end-to-end).
+- **The build variables reach the build.** All three `generateStaticParams`
+  routes prerendered in CI, which is only possible if the Supabase URL and anon
+  key arrived. Worth knowing the failure shape: a missing key builds **green**
+  and simply omits those routes.
+- **The four undeployed commits are live and checked on the site**, not just
+  deployed — see the box at the top of this file.
+- **The stray `C:\Users\divya\node_modules` is gone**, along with its npm
+  2.15.12. `npm run cf:build` and `npm run cf:deploy` both run clean now, so the
+  direct-node-invocation workaround in [`infrastructure.md`](infrastructure.md)
+  is history rather than instruction.
+- **Google can fetch the sitemap.** Live Test in URL Inspection: *URL is
+  available to Google*. The `Couldn't fetch` in the Sitemaps report is stale.
+- **`NODE_ENV=production` and `NODE_TLS_REJECT_UNAUTHORIZED=0` are still set**
+  in the VS Code environment. Re-measured, still open, still §4.
 
 ---
 
 ## Change log
+
+**16 Aug 2026**
+- The four undeployed commits shipped, and each fix was checked against the live
+  site rather than assumed from a green deploy.
+- **GitHub connected to Cloudflare** via Workers Builds, verified end to end.
+  The §4 housekeeping item for it is done and gone.
+- Rewrote "Where these values go now": `NEXT_PUBLIC_*` now has **two** homes,
+  Workers Builds build variables and `.env.local`, and they can drift.
+- Sitemap "Couldn't fetch" downgraded from a task to a note — Google's own Live
+  Test says the URL is available, so there is nothing to fix in code.
+- Corrected: the demo-admin password was said to be in "section 8", which does
+  not exist. It is in §7.
+- Recorded as fixed: the stray home-folder npm 2.15.12. Recorded as still open,
+  having been re-measured today: the two inherited VS Code environment
+  variables.
 
 **15 Aug 2026**
 - Site moved from Vercel to Cloudflare Workers; DNS moved from Porkbun to

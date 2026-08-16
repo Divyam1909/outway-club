@@ -147,18 +147,23 @@ npm run cf:deploy    # uploads the LAST BUILD — see below
 > incremental cache" and ends with a green "Deployed outway-club triggers".
 >
 > Deploy on its own after a source change therefore **re-ships the previous
-> build**, successfully and silently. This was hit for real on 15 Aug 2026: a
-> CSP change deployed clean and the old header was still being served.
+> build**, successfully and silently. Hit twice now. 15 Aug 2026: a CSP change
+> deployed clean and the old header was still being served. 16 Aug 2026, with
+> the trap already written up on this page: `cf:deploy` was run alone, produced
+> a green log and a new version ID, and served the previous day's bundle. The
+> giveaway was `.open-next/worker.js` still carrying the old timestamp and
+> `.next/BUILD_ID` not existing at all.
 >
 > Always run both, in order:
 >
 > ```bash
-> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js build
-> CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
+> npm run cf:build
+> npm run cf:deploy
 > ```
 >
 > And verify the thing you changed actually shipped, rather than trusting the
-> exit code — for a header, `curl -sI https://outway.club`.
+> exit code — for a header, `curl -sI https://outway.club`. Pushing to `main`
+> avoids the trap entirely, because CI runs both.
 
 `cf:preview` matters more than it looks: `npm run dev` runs in Node and will
 happily use APIs that do not exist in the Workers runtime. The preview is the
@@ -180,28 +185,24 @@ date" and installs nothing. Always `npm install --include=dev`. The symptom is
 Never pass `NODE_ENV=development` to `next build` itself — that breaks `/404`
 prerendering with a misleading `<Html> should not be imported` error.
 
-**`npm run cf:deploy` fails here with `Wrangler kv bulk put command failed`,**
-preceded by npm usage text and `npm@2.15.12 C:\Users\divya\node_modules\npm`.
+**~~`npm run cf:deploy` fails with `Wrangler kv bulk put command failed`~~ —
+fixed, 16 Aug 2026.** Kept because the symptom is baffling if it ever returns.
 
-Nothing is wrong with the adapter. `npm run` prepends `node_modules/.bin` from
-the project **and every ancestor directory** to `PATH`. There is a stray
-`C:\Users\divya\node_modules` — left over from an accidental `npm install
-concurrently` in the home folder — containing **npm 2.15.12**, and because the
-project lives under `C:\Users\divya\`, that decade-old npm shadows the real 11.x
-inside every npm script. The adapter shells out to `npm exec wrangler`, npm 2
-has no `exec`, and it prints usage and exits.
+The failure looked like an adapter bug and was not. `npm run` prepends
+`node_modules/.bin` from the project **and every ancestor directory** to `PATH`.
+A stray `C:\Users\divya\node_modules` — left over from an accidental `npm
+install concurrently` in the home folder — contained **npm 2.15.12**, and
+because the project lives under `C:\Users\divya\`, that decade-old npm shadowed
+the real 11.x inside every npm script. The adapter shells out to `npm exec
+wrangler`, npm 2 has no `exec`, so it printed usage and exited.
 
-Workaround — invoke the CLI directly so npm never rewrites `PATH`:
+Those three home-folder files are now deleted, and `npm run cf:build` and
+`npm run cf:deploy` both run clean — confirmed 16 Aug. The old workaround of
+invoking the CLI directly is no longer needed anywhere in this file.
 
-```bash
-CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js preview
-CF_BUILD=1 node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
-```
-
-Real fix — delete `C:\Users\divya\node_modules`, `C:\Users\divya\package.json`
-and `C:\Users\divya\package-lock.json`. Nothing depends on them; they only
-declare `irm` and `concurrently`. Doing so also makes `outputFileTracingRoot` in
-`next.config.mjs` unnecessary. Cloudflare's own builders have no such folder.
+One leftover: `outputFileTracingRoot` in `next.config.mjs` was pinned because of
+that stray folder and is now unnecessary. It is correct either way, so removing
+it is tidying, not fixing. Cloudflare's own builders never had the folder.
 
 ### Deploying from GitHub — connected 16 Aug 2026
 
@@ -261,8 +262,14 @@ Two log details that look wrong and are not:
   the same command works in both places.
 
 Cloudflare's builder runs Node 24.18.0 and npm 10.9.2 out of `/opt/buildhome/repo`,
-against Node 22 and npm 11.x locally. No difference has shown up so far, but the
-build that matters is now the one you cannot see.
+against Node 22.14.0 and npm 11.4.2 locally. No difference has shown up so far,
+but the build that matters is now the one you cannot see.
+
+The second build, commit `fd82eef`, repeated it: 2m 11s push-to-live, version
+`24e6b64e-0765-40d9-9348-83508dcd9cda`, `BUILD_ID` moving `GDj-a3eagg…` →
+`T12enpKR…`, and all six checked URLs still 200 with the sitemap at 14 `<loc>`
+and 7 `<lastmod>`. Two for two, and the timing is consistent enough to treat
+~2m 10s as the expected push-to-live latency.
 
 ### `NEXT_PUBLIC_*` is baked in at build time
 
@@ -508,6 +515,7 @@ A value coming back means it is published and the dashboard is simply stale.
 | Cross-account | The GitHub account and the Cloudflare account are different Google identities. This needed no collaborator invite: the Cloudflare GitHub App prompts for its own GitHub sign-in. |
 | Build variables | All 20 `NEXT_PUBLIC_*` copied into Workers Builds and diffed against `.env.local` — no drift. |
 | Non-production branches | Deploy command changed off Cloudflare's pre-filled `npx wrangler versions upload` to `npx opennextjs-cloudflare upload`, for the populate-cache reason already documented for `deploy`. |
+| npm 2.15.12 | **Fixed.** The stray `C:\Users\divya\node_modules` is gone, so `npm run cf:build` and `npm run cf:deploy` work directly and the direct-node-invocation workaround has been removed from this file. |
 
 Also on 16 Aug: the stale-deploy trap **recurred**, exactly as written up on 15
 Aug. `cf:deploy` was run on its own and re-shipped the 15 Aug bundle — green
