@@ -82,6 +82,9 @@ const config: Config = {
       fontFamily: {
         display: ["var(--font-playfair)", "serif"],
         sans: ["var(--font-inter)", "sans-serif"],
+        // Deliberately overrides Tailwind's default mono stack. Only the
+        // Journal pull quote uses it — see `.post-pullquote` in globals.css.
+        mono: ["var(--font-plex-mono)", "monospace"],
       },
       borderRadius: {
         xl: "1rem",

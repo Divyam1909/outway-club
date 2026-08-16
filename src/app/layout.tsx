@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Playfair_Display, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { SetupRequired } from "@/components/setup-required";
@@ -33,6 +33,21 @@ const playfair = Playfair_Display({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+/**
+ * Used in exactly one place — the Journal pull quote — which is why it loads a
+ * single weight. A third face earns its keep only if it is doing a job the
+ * other two cannot: Playfair is the display voice and Inter is the reading
+ * voice, so a pull quote set in either is just those voices louder. Plex Mono
+ * is plain by construction and reads as a note rather than a proclamation,
+ * which is closer to how this Journal actually talks.
+ */
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-plex-mono",
+  weight: ["400"],
   display: "swap",
 });
 
@@ -102,7 +117,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const configured = isSupabaseConfigured();
 
   return (
-    <html lang="en-IN" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en-IN" className={`${playfair.variable} ${inter.variable} ${plexMono.variable}`}>
       <head>
         {supabaseOrigin && (
           <>

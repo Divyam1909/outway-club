@@ -314,8 +314,39 @@
   .post-prose .post-right {
     @apply text-right;
   }
+  /* The one place on the site set in neither Playfair nor Inter.
+
+     An italic Playfair pull quote was the same voice as every heading, only
+     bigger and slanted, so it read as decoration rather than emphasis. Plex
+     Mono is plain by construction — no italic flourish, no display contrast —
+     and it rhymes with how this Journal already writes: itineraries kept as
+     timestamped entries, logbook style.
+
+     All of the ornament is spent on the quotation marks, which stay in Playfair
+     and sit oversized around plain text. `ch` is the measure because the face is
+     monospaced, so 44ch really is 44 characters a line. */
   .post-prose .post-pullquote {
-    @apply my-9 border-y border-border py-6 text-center font-display text-2xl italic leading-snug text-pine sm:text-[28px];
+    @apply mx-auto my-9 max-w-[44ch] border-y border-border py-7 text-center font-mono text-base font-normal leading-[1.75] text-pine sm:text-lg;
+  }
+  /* Generated rather than typed into the post body, so the copy in the database
+     stays clean and can be reused in an excerpt or a meta description without
+     dragging stray punctuation into it. */
+  .post-prose .post-pullquote::before,
+  .post-prose .post-pullquote::after {
+    @apply font-display text-[1.5em] not-italic text-clay/60;
+    /* Curly quotes sit on the baseline; at 1.5em that leaves them hanging below
+       the line they open. Zero line-height keeps them from stretching the first
+       line box, and the nudge puts them back on the text's optical centre. */
+    line-height: 0;
+    vertical-align: -0.25em;
+  }
+  .post-prose .post-pullquote::before {
+    content: "\201C";
+    margin-right: 0.08em;
+  }
+  .post-prose .post-pullquote::after {
+    content: "\201D";
+    margin-left: 0.08em;
   }
 
   /* The editor's own surface: same typography, plus a placeholder. */
