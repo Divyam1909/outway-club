@@ -13,6 +13,15 @@ import type { Departure, Trip } from "@/lib/types";
  * than an empty frame.
  */
 
+/**
+ * Shown when no escape is on sale. `SmartImage`'s placeholder panel is right
+ * for a half-populated gallery, but at full-bleed on the homepage it reads as a
+ * broken page rather than a designed empty state — which is exactly how the
+ * hero looked on 16 Aug 2026, with the only published trip between departures.
+ * A real photograph of somewhere we run keeps that state deliberate.
+ */
+const FALLBACK_HERO = "/images/udaipur/hero.jpg";
+
 type HeroTrip = Pick<
   Trip,
   | "slug"
@@ -56,7 +65,7 @@ export function Hero({
     <section className="relative overflow-hidden bg-pine-700">
       <div className="absolute inset-0 animate-slow-zoom">
         <SmartImage
-          src={trip?.hero_image}
+          src={trip?.hero_image ?? FALLBACK_HERO}
           alt=""
           fill
           priority
