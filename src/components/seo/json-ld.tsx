@@ -1,5 +1,6 @@
 import { site } from "@/config/site";
-import type { BlogPost, Departure, TripWithDetails } from "@/lib/types";
+import { nextDeparture } from "@/lib/data";
+import type { BlogPost, TripWithDetails } from "@/lib/types";
 
 /**
  * Renders a JSON-LD block. Next.js strips `<script>` children unless they go
@@ -134,7 +135,14 @@ export function TripJsonLd({ trip }: { trip: TripWithDetails }) {
     .filter(Boolean)
     .map((src) => (src.startsWith("http") ? src : `${site.url}${src}`));
 
-  const nextDeparture: Departure | undefined = trip.departures[0];
+  // `nextDeparture` applies the same filter the booking UI does — drops closed
+  // and past dates, then takes the soonest. Reading `trip.departures[0]` raw,
+  // as this did until 16 Aug 2026, took whatever order Postgres happened to
+  // return: a finished or closed date could end up advertised as an `Event`
+  // with `InStock` availability while the page itself said "No upcoming
+  // departures right now". Structured data that contradicts the visible page is
+  // exactly what Google penalises.
+  const departure = nextDeparture(trip);
 
   return (
     <>
@@ -168,10 +176,10 @@ export function TripJsonLd({ trip }: { trip: TripWithDetails }) {
             priceCurrency: "INR",
             url: `${site.url}/trips/${trip.slug}`,
             availability:
-              nextDeparture && nextDeparture.status !== "sold_out"
+              departure && departure.status !== "sold_out"
                 ? "https://schema.org/InStock"
                 : "https://schema.org/SoldOut",
-            ...(nextDeparture ? { validFrom: nextDeparture.created_at } : {}),
+            ...(departure ? { validFrom: departure.created_at } : {}),
           },
           // Only claim a rating when real, approved reviews exist.
           ...(trip.review_count > 0
@@ -200,15 +208,15 @@ export function TripJsonLd({ trip }: { trip: TripWithDetails }) {
             : {}),
         }}
       />
-      {nextDeparture && (
+      {departure && (
         <JsonLd
           data={{
             "@context": "https://schema.org",
             "@type": "Event",
             name: trip.title,
             description: trip.short_description,
-            startDate: nextDeparture.start_date,
-            endDate: nextDeparture.end_date,
+            startDate: departure.start_date,
+            endDate: departure.end_date,
             eventStatus: "https://schema.org/EventScheduled",
             eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
             image: absoluteImages.slice(0, 1),
@@ -231,17 +239,17 @@ export function TripJsonLd({ trip }: { trip: TripWithDetails }) {
             performer: { "@id": `${site.url}/#organization` },
             offers: {
               "@type": "Offer",
-              price: String(nextDeparture.price_override ?? price),
+              price: String(departure.price_override ?? price),
               priceCurrency: "INR",
               url: `${site.url}/trips/${trip.slug}`,
               availability:
-                nextDeparture.status === "sold_out"
+                departure.status === "sold_out"
                   ? "https://schema.org/SoldOut"
                   : "https://schema.org/InStock",
               // When the offer became bookable, which is when the departure row
               // was created. The TouristTrip offer above already carried this;
               // the Event one did not, which was the first warning.
-              validFrom: nextDeparture.created_at,
+              validFrom: departure.created_at,
             },
           }}
         />
