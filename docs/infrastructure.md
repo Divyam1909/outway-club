@@ -235,6 +235,35 @@ Because CI runs `cf:build` before `cf:deploy`, the stale-deploy trap
 [above](#cfdeploy-does-not-build-always-build-first) cannot happen on a pushed
 commit. It still can when deploying by hand from this laptop.
 
+#### First build, verified end to end
+
+Build `#2cc63f01`, commit `a2a7626`, 16 Aug 2026 — 2m 9s from push to live.
+Checked against the live site rather than trusted from the log:
+
+| | |
+|---|---|
+| `next build` genuinely ran | "Creating an optimized production build", 48/48 static pages. This is the check that distinguishes a real deploy from the stale-deploy trap. |
+| Build variables reached the build | All three SSG routes prerendered — `/blog/udaipur-travel-guide`, `/destinations/udaipur`, `/trips/udaipur-mount-abu`. They come from `generateStaticParams` hitting Supabase, so their presence proves the Supabase pair arrived. **A missing key would still build green, with those rows simply absent** — that is the failure to watch for, not a red build. |
+| Adapter deploy, not bare wrangler | "Successfully populated cache with 38 entries" and "Successfully created D1 table". |
+| Version | `5b869ca5-9d02-499b-b043-5d2b91ba28b8`, 100%. |
+| Live | `/`, `/trips`, the article, the destination, `sitemap.xml`, `robots.txt` all 200; sitemap carries 7 `lastmod` entries and none on `/about`, `/terms`, `/privacy`. |
+
+Two log details that look wrong and are not:
+
+- **38 KV entries, where a local deploy inserts 68.** CI checks out clean; this
+  laptop's `.open-next/cache` still holds directories from earlier build IDs and
+  ships them too. 38 is the honest count.
+- **`npm install --include=dev` reports "up to date" and installs nothing.**
+  Cloudflare runs its own `npm clean-install` first, which already pulled all
+  453 packages including devDependencies. The `--include=dev` flag exists for
+  the `NODE_ENV=production` trap [above](#two-npm-traps-on-this-machine), which
+  is specific to this laptop — CI does not have it. Costs a second; keep it, so
+  the same command works in both places.
+
+Cloudflare's builder runs Node 24.18.0 and npm 10.9.2 out of `/opt/buildhome/repo`,
+against Node 22 and npm 11.x locally. No difference has shown up so far, but the
+build that matters is now the one you cannot see.
+
 ### `NEXT_PUBLIC_*` is baked in at build time
 
 Not read at runtime, so whichever machine runs `next build` supplies them.
@@ -475,7 +504,7 @@ A value coming back means it is published and the dashboard is simply stale.
 
 | | |
 |---|---|
-| Workers Builds | **Connected** to `Divyam1909/outway-club`, branch `main`. Deploys no longer depend on this laptop. |
+| Workers Builds | **Connected** to `Divyam1909/outway-club`, branch `main`, and verified end to end on commit `a2a7626` — 2m 9s from push to a live version. Deploys no longer depend on this laptop. |
 | Cross-account | The GitHub account and the Cloudflare account are different Google identities. This needed no collaborator invite: the Cloudflare GitHub App prompts for its own GitHub sign-in. |
 | Build variables | All 20 `NEXT_PUBLIC_*` copied into Workers Builds and diffed against `.env.local` — no drift. |
 | Non-production branches | Deploy command changed off Cloudflare's pre-filled `npx wrangler versions upload` to `npx opennextjs-cloudflare upload`, for the populate-cache reason already documented for `deploy`. |
@@ -487,8 +516,11 @@ noticing `/about` still carried a `lastmod`. Writing the trap down had not been
 enough to avoid it; CI running both steps in order is what actually fixes it.
 
 Google Search Console reported the sitemap as `Couldn't fetch`. The URL itself
-was fine throughout — 200, valid XML, not blocked — so the status was a stale
-record of one failed read at submission time, not a live error.
+was fine throughout — 200, valid XML, `application/xml`, no redirect, and
+allowed by `robots.txt` — so the status was a stale record of one failed read at
+submission time, not a live error. Nothing to fix in code; resubmit and let
+Google re-read. Which Google account owns the Search Console property has no
+bearing on crawling, indexing or sitemap fetching.
 
 ---
 

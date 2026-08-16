@@ -36,9 +36,19 @@ printing a placeholder, so an unfilled value is invisible, not "TBD".
 > push to `main` builds and deploys on its own. See
 > [`infrastructure.md`](infrastructure.md#deploying-from-github--connected-16-aug-2026).
 >
-> The sitemap `lastmod` fix is verified live: `/about`, `/terms` and the other
-> undated pages now carry no `lastmod`, and `/trips` carries the real newest
-> trip date rather than the time of the last cache regeneration.
+> All four are verified against the live site, not merely deployed:
+>
+> - **Sitemap `lastmod`** — `/about`, `/terms` and the other undated pages carry
+>   no `lastmod`; `/trips` carries the real newest trip date rather than the time
+>   of the last cache regeneration.
+> - **Article images** — the Journal article serves
+>   `/cdn-cgi/image/width=1344,quality=80,format=auto/…` rewrites, not the plain
+>   `<img>` tags it served on 15 Aug.
+> - **Images binding** — one of those rewritten URLs returns `200 image/jpeg`,
+>   so the zone toggle is on and transformations really run. This is the failure
+>   `wrangler.jsonc` warns about: the binding resolves at deploy time whether or
+>   not the toggle is on, and only fails at request time.
+> - **`OPS_EMAIL`** — the Worker reports `bookings@outway.club` in its bindings.
 >
 > Worth repeating: `cf:deploy` **does not build**. The first attempt on 16 Aug
 > re-shipped the 15 Aug bundle, green and silent, and the fix only went live
