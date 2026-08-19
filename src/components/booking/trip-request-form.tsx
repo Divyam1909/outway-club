@@ -10,11 +10,14 @@ import {
   CalendarDays,
   CheckCircle2,
   Mail,
+  Sparkles,
   MessageCircle,
   Phone,
   Send,
 } from "lucide-react";
 import { DepartureBoard } from "@/components/trips/departure-board";
+import { PromoPricing } from "@/components/booking/promo-pricing";
+import { PaymentDetails } from "@/components/trips/payment-details";
 import { ChoiceGroup } from "@/components/ui/choice-group";
 import { Stepper } from "@/components/ui/stepper";
 import { TrustBand } from "@/components/trips/trust-band";
@@ -29,7 +32,7 @@ import {
   questionsInSection,
 } from "@/config/trip-request";
 import { site, whatsappLink } from "@/config/site";
-import type { Departure } from "@/lib/types";
+import type { AppliedPromo, Departure } from "@/lib/types";
 
 /**
  * The two-minute form that stands between "Book now" and us.
@@ -65,6 +68,7 @@ export function TripRequestForm({
   pricePerPerson,
   initialDepartureId,
   initialTravelers,
+  initialPromo,
   maxTravelers,
   initialOrigin,
   prefillName,
@@ -79,6 +83,8 @@ export function TripRequestForm({
   pricePerPerson: number;
   initialDepartureId: string;
   initialTravelers: number;
+  /** The live offer, priced on the server so the first paint already has it. */
+  initialPromo: AppliedPromo | null;
   maxTravelers: number;
   /** From ?from=delhi on the trip page's "getting there" chips. */
   initialOrigin: string;
@@ -92,6 +98,8 @@ export function TripRequestForm({
   const [stepIndex, setStepIndex] = useState(0);
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  /** Short reference the customer quotes on the transfer, from the saved row. */
+  const [reference, setReference] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [departureId, setDepartureId] = useState(initialDepartureId);
@@ -111,6 +119,19 @@ export function TripRequestForm({
   const [understood, setUnderstood] = useState(false);
   const [trap, setTrap] = useState("");
 
+  /**
+   * The one code applied, and what the order comes to with it.
+   *
+   * Quoted by the server through PromoPricing, sent back with the request, and
+   * then priced again server-side before anything is stored — the value here is
+   * what the customer was *shown*, never what they are charged.
+   */
+  const [quote, setQuote] = useState<{ code: string | null; total: number; discount: number }>({
+    code: initialPromo?.code ?? null,
+    total: initialPromo?.total ?? 0,
+    discount: initialPromo?.discountAmount ?? 0,
+  });
+
   const step = STEPS[stepIndex];
   const selectedDeparture = departures.find((departure) => departure.id === departureId) ?? null;
   const seatCap = useMemo(() => {
@@ -121,7 +142,8 @@ export function TripRequestForm({
     );
   }, [maxTravelers, selectedDeparture]);
 
-  const indicativeTotal = (selectedDeparture?.price_override ?? pricePerPerson) * travelers;
+  const perPersonPrice = selectedDeparture?.price_override ?? pricePerPerson;
+  const indicativeTotal = quote.total || perPersonPrice * travelers;
   const whatsapp = whatsappLink(`Hi Outway, I've sent a booking request for ${tripTitle}.`);
 
   function setAnswer(id: string, value: string) {
@@ -240,6 +262,7 @@ export function TripRequestForm({
           answers,
           dealBreakers,
           notes,
+          promoCode: quote.code,
           formStartedAt: mountedAt.current,
           [HONEYPOT_FIELD]: trap,
         }),
@@ -254,6 +277,21 @@ export function TripRequestForm({
         );
         setStatus("idle");
         return;
+      }
+
+      const saved = (await response.json().catch(() => null)) as
+        | { requestId?: string; total?: number; discountAmount?: number; promoCode?: string | null }
+        | null;
+
+      if (saved?.requestId) setReference(`OW-${saved.requestId.slice(0, 6).toUpperCase()}`);
+      // The server re-prices from the trip's own row, so its figure is the one
+      // to show from here on — not the quote the browser was holding.
+      if (typeof saved?.total === "number") {
+        setQuote((current) => ({
+          code: saved.promoCode ?? current.code,
+          total: saved.total!,
+          discount: saved.discountAmount ?? current.discount,
+        }));
       }
 
       setStatus("sent");
@@ -283,6 +321,13 @@ export function TripRequestForm({
           way to <strong>{email}</strong>.
         </p>
 
+        {quote.discount > 0 && (
+          <p className="mt-3 inline-flex flex-wrap items-center gap-2 rounded-full bg-pine/10 px-4 py-2 text-sm font-medium text-pine-600">
+            <Sparkles size={15} aria-hidden="true" />
+            {quote.code} applied — {formatINR(quote.discount)} off, held on your request.
+          </p>
+        )}
+
         <ol className="mt-6 space-y-3 text-sm leading-relaxed text-pine-600/85">
           {[
             "A person reads the request, checks the seats are actually free, and looks at who else is on that date.",
@@ -297,6 +342,16 @@ export function TripRequestForm({
             </li>
           ))}
         </ol>
+
+        {/* The amount, the account, and the screenshot step — on the screen
+            someone is looking at the moment they decide to pay, rather than
+            two emails away. */}
+        <PaymentDetails
+          tripTitle={tripTitle}
+          amount={indicativeTotal}
+          reference={reference}
+          className="mt-7 !bg-white"
+        />
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <a href={`mailto:${site.email}`} className="btn-primary flex-1">
@@ -395,19 +450,22 @@ export function TripRequestForm({
               }
             />
 
-            <div className="rounded-xl bg-cream-300 px-4 py-3.5 text-sm text-ink-700">
-              <div className="flex items-baseline justify-between gap-4">
-                <span>
-                  {formatINR(selectedDeparture?.price_override ?? pricePerPerson)} × {travelers}
-                </span>
-                <output aria-live="polite" className="heading-sm text-base text-ink">
-                  {formatINR(indicativeTotal)}
-                </output>
+            <div>
+              <PromoPricing
+                tripId={tripId}
+                departureId={departureId || null}
+                travelers={travelers}
+                fallbackPricePerPerson={perPersonPrice}
+                initialPromo={initialPromo}
+                onChange={setQuote}
+              />
+              <div className="rounded-b-xl bg-cream-300 px-4 pb-3.5">
+                <p className="text-xs leading-relaxed text-ink-500">
+                  Indicative only, and not payable now. Flights and trains are not included in
+                  this.
+                </p>
+                <TrustPoints align="start" className="mt-3.5 border-t border-border/70 pt-3.5" />
               </div>
-              <p className="mt-1.5 text-xs leading-relaxed text-ink-500">
-                Indicative only, and not payable now. Flights and trains are not included in this.
-              </p>
-              <TrustPoints align="start" className="mt-3.5 border-t border-border/70 pt-3.5" />
             </div>
           </div>
         )}
@@ -754,9 +812,13 @@ export function TripRequestForm({
         </div>
       </div>
 
-      {/* Refund ladder only: the Payment details block sits directly below
-          this on the page and says the rest. */}
+      {/* Refund ladder only: the Payment details block below says the rest. */}
       <TrustBand showPayment={false} className="mt-6" />
+
+      {/* No amount yet, deliberately — a seat has to be confirmed free before
+          anyone should be transferring anything. This is "how paying works",
+          and the version with the figure on it appears once the request is in. */}
+      <PaymentDetails tripTitle={tripTitle} className="mt-6" />
     </div>
   );
 }

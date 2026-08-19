@@ -72,7 +72,12 @@ export const metadata: Metadata = {
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
   publisher: site.legalName,
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    // A feed link in the head is how aggregators and several non-Google
+    // crawlers learn a site publishes regularly.
+    types: { "application/rss+xml": [{ url: "/feed.xml", title: "The Outway Journal" }] },
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -91,14 +96,22 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    // `max-image-preview: large` is what gets a photograph next to the result
+    // rather than a thumbnail, and it is honoured by Bing and Yandex as well as
+    // Google — but only from the generic block, which is why it is set twice
+    // rather than only under googleBot.
+    "max-image-preview": "large",
+    "max-snippet": -1,
+    "max-video-preview": -1,
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
   // Rendered only when a token is actually set, so an unverified site ships no
   // tag rather than an empty one.
-  ...(site.verification.google || site.verification.bing
+  ...(site.verification.google || site.verification.bing || site.verification.yandex
     ? {
         verification: {
           ...(site.verification.google ? { google: site.verification.google } : {}),
+          ...(site.verification.yandex ? { yandex: site.verification.yandex } : {}),
           ...(site.verification.bing ? { other: { "msvalidate.01": site.verification.bing } } : {}),
         },
       }

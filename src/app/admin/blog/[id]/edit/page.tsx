@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PostEditorForm } from "@/components/admin/post-editor-form";
-import { requireAdminPage } from "@/lib/auth";
+import { requireBlogEditorPage } from "@/lib/auth";
 import { getPostByIdForAdmin } from "@/lib/blog";
 import { getAllDestinations, getAllTripsForAdmin } from "@/lib/data";
 
@@ -13,7 +13,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
 
   const [current, post, destinations, trips] = await Promise.all([
-    requireAdminPage(),
+    requireBlogEditorPage(),
     getPostByIdForAdmin(id),
     getAllDestinations(),
     getAllTripsForAdmin(),

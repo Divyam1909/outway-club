@@ -10,6 +10,13 @@ export type Category =
   | "culture";
 
 export type Difficulty = "easy" | "moderate" | "challenging";
+
+/**
+ * `blogger` is an admin of exactly one thing: the Journal. Same console, same
+ * editor, and nothing else — no bookings, no trips, no customers, no payments.
+ * Set by hand from /admin/users, like admin.
+ */
+export type Role = "customer" | "blogger" | "admin";
 export type TripType = "group" | "private" | "customizable";
 export type DepartureStatus = "open" | "filling_fast" | "sold_out" | "closed";
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -132,7 +139,7 @@ export interface Profile {
   email: string | null;
   phone: string | null;
   avatar_url: string | null;
-  role: "customer" | "admin";
+  role: Role;
   created_at: string;
 }
 
@@ -165,6 +172,10 @@ export interface Booking {
   cancelled_at: string | null;
   cancellation_reason: string | null;
   refund_amount: number | null;
+  promo_code_id: string | null;
+  promo_code: string | null;
+  subtotal_amount: number | null;
+  discount_amount: number | null;
   created_at: string;
   trip?: Trip;
   departure?: Departure;
@@ -211,6 +222,12 @@ export interface TripRequest {
   age_band: string;
   deal_breakers: string | null;
   notes: string | null;
+  /** The one promo code applied, priced server-side at submission. */
+  promo_code_id: string | null;
+  promo_code: string | null;
+  subtotal_amount: number | null;
+  discount_amount: number | null;
+  total_amount: number | null;
   status: TripRequestStatus;
   created_at: string;
   trip?: Pick<Trip, "title" | "slug"> | null;
@@ -225,7 +242,16 @@ export interface Subscriber {
   created_at: string;
 }
 
-export type PostStatus = "draft" | "published";
+/**
+ * `submitted` is a reader's article waiting on a human. It is not on the
+ * internet in any form until someone approves it — see the RLS in
+ * supabase/migrations/0007_promos_blog_roles.sql. `rejected` is kept rather
+ * than deleted so the writer can read why.
+ */
+export type PostStatus = "draft" | "submitted" | "published" | "rejected";
+
+/** Where a post came from: our own desk, or a reader's. */
+export type PostSource = "staff" | "community";
 
 export interface BlogPost {
   id: string;
@@ -245,7 +271,15 @@ export interface BlogPost {
   trip_id: string | null;
   reading_minutes: number;
   status: PostStatus;
+  source: PostSource;
   published_at: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  /** Editor's note back to the writer. Never rendered publicly. */
+  review_note: string | null;
+  /** Where the accept/decline email goes for a reader-submitted piece. */
+  submitter_email: string | null;
   is_featured: boolean;
   seo_title: string | null;
   seo_description: string | null;
@@ -297,4 +331,83 @@ export interface TripFilters {
 /** A single dated departure joined back to the trip it belongs to. */
 export interface DepartureWithTrip extends Departure {
   trip: Trip & { destination: Destination };
+}
+
+// ---------------------------------------------------------------------------
+// Promo codes
+// ---------------------------------------------------------------------------
+
+export type PromoDiscountType = "percent" | "flat";
+
+/**
+ * A discount code, as ops create it.
+ *
+ * Never sent to the browser whole: `usage_limit` and `times_used` together tell
+ * anyone with a network tab exactly how much of a collaborator's deal is left,
+ * which is their business and not the reader's. The public validate endpoint
+ * returns an `AppliedPromo` instead.
+ */
+export interface PromoCode {
+  id: string;
+  code: string;
+  /** Shown to the customer on the line item, e.g. "Janmashtami special". */
+  label: string;
+  description: string | null;
+  discount_type: PromoDiscountType;
+  discount_value: number;
+  /** Percentage codes only. Null = uncapped. */
+  max_discount_amount: number | null;
+  /** Flat codes only: per head, or once off the order. */
+  per_traveler: boolean;
+  min_order_amount: number;
+  min_travelers: number;
+  /** Null on either of these means unlimited. */
+  usage_limit: number | null;
+  per_user_limit: number | null;
+  times_used: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_active: boolean;
+  /** Applied without anyone typing it. Event offers only. */
+  auto_apply: boolean;
+  /** Empty = every trip. Otherwise the trip ids it is valid on. */
+  trip_ids: string[];
+  partner_name: string | null;
+  partner_handle: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A code applied to an order — the only shape the browser ever sees. */
+export interface AppliedPromo {
+  id: string;
+  code: string;
+  label: string;
+  description: string | null;
+  /** True when it landed on its own rather than being typed in. */
+  auto: boolean;
+  /** Rupees off the whole order, already rounded. */
+  discountAmount: number;
+  subtotal: number;
+  total: number;
+  /** When the offer stops, for the countdown line. Null = open-ended. */
+  endsAt: string | null;
+}
+
+export interface PromoRedemption {
+  id: string;
+  promo_code_id: string;
+  code: string;
+  trip_request_id: string | null;
+  booking_id: string | null;
+  trip_id: string | null;
+  user_id: string | null;
+  email: string | null;
+  num_travelers: number;
+  subtotal_amount: number;
+  discount_amount: number;
+  total_amount: number;
+  created_at: string;
 }

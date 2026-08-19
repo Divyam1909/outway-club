@@ -5,6 +5,7 @@ import { MapPin, CalendarDays } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { TripCard } from "@/components/trips/trip-card";
+import { getAutoPromoForTrips } from "@/lib/promo";
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import {
   getDestinationBySlug,
@@ -47,6 +48,7 @@ export default async function DestinationPage({
   if (!destination) notFound();
 
   const trips = await getTripsByDestination(destination.id);
+  const promos = await getAutoPromoForTrips(trips);
 
   return (
     <div>
@@ -136,7 +138,7 @@ export default async function DestinationPage({
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {trips.map((trip, index) => (
                 <Reveal key={trip.id} delay={Math.min(index, 5) * 70}>
-                  <TripCard trip={trip} />
+                  <TripCard trip={trip} promo={promos.get(trip.id) ?? null} />
                 </Reveal>
               ))}
             </div>

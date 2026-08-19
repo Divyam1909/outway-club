@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ClipboardList, MessageSquare, Newspaper, Star } from "lucide-react";
+import { redirect } from "next/navigation";
 import { getAdminStats, getAllBookingsForAdmin } from "@/lib/data";
+import { getCurrentUser } from "@/lib/auth";
 import { formatDate, formatINR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -9,6 +11,11 @@ export const metadata: Metadata = { title: "Admin dashboard" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  // A blogger has no dashboard — every number on it is commercial. Send them
+  // where their work actually is instead of showing an empty screen.
+  const current = await getCurrentUser();
+  if (current?.profile?.role !== "admin") redirect("/admin/blog");
+
   const [stats, bookings] = await Promise.all([getAdminStats(), getAllBookingsForAdmin()]);
   const recent = bookings.slice(0, 6);
 

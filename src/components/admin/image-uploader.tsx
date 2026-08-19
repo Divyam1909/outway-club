@@ -24,6 +24,7 @@ export function ImageUploader({
   onChange,
   multiple = false,
   bucket = "trip-images",
+  pathPrefix,
 }: {
   label: string;
   hint?: string;
@@ -33,6 +34,13 @@ export function ImageUploader({
   multiple?: boolean;
   /** Storage bucket to upload into. Editorial photography lives separately. */
   bucket?: "trip-images" | "blog-images";
+  /**
+   * Folder to write into, e.g. "submissions". Reader-submitted photography is
+   * confined to one prefix by storage policy — a signed-in contributor may
+   * write there and nowhere else, so one person's upload can never land on
+   * another's cover photo. Editors upload with no prefix.
+   */
+  pathPrefix?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -78,7 +86,8 @@ export function ImageUploader({
       setProgress(`Uploading ${index + 1} of ${list.length}…`);
 
       const extension = upload.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const path = `${new Date().getFullYear()}/${crypto.randomUUID()}.${extension}`;
+      const folder = pathPrefix ? `${pathPrefix}/` : "";
+      const path = `${folder}${new Date().getFullYear()}/${crypto.randomUUID()}.${extension}`;
 
       try {
         const { error: uploadError } = await supabase.storage

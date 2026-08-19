@@ -6,10 +6,12 @@ import { RatingStars } from "@/components/ui/rating-stars";
 import { CommentModeration } from "@/components/admin/comment-moderation";
 import { getCommentsForAdmin } from "@/lib/blog";
 import { formatDate } from "@/lib/utils";
+import { requireBlogEditorPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Journal comments" };
 
 export default async function AdminBlogCommentsPage() {
+  await requireBlogEditorPage();
   const comments = await getCommentsForAdmin();
 
   // Anything waiting on a decision goes to the top — that's the whole job.

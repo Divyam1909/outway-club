@@ -4,13 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, User as UserIcon, ChevronDown, Settings, Ticket, LogOut } from "lucide-react";
+import {
+  Menu,
+  X,
+  User as UserIcon,
+  ChevronDown,
+  Settings,
+  Ticket,
+  LogOut,
+  PenLine,
+} from "lucide-react";
 import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import { useSession } from "@/lib/use-session";
 
 export function NavbarClient({ links }: { links: { href: string; label: string }[] }) {
-  const { loading, isSignedIn, isAdmin, fullName } = useSession();
+  const { loading, isSignedIn, isAdmin, isBlogEditor, fullName } = useSession();
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -104,9 +113,15 @@ export function NavbarClient({ links }: { links: { href: string; label: string }
               Holding its width keeps the bar from reflowing under the cursor
               at the exact moment someone is reaching for "Log in". */}
           {loading && <span aria-hidden="true" className="h-10 w-[12.5rem]" />}
-          {!loading && isAdmin && (
-            <Link href="/admin" className="text-sm font-medium text-ink-700 hover:text-pine">
-              Admin
+          {/* A blogger reaches the console too, but only the Journal — so the
+              link says where it actually goes rather than promising an admin
+              area they cannot open. */}
+          {!loading && isBlogEditor && (
+            <Link
+              href={isAdmin ? "/admin" : "/admin/blog"}
+              className="text-sm font-medium text-ink-700 hover:text-pine"
+            >
+              {isAdmin ? "Admin" : "Journal"}
             </Link>
           )}
           {loading ? null : isSignedIn ? (
@@ -145,6 +160,13 @@ export function NavbarClient({ links }: { links: { href: string; label: string }
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink-700 hover:bg-cream-300"
                     >
                       <Settings size={15} className="text-clay" /> Settings
+                    </Link>
+                    <Link
+                      href="/blog/write"
+                      role="menuitem"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink-700 hover:bg-cream-300"
+                    >
+                      <PenLine size={15} className="text-clay" /> Write for us
                     </Link>
                     <div className="my-1.5 border-t border-border" />
                     <button
@@ -205,9 +227,9 @@ export function NavbarClient({ links }: { links: { href: string; label: string }
           ))}
 
           <div className="mt-3 flex flex-col gap-2 border-t border-border/70 pt-4">
-            {!loading && isAdmin && (
-              <Link href="/admin" className="btn-outline">
-                Admin dashboard
+            {!loading && isBlogEditor && (
+              <Link href={isAdmin ? "/admin" : "/admin/blog"} className="btn-outline">
+                {isAdmin ? "Admin dashboard" : "Journal console"}
               </Link>
             )}
             {loading ? null : isSignedIn ? (
@@ -217,6 +239,9 @@ export function NavbarClient({ links }: { links: { href: string; label: string }
                 </Link>
                 <Link href="/account/settings" className="btn-outline">
                   Settings
+                </Link>
+                <Link href="/blog/write" className="btn-outline">
+                  Write for us
                 </Link>
                 <button onClick={handleSignOut} disabled={signingOut} className="btn-primary">
                   {signingOut ? "Signing out…" : "Sign out"}

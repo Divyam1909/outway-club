@@ -8,6 +8,7 @@ import { ComingSoonDestinationCard } from "@/components/coming-soon-card";
 import { DestinationExplorer } from "@/components/home/destination-explorer";
 import { TripCard } from "@/components/trips/trip-card";
 import { Hero } from "@/components/home/hero";
+import { OfferBand } from "@/components/home/offer-band";
 import { WhyUs } from "@/components/home/why-us";
 import { Testimonials } from "@/components/home/testimonials";
 import { CtaBanner } from "@/components/home/cta-banner";
@@ -18,6 +19,9 @@ import {
   getFeaturedReviews,
   getRunningTrips,
 } from "@/lib/data";
+import { getAutoPromoForTrips } from "@/lib/promo";
+import { tripPricing } from "@/lib/promo-rules";
+import { PromoBanner } from "@/components/trips/promo-banner";
 import { formatDateRange, formatINR, seatsLeft } from "@/lib/utils";
 import { UPCOMING_DESTINATIONS, fillWithUpcoming } from "@/config/upcoming-destinations";
 
@@ -36,7 +40,13 @@ export default async function HomePage() {
 
   const departure = trip?.departures[0] ?? null;
   const remaining = departure ? seatsLeft(departure.total_seats, departure.seats_booked) : null;
-  const price = trip ? (trip.discounted_price ?? trip.price_per_person) : null;
+
+  // One query for every trip on the page. The hero, the rail and the booking
+  // band all need the same answer, and asking per card would be four round
+  // trips to hear it four times.
+  const promos = await getAutoPromoForTrips([...(trip ? [trip] : []), ...running]);
+  const heroPromo = trip ? (promos.get(trip.id) ?? null) : null;
+  const price = trip ? tripPricing(trip, heroPromo) : null;
 
   const bookableDestinations = destinations.filter((d) => d.tripCount > 0);
   const explorerDestinations = (bookableDestinations.length > 0 ? bookableDestinations : destinations).slice(0, 6);
@@ -58,7 +68,12 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero trip={trip} departure={departure} />
+      <Hero trip={trip} departure={departure} promo={heroPromo} />
+
+      {/* Only while an event offer is actually running on the spotlight trip.
+          It writes itself from the promo row and removes itself when the
+          window closes — no festival is hardcoded anywhere on this page. */}
+      {trip && heroPromo && <OfferBand trip={trip} departure={departure} promo={heroPromo} />}
 
       {!trip && (
         <section className="section-lg">
@@ -117,7 +132,7 @@ export default async function HomePage() {
             <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {running.map((item, index) => (
                 <Reveal key={item.id} delay={index * 90}>
-                  <TripCard trip={item} />
+                  <TripCard trip={item} promo={promos.get(item.id) ?? null} />
                 </Reveal>
               ))}
             </div>
@@ -185,14 +200,22 @@ export default async function HomePage() {
                     {price !== null && (
                       <div className="mb-4 flex items-baseline gap-3">
                         <span className="font-display text-4xl font-semibold">
-                          {formatINR(price)}
+                          {formatINR(price.effective)}
                         </span>
-                        {trip.discounted_price && (
+                        {price.struck !== null && (
                           <span className="text-cream-100/45 line-through">
-                            {formatINR(trip.price_per_person)}
+                            {formatINR(price.struck)}
                           </span>
                         )}
                       </div>
+                    )}
+                    {heroPromo && price && (
+                      <PromoBanner
+                        promo={heroPromo}
+                        pricePerPerson={price.effective + price.promoDiscount}
+                        tone="dark"
+                        className="mb-4"
+                      />
                     )}
                     {/* Says what it does. This goes to the trip page, same as
                         the hero button — promising "book your seat" and

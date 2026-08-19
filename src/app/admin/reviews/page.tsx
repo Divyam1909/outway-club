@@ -6,11 +6,15 @@ import { RatingStars } from "@/components/ui/rating-stars";
 import { ReviewModeration } from "@/components/admin/review-moderation";
 import { getPendingReviewsForAdmin } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Reviews" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminReviewsPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const reviews = await getPendingReviewsForAdmin();
   const pending = reviews.filter((review) => !review.is_approved);
   const published = reviews.filter((review) => review.is_approved);

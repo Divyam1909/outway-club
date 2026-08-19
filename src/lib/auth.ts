@@ -66,3 +66,70 @@ export async function requireAdminApi(): Promise<
   }
   return { current };
 }
+
+// ---------------------------------------------------------------------------
+// Journal editors
+//
+// A `blogger` is an admin of the Journal and nothing else. Every blog route
+// asks these three instead of the admin ones; every other admin route keeps
+// asking the admin ones, which is what confines the role.
+// ---------------------------------------------------------------------------
+
+export function isBlogEditor(current: CurrentUser | null): boolean {
+  return current?.profile?.role === "admin" || current?.profile?.role === "blogger";
+}
+
+export async function requireBlogEditor(): Promise<CurrentUser> {
+  const current = await getCurrentUser();
+  if (!isBlogEditor(current)) throw new Error("Not authorized");
+  return current!;
+}
+
+/** For Server Components / pages — redirects instead of throwing. */
+export async function requireBlogEditorPage(): Promise<CurrentUser> {
+  const current = await getCurrentUser();
+  if (!isBlogEditor(current)) redirect("/");
+  return current!;
+}
+
+export async function requireBlogEditorApi(): Promise<
+  { current: CurrentUser } | { response: NextResponse }
+> {
+  const current = await getCurrentUser();
+  if (!current) {
+    return {
+      response: NextResponse.json({ error: "Please sign in." }, { status: 401 }),
+    };
+  }
+  if (!isBlogEditor(current)) {
+    return {
+      response: NextResponse.json(
+        { error: "You don't have access to the Journal." },
+        { status: 403 }
+      ),
+    };
+  }
+  return { current };
+}
+
+/**
+ * Any signed-in account, for the reader-submission endpoints.
+ *
+ * Submitting an article requires an account — not as a gate on the writing, but
+ * so an accepted piece has a real byline behind it and a rejected one has
+ * somewhere to be explained. Nothing here grants publishing rights.
+ */
+export async function requireUserApi(): Promise<
+  { current: CurrentUser } | { response: NextResponse }
+> {
+  const current = await getCurrentUser();
+  if (!current) {
+    return {
+      response: NextResponse.json(
+        { error: "Please sign in to send us a piece." },
+        { status: 401 }
+      ),
+    };
+  }
+  return { current };
+}

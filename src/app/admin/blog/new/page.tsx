@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PostEditorForm } from "@/components/admin/post-editor-form";
-import { requireAdminPage } from "@/lib/auth";
+import { requireBlogEditorPage } from "@/lib/auth";
 import { getAllDestinations, getAllTripsForAdmin } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Write a post" };
 
 export default async function NewPostPage() {
   const [current, destinations, trips] = await Promise.all([
-    requireAdminPage(),
+    requireBlogEditorPage(),
     getAllDestinations(),
     getAllTripsForAdmin(),
   ]);

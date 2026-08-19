@@ -1,6 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const TRIP_SLUG = "udaipur-mount-abu";
+// The escape currently on sale. Escape 001 (udaipur-mount-abu) is between
+// dates and deliberately unpublished, so its public URL 404s — pointing these
+// at a hidden trip is how the suite starts failing for a reason that is
+// actually correct behaviour.
+const TRIP_SLUG = "udaipur-jawai";
 
 const PUBLIC_ROUTES = [
   { path: "/", heading: /Udaipur/i },
@@ -149,17 +153,19 @@ test.describe("navigation", () => {
   });
 });
 
-test.describe("the launch escape", () => {
+test.describe("the live escape", () => {
   test("trip page shows dates, price and full itinerary", async ({ page }) => {
     await page.goto(`/trips/${TRIP_SLUG}`, { waitUntil: "networkidle" });
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Udaipur");
-    await expect(page.getByText(/15\s*to\s*18 Aug/i).first()).toBeVisible();
+    await expect(page.getByText(/4\s*to\s*8 Sep/i).first()).toBeVisible();
+    // The price after the Janmashtami code, which applies by itself — this is
+    // the number the customer is actually quoted everywhere on the site.
     await expect(page.getByText("₹7,999").and(page.locator(":visible")).first()).toBeVisible();
 
-    // Four itinerary days, each with a heading.
+    // Five itinerary days, each with a heading.
     const timeline = page.locator("ol.border-l > li");
-    await expect(timeline).toHaveCount(4);
+    await expect(timeline).toHaveCount(5);
 
     await expect(page.getByRole("heading", { name: /Full itinerary/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Inclusions, exclusions/i })).toBeVisible();

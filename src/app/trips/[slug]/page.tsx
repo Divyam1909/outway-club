@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Clock, MapPin, Mountain, ShieldCheck, Users } from "lucide-react";
+import { Clock, Download, MapPin, Mountain, ShieldCheck, Users } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { RatingStars } from "@/components/ui/rating-stars";
@@ -19,10 +19,14 @@ import { BookingWidget } from "@/components/trips/booking-widget";
 import { MobileBookingBar } from "@/components/trips/mobile-booking-bar";
 import { BreadcrumbJsonLd, TripJsonLd } from "@/components/seo/json-ld";
 import { getPublishedTripSlugs, getTripBySlug } from "@/lib/data";
+import { getAutoPromoForTrips } from "@/lib/promo";
+import { PromoBanner } from "@/components/trips/promo-banner";
+import { tripPricing } from "@/lib/promo-rules";
 import { SignedInOnly } from "@/components/auth/signed-in-only";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { CATEGORY_LABELS, DIFFICULTY_LABELS, formatDateRange } from "@/lib/utils";
 import { site } from "@/config/site";
+import { itineraryPdfFor } from "@/config/itineraries";
 
 export const revalidate = 300;
 
@@ -85,6 +89,13 @@ export default async function TripDetailPage({
 
   const departure = trip.departures[0] ?? null;
   const hasReviews = trip.review_count > 0;
+
+  // A live event code, if one covers this escape. Read on the server so the
+  // prerendered page already carries the offer price rather than flashing the
+  // full one and correcting itself.
+  const promo = (await getAutoPromoForTrips([trip])).get(trip.id) ?? null;
+  const price = tripPricing(trip, promo);
+  const brochure = itineraryPdfFor(trip.slug);
 
   return (
     <div className="py-8 sm:py-10">
@@ -149,6 +160,14 @@ export default async function TripDetailPage({
               )}
             </div>
 
+            {promo && (
+              <PromoBanner
+                promo={promo}
+                pricePerPerson={price.effective + price.promoDiscount}
+                className="mt-6 w-fit"
+              />
+            )}
+
             <p className="mt-7 text-lg leading-relaxed text-ink-700">{trip.short_description}</p>
             <p className="mt-4 leading-relaxed text-ink-500">{trip.description}</p>
 
@@ -193,7 +212,17 @@ export default async function TripDetailPage({
 
             <Reveal>
               <section className="mt-12">
-                <h2 className="heading-sm mb-6 text-xl text-ink">Full itinerary, day by day</h2>
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="heading-sm text-xl text-ink">Full itinerary, day by day</h2>
+                  {/* Generated from these same rows, so the brochure and the
+                      page can never quote different dates or a different
+                      price. See scripts/build-itinerary-pdf.mjs. */}
+                  {brochure && (
+                    <a href={brochure} download className="btn-outline btn-sm shrink-0">
+                      <Download size={14} aria-hidden="true" /> Download as PDF
+                    </a>
+                  )}
+                </div>
                 <ItineraryTimeline days={trip.itinerary_days} />
               </section>
             </Reveal>
@@ -264,12 +293,12 @@ export default async function TripDetailPage({
               yet — and once it moved down it just competed with the fixed bar
               for the same click. MobileBookingBar owns booking below lg. */}
           <div className="hidden lg:block">
-            <BookingWidget trip={trip} departures={trip.departures} />
+            <BookingWidget trip={trip} departures={trip.departures} promo={promo} />
           </div>
         </div>
       </Container>
 
-      <MobileBookingBar trip={trip} departures={trip.departures} />
+      <MobileBookingBar trip={trip} departures={trip.departures} promo={promo} />
 
       {/* Clears the fixed mobile bar so the footer is never overlapped. */}
       <div aria-hidden="true" className="h-20 lg:hidden" />

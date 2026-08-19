@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { DestinationEditorForm } from "@/components/admin/destination-editor-form";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "New destination" };
 
-export default function NewDestinationPage() {
+export default async function NewDestinationPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   return (
     <div>
       <Link

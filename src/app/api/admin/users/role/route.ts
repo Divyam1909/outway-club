@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Role } from "@/lib/types";
+
+const ROLES: Role[] = ["customer", "blogger", "admin"];
 
 /**
- * Promote or demote a user. Replaces the "run this SQL by hand" step —
- * admin rights are now granted from /admin/users.
+ * Set a user's role. Replaces the "run this SQL by hand" step.
+ *
+ * Three roles: `customer`, `blogger` (the Journal and nothing else) and
+ * `admin`. Only an admin can call this, so a blogger cannot promote themselves
+ * — and the database's own role guard in 0002_launch.sql backs that up in case
+ * this route is ever bypassed.
  */
 export async function POST(request: Request) {
   const guard = await requireAdminApi();
@@ -19,13 +26,14 @@ export async function POST(request: Request) {
 
   const { userId, role } = body;
 
-  if (!userId || (role !== "admin" && role !== "customer")) {
+  if (!userId || !ROLES.includes(role as Role)) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  // An admin demoting themselves would lock the console if they're the last
-  // one — check before, not after.
-  if (userId === guard.current.user.id && role === "customer") {
+  // An admin stepping down would lock the console if they're the last one —
+  // check before, not after. Moving to `blogger` counts: it takes away every
+  // admin screen, including this one.
+  if (userId === guard.current.user.id && role !== "admin") {
     const admin = createAdminClient();
     const { count } = await admin
       .from("profiles")

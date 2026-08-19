@@ -10,6 +10,7 @@ import { getBookingByIdForAdmin } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { refundPercentFor } from "@/config/site";
 import { formatDate, formatDateRange, formatINR } from "@/lib/utils";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Booking detail" };
 export const dynamic = "force-dynamic";
@@ -26,6 +27,9 @@ export default async function AdminBookingDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const { id } = await params;
   const booking = await getBookingByIdForAdmin(id);
   if (!booking) notFound();

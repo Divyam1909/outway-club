@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteTripButton } from "@/components/admin/delete-trip-button";
 import { getAllTripsForAdmin } from "@/lib/data";
 import { formatINR } from "@/lib/utils";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Manage trips" };
 
 export default async function AdminTripsPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const trips = await getAllTripsForAdmin();
 
   return (

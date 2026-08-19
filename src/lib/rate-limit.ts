@@ -39,6 +39,18 @@ export const RATE_LIMITS = {
   review: { bucket: "review", limit: 5, windowSeconds: 3600 },
   cancelBooking: { bucket: "cancel_booking", limit: 5, windowSeconds: 3600 },
   blogComment: { bucket: "blog_comment", limit: 4, windowSeconds: 900 },
+  // Writing an article is slow, sending it is one request. Four in fifteen
+  // minutes covers a genuine "I fixed the typo and resent it" and stops a
+  // script filling the moderation queue.
+  blogSubmission: { bucket: "blog_submission", limit: 4, windowSeconds: 900 },
+  // Deliberately loose. This endpoint is not only "someone typed a code" — the
+  // price panel re-quotes on every change of date or headcount, so a customer
+  // tapping the traveller stepper six times legitimately spends six of these.
+  // At 25 an indecisive person on a slow decision ran out and silently lost
+  // their discount, which is a far worse failure than a wasted request. Codes
+  // still can't be brute-forced at this rate: the space is alphanumeric and a
+  // wrong guess reveals nothing except that it was wrong.
+  promoValidate: { bucket: "promo_validate", limit: 120, windowSeconds: 600 },
   // Per IP *and* per slug (the caller passes the slug as the extra key), so
   // this is really "one reader, one post, once an hour" — enough to stop a
   // refresh loop inflating a number without penalising genuine re-reads.

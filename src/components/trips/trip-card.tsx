@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { SmartImage } from "@/components/ui/smart-image";
 import { formatINR, editionLabel, CATEGORY_LABELS } from "@/lib/utils";
+import { tripPricing, type PublicPromo } from "@/lib/promo-rules";
 import { format } from "date-fns";
 import type { Departure, Trip } from "@/lib/types";
 
@@ -29,10 +30,16 @@ function urgencyLabel(nextDeparture: Departure | undefined): string | null {
  * also advertises the next few dates: one trip running four weekends should
  * read as four chances to go, not one ambiguous listing.
  */
-export function TripCard({ trip }: { trip: Trip & { departures?: Departure[] } }) {
-  const hasDiscount = Boolean(
-    trip.discounted_price && trip.discounted_price < trip.price_per_person
-  );
+export function TripCard({
+  trip,
+  promo,
+}: {
+  trip: Trip & { departures?: Departure[] };
+  /** A live auto-applying code, so the card quotes what you would actually pay. */
+  promo?: PublicPromo | null;
+}) {
+  const price = tripPricing(trip, promo);
+  const hasDiscount = price.struck !== null;
   const hasReviews = trip.review_count > 0;
   const edition = editionLabel(trip);
 
@@ -76,7 +83,7 @@ export function TripCard({ trip }: { trip: Trip & { departures?: Departure[] } }
             )}
             {hasDiscount && (
               <span className="rounded-full bg-clay px-3 py-1 text-xs font-bold text-cream-100 shadow-soft">
-                Save {formatINR(trip.price_per_person - (trip.discounted_price ?? 0))}
+                Save {formatINR(price.saving)}
               </span>
             )}
           </div>
@@ -131,16 +138,16 @@ export function TripCard({ trip }: { trip: Trip & { departures?: Departure[] } }
           <div>
             <p className="text-xs text-ink-500">From</p>
             <div className="flex items-baseline gap-2">
-              <span className="heading-sm text-xl text-ink">
-                {formatINR(trip.discounted_price ?? trip.price_per_person)}
-              </span>
-              {hasDiscount && (
+              <span className="heading-sm text-xl text-ink">{formatINR(price.effective)}</span>
+              {price.struck !== null && (
                 <span className="text-sm text-ink-400 line-through">
-                  {formatINR(trip.price_per_person)}
+                  {formatINR(price.struck)}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-ink-500">per person</p>
+            <p className="text-[11px] text-ink-500">
+              per person{price.promoDiscount > 0 && promo ? " · " + promo.label : ""}
+            </p>
           </div>
           <span className="btn-ghost btn-sm">View trip</span>
         </div>

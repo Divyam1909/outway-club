@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { CopyEmails } from "@/components/admin/copy-emails";
 import { getSubscribersForAdmin } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Waitlist" };
 export const dynamic = "force-dynamic";
@@ -15,6 +16,9 @@ const SOURCE_LABEL: Record<string, string> = {
 };
 
 export default async function AdminSubscribersPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const subscribers = await getSubscribersForAdmin();
 
   const bySource = subscribers.reduce<Record<string, number>>((acc, subscriber) => {

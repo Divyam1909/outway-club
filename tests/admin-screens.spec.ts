@@ -3,6 +3,10 @@ import { test } from "@playwright/test";
 const ADMIN = { email: "playwright-admin@outway.test", password: "pw-test-Admin-2026!" };
 
 test("admin screenshots", async ({ page }, testInfo) => {
+  // Fourteen full-page captures, each waiting for network idle. The default
+  // 30s is a budget for an assertion, not for a photo shoot.
+  test.setTimeout(180_000);
+
   await page.goto("/login");
   await page.locator("#login-email").fill(ADMIN.email);
   await page.locator("#login-password").fill(ADMIN.password);
@@ -17,6 +21,8 @@ test("admin screenshots", async ({ page }, testInfo) => {
     ["blog-new", "/admin/blog/new"],
     ["blog-comments", "/admin/blog/comments"],
     ["users", "/admin/users"],
+    ["promo-codes", "/admin/promo-codes"],
+    ["promo-code-new", "/admin/promo-codes/new"],
     ["bookings", "/admin/bookings"],
     ["reviews", "/admin/reviews"],
     ["enquiries", "/admin/enquiries"],

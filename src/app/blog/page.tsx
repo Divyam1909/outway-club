@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { NotebookPen, PenLine } from "lucide-react";
+import { ArrowRight, NotebookPen, PenLine } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { PostCard } from "@/components/blog/post-card";
@@ -162,6 +162,34 @@ export default async function BlogPage({
           </Container>
         </section>
       )}
+
+      {/* --- Write for us ----------------------------------------------------
+          Under the writing rather than above it, deliberately: the invitation
+          lands with someone who has just read a piece and thought "I could
+          write one of these", not with someone who arrived thirty seconds ago. */}
+      <section className="pt-16">
+        <Container>
+          <div className="rounded-3xl border border-border bg-white p-8 shadow-card sm:p-10">
+            <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.5fr_auto]">
+              <div>
+                <Eyebrow className="mb-3">Open to readers</Eyebrow>
+                <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+                  Been somewhere worth writing about?
+                </h2>
+                <p className="mt-3 max-w-xl leading-relaxed text-ink-500">
+                  The Journal isn&apos;t only ours. Send us a piece about a place you&apos;ve
+                  actually travelled — it doesn&apos;t have to be one of our escapes. A person
+                  reads every submission and replies either way, and nothing appears on this page
+                  until we&apos;ve read it properly.
+                </p>
+              </div>
+              <Link href="/blog/write" className="btn-accent btn-lg shrink-0">
+                <PenLine size={16} /> Write for us <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </section>
 
       {/* --- Newsletter ------------------------------------------------------ */}
       <section className="pt-16">

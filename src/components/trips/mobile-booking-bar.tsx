@@ -11,6 +11,7 @@ import { TrustPoints } from "@/components/trips/trust-points";
 import { Modal } from "@/components/ui/modal";
 import { Stepper } from "@/components/ui/stepper";
 import { formatDateRange, formatINR, seatsLeft } from "@/lib/utils";
+import { publicDiscount, tripPricing, type PublicPromo } from "@/lib/promo-rules";
 import type { Departure, Trip } from "@/lib/types";
 
 /**
@@ -27,6 +28,7 @@ import type { Departure, Trip } from "@/lib/types";
 export function MobileBookingBar({
   trip,
   departures,
+  promo,
 }: {
   trip: Pick<
     Trip,
@@ -39,6 +41,8 @@ export function MobileBookingBar({
     | "is_group_trip"
   >;
   departures: Departure[];
+  /** A live auto-applying code, so the bar quotes the price the form will. */
+  promo?: PublicPromo | null;
 }) {
   const router = useRouter();
   const [shown, setShown] = useState(false);
@@ -66,6 +70,9 @@ export function MobileBookingBar({
   const selected = departures.find((d) => d.id === departureId) ?? firstBookable;
   const basePrice = trip.discounted_price ?? trip.price_per_person;
   const price = selected?.price_override ?? basePrice;
+  const headline = tripPricing(trip, promo);
+  const sheetSubtotal = price * travelers;
+  const sheetDiscount = promo ? publicDiscount(promo, sheetSubtotal, travelers) : 0;
   const remaining = selected ? seatsLeft(selected.total_seats, selected.seats_booked) : null;
   const soldOut = selected?.status === "sold_out" || remaining === 0;
   const isFixedDeparture = trip.trip_type === "group";
@@ -104,11 +111,11 @@ export function MobileBookingBar({
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">
               <span className="font-display text-xl font-semibold text-ink">
-                {formatINR(price)}
+                {formatINR(headline.effective)}
               </span>
-              {trip.discounted_price && trip.discounted_price < trip.price_per_person && (
+              {headline.struck !== null && (
                 <span className="text-xs text-ink-400 line-through">
-                  {formatINR(trip.price_per_person)}
+                  {formatINR(headline.struck)}
                 </span>
               )}
             </div>
@@ -185,13 +192,30 @@ export function MobileBookingBar({
           />
         </div>
 
-        <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
-          <span className="text-ink-500">
-            {formatINR(price)} &times; {travelers}
-          </span>
-          <output aria-live="polite" className="font-display text-lg font-semibold text-ink">
-            {formatINR(price * travelers)}
-          </output>
+        <div className="mt-5 border-t border-border pt-4 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-ink-500">
+              {formatINR(price)} &times; {travelers}
+            </span>
+            <span className={sheetDiscount > 0 ? "text-ink-500" : "font-display text-lg font-semibold text-ink"}>
+              {formatINR(sheetSubtotal)}
+            </span>
+          </div>
+
+          {sheetDiscount > 0 && promo && (
+            <>
+              <div className="mt-1.5 flex items-center justify-between text-pine">
+                <span className="truncate pr-2">{promo.label}</span>
+                <span className="shrink-0 font-medium">&minus;{formatINR(sheetDiscount)}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
+                <span className="font-medium text-ink">You pay</span>
+                <output aria-live="polite" className="font-display text-lg font-semibold text-ink">
+                  {formatINR(sheetSubtotal - sheetDiscount)}
+                </output>
+              </div>
+            </>
+          )}
         </div>
 
         <TrustPoints align="start" className="mt-4" />

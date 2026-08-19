@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { SmartImage } from "@/components/ui/smart-image";
 import { DeleteDestinationButton } from "@/components/admin/delete-destination-button";
 import { getDestinationsForAdmin } from "@/lib/data";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Manage destinations" };
 
 export default async function AdminDestinationsPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const destinations = await getDestinationsForAdmin();
 
   return (

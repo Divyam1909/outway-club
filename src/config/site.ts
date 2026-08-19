@@ -63,7 +63,16 @@ export const site = {
    */
   verification: {
     google: env("NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION"),
+    /**
+     * Bing's token is the one that matters most for everything that is not
+     * Google. Bing Webmaster Tools is where you submit the sitemap and read the
+     * crawl errors for the index behind DuckDuckGo, Ecosia, Yahoo and a large
+     * share of what Brave shows — so a site that ranks on Google and nowhere
+     * else is usually a site that was never verified here.
+     */
     bing: env("NEXT_PUBLIC_BING_SITE_VERIFICATION"),
+    /** Yandex Webmaster. Also one of the engines IndexNow reaches. */
+    yandex: env("NEXT_PUBLIC_YANDEX_VERIFICATION"),
   },
 
   /** Responded-within promise used in copy and auto-replies. Keep honest. */

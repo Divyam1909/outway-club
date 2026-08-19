@@ -6,6 +6,7 @@ import { getTripRequestsForAdmin } from "@/lib/data";
 import { formatDate, formatDateRange } from "@/lib/utils";
 import { QUESTIONNAIRE, answerLabel, questionLabel } from "@/config/trip-request";
 import type { TripRequest } from "@/lib/types";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Booking requests" };
 export const dynamic = "force-dynamic";
@@ -29,6 +30,9 @@ const HEADLINE_ANSWERS = ["travel_style", "evenings", "age_band"];
  * above the names, not buried inside eighteen cards.
  */
 export default async function AdminRequestsPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const requests = await getTripRequestsForAdmin();
   const newCount = requests.filter((request) => request.status === "new").length;
   const groups = groupByDeparture(requests);

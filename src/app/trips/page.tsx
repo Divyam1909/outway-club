@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { TripCard } from "@/components/trips/trip-card";
+import { getAutoPromoForTrips } from "@/lib/promo";
 import { ComingSoonEscapeCard } from "@/components/coming-soon-card";
 import { CatalogueFilters } from "@/components/trips/catalogue-filters";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -69,6 +70,10 @@ export default async function TripsPage({
   const bookable = trips.filter((trip) => trip.departures.length > 0);
   const waitlist = trips.filter((trip) => trip.departures.length === 0);
 
+  // One query for the whole grid, so every card quotes the price its trip page
+  // will quote rather than the pre-offer one.
+  const promos = await getAutoPromoForTrips(trips);
+
   // While the catalogue is small, top the first row up with places we're
   // planning rather than leaving a half-empty grid. Suppressed the moment
   // someone filters: a "coming soon" card can't honestly claim to match a
@@ -129,7 +134,7 @@ export default async function TripsPage({
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {bookable.map((trip, index) => (
                 <Reveal key={trip.id} delay={Math.min(index, 5) * 70}>
-                  <TripCard trip={trip} />
+                  <TripCard trip={trip} promo={promos.get(trip.id) ?? null} />
                 </Reveal>
               ))}
               {catalogueUpcoming.map((place, index) => (
@@ -159,7 +164,7 @@ export default async function TripsPage({
                 </p>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {waitlist.map((trip) => (
-                    <TripCard key={trip.id} trip={trip} />
+                    <TripCard key={trip.id} trip={trip} promo={promos.get(trip.id) ?? null} />
                   ))}
                 </div>
               </div>

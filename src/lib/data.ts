@@ -453,9 +453,36 @@ const EMPTY_ADMIN_STATS = {
   postCount: 0,
   publishedPostCount: 0,
   pendingCommentCount: 0,
+  pendingSubmissionCount: 0,
+  journalQueueCount: 0,
 };
 
 export type AdminStats = typeof EMPTY_ADMIN_STATS;
+
+/**
+ * The Journal's own counters, with every commercial number left at zero.
+ *
+ * What a `blogger` sees. Bookings, revenue and customer counts aren't hidden
+ * from them by the template — they are never read in the first place, which is
+ * the only version of "confined to the Journal" that survives someone opening
+ * the network tab.
+ */
+export async function getEmptyAdminStats(): Promise<AdminStats> {
+  if (!isSupabaseConfigured()) return EMPTY_ADMIN_STATS;
+  const supabase = await createClient();
+
+  const [{ count: pendingCommentCount }, { count: pendingSubmissionCount }] = await Promise.all([
+    supabase.from("blog_comments").select("*", { count: "exact", head: true }).eq("is_approved", false),
+    supabase.from("blog_posts").select("*", { count: "exact", head: true }).eq("status", "submitted"),
+  ]);
+
+  return {
+    ...EMPTY_ADMIN_STATS,
+    pendingCommentCount: pendingCommentCount ?? 0,
+    pendingSubmissionCount: pendingSubmissionCount ?? 0,
+    journalQueueCount: (pendingCommentCount ?? 0) + (pendingSubmissionCount ?? 0),
+  };
+}
 
 export async function getAdminStats(): Promise<AdminStats> {
   if (!isSupabaseConfigured()) return EMPTY_ADMIN_STATS;
@@ -475,6 +502,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     { count: postCount },
     { count: publishedPostCount },
     { count: pendingCommentCount },
+    { count: pendingSubmissionCount },
   ] = await Promise.all([
     supabase.from("trips").select("*", { count: "exact", head: true }),
     supabase.from("trips").select("*", { count: "exact", head: true }).eq("is_published", true),
@@ -489,6 +517,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     supabase.from("blog_posts").select("*", { count: "exact", head: true }),
     supabase.from("blog_posts").select("*", { count: "exact", head: true }).eq("status", "published"),
     supabase.from("blog_comments").select("*", { count: "exact", head: true }).eq("is_approved", false),
+    supabase.from("blog_posts").select("*", { count: "exact", head: true }).eq("status", "submitted"),
   ]);
 
   const rows = bookings ?? [];
@@ -515,6 +544,10 @@ export async function getAdminStats(): Promise<AdminStats> {
     postCount: postCount ?? 0,
     publishedPostCount: publishedPostCount ?? 0,
     pendingCommentCount: pendingCommentCount ?? 0,
+    pendingSubmissionCount: pendingSubmissionCount ?? 0,
+    // One badge on the Journal tab, because an editor opening it is going to
+    // deal with whichever of the two is waiting.
+    journalQueueCount: (pendingCommentCount ?? 0) + (pendingSubmissionCount ?? 0),
   };
 }
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { revalidatePath } from "next/cache";
+import { pingIndexNow } from "@/lib/indexnow";
 
 /**
  * Purges the cached pages affected by an admin edit.
@@ -22,7 +23,13 @@ import { revalidatePath } from "next/cache";
  * The list pages are purged unconditionally because a title, price or date
  * change moves the cards on them, and there is exactly one of each.
  */
-export type ContentScope = "trip" | "destination" | "post" | "comment" | "review";
+export type ContentScope =
+  | "trip"
+  | "destination"
+  | "post"
+  | "comment"
+  | "review"
+  | "promo";
 
 /**
  * Fixed pages to purge per scope. The detail page is added separately from the
@@ -39,6 +46,11 @@ const LIST_PATHS: Record<ContentScope, string[]> = {
   comment: [],
   // Reviews surface on the trip page, the homepage strip and /testimonials.
   review: ["/", "/testimonials"],
+  // An auto-applying code changes the price printed on the homepage hero, the
+  // catalogue cards and every trip page. Those are prerendered, so creating an
+  // offer and not purging them means the site quietly keeps quoting the old
+  // number — which reads as the promo feature being broken.
+  promo: ["/", "/trips"],
 };
 
 /** Where a scope's detail page lives, for building the slug-specific path. */
@@ -48,6 +60,9 @@ const DETAIL_PREFIX: Partial<Record<ContentScope, string>> = {
   post: "/blog",
   comment: "/blog",
   review: "/trips",
+  // A code names the trips it runs on, so the caller passes each of those slugs
+  // in turn — the price on a trip page is the number the offer changes.
+  promo: "/trips",
 };
 
 export function revalidateContent(scope: ContentScope, slug?: string | null): void {
@@ -66,6 +81,18 @@ export function revalidateContent(scope: ContentScope, slug?: string | null): vo
       console.error(`[revalidate] ${path} failed:`, error);
     }
   }
+
+  // Same event, different audience: the purge tells our own cache, this tells
+  // Bing, Yandex, Seznam and Naver — and through Bing, DuckDuckGo, Ecosia and
+  // a good deal of what Brave shows. Google is not in that list and does not
+  // need to be; it discovers by crawling and the sitemap is what it reads.
+  //
+  // Deliberately not awaited. Publishing a post must not wait on, or fail
+  // because of, a search engine's API.
+  const indexable = paths.filter(
+    (path) => !path.endsWith(".xml") && !path.startsWith("/api")
+  );
+  void pingIndexNow(indexable);
 }
 
 export function isContentScope(value: unknown): value is ContentScope {

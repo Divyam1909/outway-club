@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight, CalendarDays, MapPin, Users } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { SmartImage } from "@/components/ui/smart-image";
+import { PromoBanner } from "@/components/trips/promo-banner";
 import { editionLabel, formatDateRange, formatINR, seatsLeft } from "@/lib/utils";
+import { tripPricing, type PublicPromo } from "@/lib/promo-rules";
 import type { Departure, Trip } from "@/lib/types";
 
 /**
@@ -50,14 +52,19 @@ function TripTitle({ title }: { title: string }) {
 export function Hero({
   trip,
   departure,
+  promo,
 }: {
   trip: HeroTrip | null;
   departure: Departure | null;
+  /**
+   * A live auto-applying code on the spotlight trip. The offer is announced
+   * here because this is where someone forms their idea of what the trip costs
+   * — quoting the full price and revealing the discount two clicks later is the
+   * thing that makes a promo feel like a trick.
+   */
+  promo?: PublicPromo | null;
 }) {
-  const price = trip ? (trip.discounted_price ?? trip.price_per_person) : null;
-  const hasDiscount = Boolean(
-    trip?.discounted_price && trip.discounted_price < trip.price_per_person
-  );
+  const price = trip ? tripPricing(trip, promo) : null;
   const remaining = departure ? seatsLeft(departure.total_seats, departure.seats_booked) : null;
   const edition = trip ? editionLabel(trip) : null;
 
@@ -99,6 +106,15 @@ export function Hero({
             {trip?.short_description ??
               "We plan a handful of escapes a year, end to end, and cap every one of them small enough that you'll know everyone's name by the second evening."}
           </p>
+
+          {trip && promo && price && (
+            <PromoBanner
+              promo={promo}
+              pricePerPerson={price.effective + price.promoDiscount}
+              tone="dark"
+              className="mt-6 w-fit backdrop-blur"
+            />
+          )}
         </div>
 
         {trip && (
@@ -146,11 +162,11 @@ export function Hero({
           {price !== null && (
             <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 sm:ml-4 sm:mt-0">
               <span className="font-display text-3xl font-semibold text-cream-100">
-                {formatINR(price)}
+                {formatINR(price.effective)}
               </span>
-              {hasDiscount && (
+              {price.struck !== null && (
                 <span className="text-base text-cream-100/50 line-through">
-                  {formatINR(trip!.price_per_person)}
+                  {formatINR(price.struck)}
                 </span>
               )}
               <span className="text-xs text-cream-100/60">per person</span>

@@ -10,6 +10,12 @@ export interface SessionState {
   fullName: string | null;
   email: string | null;
   isAdmin: boolean;
+  /**
+   * True for an admin *or* a blogger — i.e. anyone the Journal section of the
+   * console will let in. Same caveat as `isAdmin`: this decides whether a link
+   * is drawn, never whether an action is allowed.
+   */
+  isBlogEditor: boolean;
 }
 
 const SIGNED_OUT: SessionState = {
@@ -18,6 +24,7 @@ const SIGNED_OUT: SessionState = {
   fullName: null,
   email: null,
   isAdmin: false,
+  isBlogEditor: false,
 };
 
 // Spelled out rather than `{ ...SIGNED_OUT, loading: true }`: the bundler
@@ -29,6 +36,7 @@ const LOADING: SessionState = {
   fullName: null,
   email: null,
   isAdmin: false,
+  isBlogEditor: false,
 };
 
 /**
@@ -84,6 +92,7 @@ interface CachedProfile {
   fullName: string | null;
   email: string | null;
   isAdmin: boolean;
+  isBlogEditor: boolean;
 }
 
 function profileCacheKey(userId: string): string {
@@ -153,6 +162,7 @@ function start(): void {
       // Keep any role already established, so the Admin link doesn't disappear
       // and come back on a token refresh.
       isAdmin: cached?.isAdmin ?? state.isAdmin,
+      isBlogEditor: cached?.isBlogEditor ?? state.isBlogEditor,
     });
 
     // Already answered this tab — the paint above is the final state.
@@ -168,6 +178,7 @@ function start(): void {
       fullName: (profile?.full_name as string | null) ?? nameFromToken,
       email: (profile?.email as string | null) ?? userEmail,
       isAdmin: profile?.role === "admin",
+      isBlogEditor: profile?.role === "admin" || profile?.role === "blogger",
     };
 
     writeCachedProfile(userId, resolved);

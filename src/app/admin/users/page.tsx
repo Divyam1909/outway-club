@@ -5,11 +5,15 @@ import { RoleToggle } from "@/components/admin/role-toggle";
 import { getProfilesForAdmin } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate } from "@/lib/utils";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Users" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const [profiles, currentUser] = await Promise.all([getProfilesForAdmin(), getCurrentUser()]);
 
   const admins = profiles.filter((profile) => profile.role === "admin");

@@ -232,3 +232,57 @@ export async function getPendingCommentCount(): Promise<number> {
 
   return count ?? 0;
 }
+
+// ---------------------------------------------------------------------------
+// Reader submissions
+// ---------------------------------------------------------------------------
+
+/** Everything waiting on a decision, oldest first — a queue, not a feed. */
+export async function getSubmissionsForAdmin(): Promise<BlogPost[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select(POST_COLUMNS)
+    .eq("status", "submitted")
+    .order("submitted_at", { ascending: true, nullsFirst: false });
+
+  if (error) throw error;
+  return (data as unknown as BlogPost[]) ?? [];
+}
+
+export async function getPendingSubmissionCount(): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+  const supabase = await createClient();
+
+  const { count } = await supabase
+    .from("blog_posts")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "submitted");
+
+  return count ?? 0;
+}
+
+/**
+ * One writer's own pieces, at whatever status.
+ *
+ * Read through the cookie-bound client rather than the service role on
+ * purpose: RLS already says "your own rows, or published ones", so the
+ * database enforces the boundary rather than this query remembering to. Pass
+ * the wrong id and you get nothing back, not somebody else's drafts.
+ */
+export async function getMySubmissions(userId: string): Promise<BlogPost[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select(POST_COLUMNS)
+    .eq("author_id", userId)
+    .eq("source", "community")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data as unknown as BlogPost[]) ?? [];
+}

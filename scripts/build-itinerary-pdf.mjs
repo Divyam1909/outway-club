@@ -2,8 +2,12 @@
  * Builds the customer-facing itinerary PDF from the live trip data.
  *
  *   node scripts/build-itinerary-pdf.mjs                  (the spotlight trip)
- *   node scripts/build-itinerary-pdf.mjs udaipur-mount-abu
- *   node scripts/build-itinerary-pdf.mjs udaipur-mount-abu docs/custom-name.pdf
+ *   node scripts/build-itinerary-pdf.mjs udaipur-jawai
+ *   node scripts/build-itinerary-pdf.mjs udaipur-jawai public/itineraries/custom.pdf
+ *
+ * Output lands in public/itineraries/<slug>.pdf by default, so the brochure is
+ * downloadable from the trip page rather than living in docs/ where only we can
+ * see it. See src/config/itineraries.ts for the link.
  *
  * This exists because the brochure used to be a hand-made file: the moment the
  * itinerary changed in the database, the PDF quietly started lying about the
@@ -68,21 +72,25 @@ const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_
 const slugArg = process.argv[2];
 const outArg = process.argv[3];
 
-let query = db
-  .from("trips")
-  .select("*, destination:destinations(name, region, best_time)")
-  .eq("is_published", true);
+// Naming a slug outright includes unpublished trips: an escape between dates is
+// hidden from the catalogue but its brochure is still the thing ops send to
+// somebody asking when it runs again. Without a slug we take the spotlight
+// trip, and that one has to be live.
+let query = db.from("trips").select("*, destination:destinations(name, region, best_time)");
 
 query = slugArg
   ? query.eq("slug", slugArg)
-  : query.order("spotlight_rank", { ascending: true, nullsFirst: false }).limit(1);
+  : query
+      .eq("is_published", true)
+      .order("spotlight_rank", { ascending: true, nullsFirst: false })
+      .limit(1);
 
 const { data: trips, error: tripError } = await query;
 if (tripError) throw tripError;
 
 const trip = trips?.[0];
 if (!trip) {
-  console.error(slugArg ? `No published trip with slug "${slugArg}".` : "No published trips.");
+  console.error(slugArg ? `No trip with slug "${slugArg}".` : "No published trips.");
   process.exit(1);
 }
 
@@ -150,7 +158,57 @@ function splitActivity(activity) {
   return match ? { time: match[1], label: match[2] } : { time: "", label: String(activity) };
 }
 
-const saving = Number(trip.price_per_person) - Number(trip.discounted_price);
+/**
+ * What the brochure prints, and it has to match the website exactly.
+ *
+ * Three things can move the price and the PDF used to know about one of them:
+ * the list price, an optional `discounted_price`, and any auto-applying promo
+ * code covering this trip. A brochure quoting ₹8,999 while the site quotes
+ * ₹7,999 is worse than no brochure, so all three are resolved here — the same
+ * precedence src/lib/promo-rules.ts uses, deliberately, because these two
+ * places disagreeing is exactly the bug this script exists to prevent.
+ */
+const listPrice = Number(trip.price_per_person);
+const basePrice = Number(trip.discounted_price ?? trip.price_per_person);
+
+const { data: autoPromos } = await db
+  .from("promo_codes")
+  .select("*")
+  .eq("is_active", true)
+  .eq("auto_apply", true);
+
+const now = Date.now();
+let promoDiscount = 0;
+let promoLabel = null;
+
+for (const promo of autoPromos ?? []) {
+  const tripIds = Array.isArray(promo.trip_ids) ? promo.trip_ids : [];
+  if (tripIds.length > 0 && !tripIds.includes(trip.id)) continue;
+  if (promo.starts_at && now < new Date(promo.starts_at).getTime()) continue;
+  if (promo.ends_at && now > new Date(promo.ends_at).getTime()) continue;
+  if (basePrice < Number(promo.min_order_amount ?? 0)) continue;
+  if (Number(promo.min_travelers ?? 1) > 1) continue;
+
+  const value = Number(promo.discount_value);
+  let off =
+    promo.discount_type === "percent" ? (basePrice * value) / 100 : value;
+  if (
+    promo.discount_type === "percent" &&
+    promo.max_discount_amount !== null &&
+    promo.max_discount_amount !== undefined
+  ) {
+    off = Math.min(off, Number(promo.max_discount_amount));
+  }
+  off = Math.max(0, Math.min(Math.round(off), Math.round(basePrice)));
+
+  if (off > promoDiscount) {
+    promoDiscount = off;
+    promoLabel = promo.label;
+  }
+}
+
+const finalPrice = Math.max(0, basePrice - promoDiscount);
+const saving = Math.max(0, listPrice - finalPrice);
 
 // ---------------------------------------------------------------------------
 // Template
@@ -182,10 +240,10 @@ const coverPage = `
       <div><span class="stat cap">${esc(trip.difficulty)}</span><span class="stat-label">DIFFICULTY</span></div>
     </div>
     <div class="price">
-      ${saving > 0 ? `<div class="was">${rupees(trip.price_per_person)}</div>` : ""}
-      <div class="now">${rupees(trip.discounted_price)}</div>
+      ${saving > 0 ? `<div class="was">${rupees(listPrice)}</div>` : ""}
+      <div class="now">${rupees(finalPrice)}</div>
       <div class="price-label">per person, all taxes in</div>
-      ${saving > 0 ? `<span class="save">Save ${rupees(saving)}</span>` : ""}
+      ${saving > 0 ? `<span class="save">${promoLabel ? `${esc(promoLabel)} · ` : ""}Save ${rupees(saving)}</span>` : ""}
     </div>
   </div>
 </section>`;
@@ -393,8 +451,7 @@ const html = `<!doctype html>
 // ---------------------------------------------------------------------------
 // Print
 // ---------------------------------------------------------------------------
-const outPath =
-  outArg ?? path.join("docs", `${trip.slug}-itinerary.pdf`);
+const outPath = outArg ?? path.join("public", "itineraries", `${trip.slug}.pdf`);
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
@@ -410,5 +467,6 @@ try {
 const pages = 2 + (days?.length ?? 0) + 1;
 console.log(
   `wrote ${outPath} — ${trip.title}, ${trip.duration_days}D/${trip.duration_nights}N, ` +
-    `${departure ? dateRange() : "no departure"}, ${rupees(trip.discounted_price)} (${pages} pages)`
+    `${departure ? dateRange() : "no departure"}, ${rupees(finalPrice)}` +
+    `${promoLabel ? ` after ${promoLabel}` : ""} (${pages} pages)`
 );

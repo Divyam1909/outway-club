@@ -56,6 +56,8 @@ test.describe("admin console", () => {
       ["/admin/blog/comments", /^Comments$/],
       ["/admin/destinations/new", /^New destination$/],
       ["/admin/users", /^Users$/],
+      ["/admin/promo-codes", /^Promo codes$/],
+      ["/admin/promo-codes/new", /^New promo code$/],
       ["/admin/reviews", /^Reviews$/],
       ["/admin/enquiries", /^Enquiries$/],
       ["/admin/subscribers", /^Waitlist$/],
@@ -75,7 +77,13 @@ test.describe("admin console", () => {
     await expect(page.getByText("Playwright Admin")).toBeVisible();
     // The signed-in admin is flagged, and can't be silently demoted to nothing.
     await expect(page.getByText("You", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Remove admin/i }).first()).toBeVisible();
+
+    // Three roles, not a switch: `blogger` sits between customer and admin and
+    // is the whole reason this is a picker now.
+    const roles = page.getByRole("group", { name: /Role for/ }).first();
+    for (const label of ["Customer", "Blogger", "Admin"]) {
+      await expect(roles.getByRole("button", { name: label })).toBeVisible();
+    }
   });
 
   test("enquiries page shows submissions from the contact form", async ({ page }) => {

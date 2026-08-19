@@ -22,7 +22,9 @@ import {
   isValidAnswer,
   questionLabel,
 } from "@/config/trip-request";
-import { formatDateRange } from "@/lib/utils";
+import { claimPromo, getAutoPromoForTrip, releasePromo, resolvePromo } from "@/lib/promo";
+import { priceOrder } from "@/lib/pricing";
+import { formatDateRange, formatINR } from "@/lib/utils";
 import { site } from "@/config/site";
 
 /**
@@ -134,6 +136,72 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "That trip isn't available any more." }, { status: 404 });
   }
 
+  // ---------------------------------------------------------------------------
+  // Money.
+  //
+  // The browser sent a code, and nothing else about the price. Everything from
+  // here is derived: `priceOrder` reads the trip and departure rows,
+  // `resolvePromo` re-checks the code against them, and whatever the form was
+  // displaying is irrelevant. A request body claiming a ₹1 total gets a
+  // correctly priced row.
+  // ---------------------------------------------------------------------------
+  const pricing = await priceOrder({
+    tripId: trip.id,
+    departureId,
+    travelers: numTravelers,
+  });
+
+  const typedCode = typeof body.promoCode === "string" ? body.promoCode : null;
+
+  const resolved = pricing
+    ? await resolvePromo({
+        code: typedCode,
+        tripId: trip.id,
+        subtotal: pricing.subtotal,
+        travelers: pricing.travelers,
+      })
+    : { applied: null };
+
+  const subtotal = pricing?.subtotal ?? null;
+
+  /**
+   * Spend the use *before* the insert, so two people racing for the last use of
+   * a capped code can't both get it. If the insert then fails, the use is
+   * handed straight back below.
+   *
+   * A code that ran out in the seconds between the quote and the send falls
+   * back to whatever applies on its own rather than to full price — losing a
+   * collaborator's code is one thing, silently dropping the event discount the
+   * customer could see on the previous screen is another.
+   */
+  let effectivePromo = null;
+
+  if (pricing && resolved.applied) {
+    const candidates = [resolved.applied];
+
+    if (!resolved.applied.auto) {
+      const auto = await getAutoPromoForTrip(trip.id, pricing.subtotal, pricing.travelers);
+      if (auto && auto.id !== resolved.applied.id) candidates.push(auto);
+    }
+
+    for (const candidate of candidates) {
+      const claim = await claimPromo({
+        promo: candidate,
+        tripId: trip.id,
+        email,
+        travelers: numTravelers,
+        userId,
+      });
+      if (claim.ok) {
+        effectivePromo = candidate;
+        break;
+      }
+    }
+  }
+
+  const effectiveDiscount = effectivePromo?.discountAmount ?? 0;
+  const effectiveTotal = effectivePromo ? effectivePromo.total : subtotal;
+
   const { data: inserted, error } = await admin
     .from("trip_requests")
     .insert({
@@ -150,16 +218,34 @@ export async function POST(request: Request) {
       ...answers,
       deal_breakers: dealBreakers,
       notes,
+      promo_code_id: effectivePromo?.id ?? null,
+      promo_code: effectivePromo?.code ?? null,
+      subtotal_amount: subtotal,
+      discount_amount: effectiveDiscount,
+      total_amount: effectiveTotal,
     })
     .select("id")
     .single();
 
   if (error) {
     console.error("[trip-requests] insert failed:", error.message);
+    // Give the code's use back — a burned use with no request behind it is a
+    // seat of somebody's allocation gone missing for no reason.
+    if (effectivePromo) await releasePromo(effectivePromo.id);
     return NextResponse.json(
       { error: "We couldn't save that just now. Please try again in a moment." },
       { status: 500 }
     );
+  }
+
+  // Tie the redemption row to the request now that there is one to tie it to.
+  if (effectivePromo) {
+    await admin
+      .from("promo_redemptions")
+      .update({ trip_request_id: inserted.id })
+      .eq("promo_code_id", effectivePromo.id)
+      .is("trip_request_id", null)
+      .eq("email", email.toLowerCase());
   }
 
   // Dates are only quoted back if the departure still exists.
@@ -188,6 +274,11 @@ export async function POST(request: Request) {
     ),
     dealBreakers,
     notes,
+    promoCode: effectivePromo?.code ?? null,
+    promoLabel: effectivePromo?.label ?? null,
+    subtotal: subtotal !== null ? formatINR(subtotal) : null,
+    discount: effectiveDiscount > 0 ? formatINR(effectiveDiscount) : null,
+    total: effectiveTotal !== null ? formatINR(effectiveTotal) : null,
   };
 
   // Email is best-effort — the request is already safely stored.
@@ -198,5 +289,14 @@ export async function POST(request: Request) {
     sendEmail({ to: email, subject: ack.subject, html: ack.html, replyTo: site.email }),
   ]);
 
-  return NextResponse.json({ ok: true, requestId: inserted.id });
+  return NextResponse.json({
+    ok: true,
+    requestId: inserted.id,
+    // The server's figures, so the "sent" screen quotes what was actually
+    // stored rather than what the browser last believed.
+    subtotal,
+    discountAmount: effectiveDiscount,
+    total: effectiveTotal,
+    promoCode: effectivePromo?.code ?? null,
+  });
 }

@@ -8,7 +8,7 @@ import { test } from "@playwright/test";
 const PAGES = [
   ["home", "/"],
   ["trips", "/trips"],
-  ["trip-detail", "/trips/udaipur-mount-abu"],
+  ["trip-detail", "/trips/udaipur-jawai"],
   ["blog", "/blog"],
   ["testimonials", "/testimonials"],
   ["about", "/about"],

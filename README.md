@@ -26,7 +26,7 @@ aren't switched on yet" and emails log a warning instead of sending.
 
 ## Database
 
-Six SQL files, run in order. All are safe to re-run.
+Nine SQL files, run in order. All are safe to re-run.
 
 | File | What it does |
 |---|---|
@@ -36,8 +36,10 @@ Six SQL files, run in order. All are safe to re-run.
 | `supabase/migrations/0004_catalogue.sql` | Edition numbers and spotlight ranking on trips |
 | `supabase/migrations/0005_booking_integrity.sql` | One booking per Razorpay order, atomic seat allocation |
 | `supabase/migrations/0006_trip_requests.sql` | `trip_requests`: the pre-booking questionnaire, one column per answer. **Required** — "Book now" writes here while payments are off |
+| `supabase/migrations/0007_promos_blog_roles.sql` | The `blogger` role and `is_blog_editor()`; reader-submitted articles (`submitted` / `rejected` statuses, review notes, contributor uploads); `promo_codes`, `promo_redemptions` and the atomic `claim_promo_code` |
 | `supabase/seed.sql` | Escape 001 content. Deletes the pre-launch demo catalogue. **No seeded reviews** — those come from real travellers only. |
 | `supabase/seed-blog.sql` | The Udaipur destination guide, the Journal's first post. Real editorial copy kept in version control rather than typed into the admin console, so a fresh environment comes up with the same article. Re-runnable: it upserts on `slug` and never overwrites the original `published_at`. |
+| `supabase/seed-udaipur-jawai.sql` | Escape 002 — Udaipur × Jawai, 4–8 September, and the Janmashtami code that prices it. Also unpublishes Escape 001, which is between dates. |
 
 Paste them into the Supabase SQL editor, or apply them from the command line:
 
@@ -48,8 +50,10 @@ node scripts/db.mjs supabase/migrations/0003_blog.sql
 node scripts/db.mjs supabase/migrations/0004_catalogue.sql
 node scripts/db.mjs supabase/migrations/0005_booking_integrity.sql
 node scripts/db.mjs supabase/migrations/0006_trip_requests.sql
+node scripts/db.mjs supabase/migrations/0007_promos_blog_roles.sql
 npm run db:seed
 node scripts/db.mjs supabase/seed-blog.sql
+node scripts/db.mjs supabase/seed-udaipur-jawai.sql
 ```
 
 `scripts/db.mjs` probes Supabase's direct, session-pooler and
@@ -140,13 +144,20 @@ The customer-facing brochure is generated from the trip's own rows, not drawn
 by hand:
 
 ```bash
-npm run itinerary:pdf                            # the spotlight trip
-npm run itinerary:pdf -- udaipur-mount-abu       # a specific slug
+npm run itinerary:pdf                        # the spotlight trip
+npm run itinerary:pdf -- udaipur-jawai       # a specific slug
 ```
 
-It reads `trips`, `itinerary_days` and the next `departure`, and writes
-`docs/<slug>-itinerary.pdf` — cover, overview, one page per day, then
-inclusions and packing list. **Re-run it after any change to a trip's dates,
+It reads `trips`, `itinerary_days`, the next `departure` and any auto-applying
+promo code, and writes `public/itineraries/<slug>.pdf` — cover, overview, one
+page per day, then inclusions and packing list. Living under `public/` means
+the trip page can offer it as a download; add the slug to
+`src/config/itineraries.ts` and a "Download as PDF" button appears beside the
+itinerary. Naming a slug outright also works for an unpublished trip, which is
+the case that matters when someone asks when an escape runs again.
+
+The price on the cover is the price after the promo, because a brochure quoting
+a different number from the website is worse than no brochure. **Re-run it after any change to a trip's dates,
 price, itinerary or inclusions**, or the PDF you hand people starts quietly
 contradicting the site. The only text in it that isn't from the database is the
 "extending your stay" and per-day callout copy, kept at the top of
@@ -207,6 +218,21 @@ at `/signup` with an email and password like any customer — whose
 `profiles.role` is `'admin'`. That one column is what `/admin` and every
 `/api/admin/*` route check.
 
+There are three roles:
+
+| Role | Sees |
+|---|---|
+| `customer` | The public site. Can send in an article at `/blog/write`, which is reviewed before it appears. |
+| `blogger` | `/admin/blog` and `/admin/blog/comments` only — write, edit, publish, unpublish, moderate comments, approve or decline reader submissions. No bookings, customers, payments, trips or promo codes. |
+| `admin` | Everything. |
+
+`blogger` is enforced in three places, not one: the nav hides what it can't
+open, every commercial page calls `requireAdminPage()` itself so typing the URL
+in fails too, and the database's RLS grants the Journal tables to
+`is_blog_editor()` rather than to `is_admin()`. Set it from **/admin/users** —
+the role control is a three-way picker, and each change is confirmed by naming
+what that role can actually do.
+
 The first one has to be promoted from outside the app, because promoting
 someone through `/admin/users` requires already being an admin:
 
@@ -236,8 +262,9 @@ Nothing operational requires opening the database:
 |---|---|
 | `/admin/trips` | Trips, itineraries, departures, photography |
 | `/admin/destinations` | The places trips point at. Deleting one is blocked while trips still reference it, and the UI says so rather than showing a foreign-key error. |
-| `/admin/blog` | Writing, publishing and unpublishing journal posts |
+| `/admin/blog` | Writing, publishing and unpublishing journal posts, and the queue of pieces readers have sent in |
 | `/admin/blog/comments` | Reader comments — nothing appears publicly until it's approved here |
+| `/admin/promo-codes` | Discount codes: percentage or flat, capped, limited by total uses, uses per person, minimum order, date window and trip. Includes a worked example of what a customer actually pays before you save it. |
 
 Role changes are guarded at the database level: a signed-in customer cannot
 escalate themselves even though RLS lets them update their own profile row, and
@@ -259,20 +286,61 @@ For the admin console, which needs a real session:
 
 ```bash
 node scripts/admin-test-user.mjs create
-npx playwright test tests/admin.spec.ts tests/blog.spec.ts
+npx playwright test tests/admin.spec.ts tests/blog.spec.ts tests/roles-and-promos.spec.ts
 node scripts/admin-test-user.mjs delete
 node scripts/cleanup-test-data.mjs      # sweeps up anything a failed run left
 ```
+
+`admin-test-user.mjs` creates one account per role — admin, blogger and
+customer — because the roles are what several of these tests are about.
 
 `tests/blog.spec.ts` drives the whole journal: writing a post in the rich-text
 editor, publishing it, reading it, commenting on it, moderating the comment and
 deleting the post — plus the same round trip for a destination. It creates and
 removes everything it touches, so it leaves the database as it found it.
 
+`tests/roles-and-promos.spec.ts` covers the three things a screenshot cannot:
+that a blogger reaches the Journal and is turned away from every other admin
+URL, that a reader's article goes submit → queue → approve → live with the right
+byline and markup, and that promo codes actually change the price at checkout —
+including a typed code losing to a larger auto-applied one, and never both
+applying at once.
+
 `tests/screenshots.spec.ts` is a visual sweep rather than an assertion suite —
 run it and look at `tests/__screens__/`.
 
 ## How a few things work
+
+**Promo codes.** One code per booking, always — not a list, not a stack. The
+event code on Escape 002 applies itself, and a code someone types replaces it
+*only if it saves more*; otherwise the bigger one stays and the panel says why.
+The arithmetic lives in `src/lib/promo-rules.ts` (pure, no database, shared by
+the browser and the server) and every figure that reaches the database is
+recomputed by `src/lib/pricing.ts` from the trip's own row — the request body
+carries a code, never a price, so a tampered payload cannot buy a trip for ₹1.
+The use itself is spent by `claim_promo_code`, a single locked statement, so a
+code capped at fifty uses cannot be used fifty-one times by two people pressing
+send together; if the write that followed fails, the use is handed back.
+
+**Not losing money on an offer.** The Janmashtami code is ₹1,000 off ₹8,999,
+which lands on exactly ₹7,999 — the price the trip actually runs at. The
+₹8,999 struck through on the page is the same list price the catalogue has
+always carried, so the discount is real rather than a second markup, and the
+page never shows more than two numbers. `tripPricing()` enforces that: the
+struck-through figure is always the list price and the live one is what you pay
+after everything, however many discounts are technically in play.
+
+**Reader-submitted articles.** `/blog/write` needs an account — not to gate the
+writing, but so a published piece has a real byline and a declined one has
+somewhere to be explained. A submission is stored as `status = 'submitted'`,
+which no public query returns and which RLS shows only to its author and the
+Journal editors; there is no request body that publishes anything. Approving it
+in `/admin/blog` flips the status, purges the cached Journal pages before the
+response returns, and emails the writer the link. It renders through exactly
+the same path as a piece we wrote ourselves, from HTML the same sanitiser
+already cleaned at submission — which is what makes "approved" and "renders
+correctly" the same event. A decline requires a note, because the note is the
+entire email the writer gets.
 
 **Reviews.** There is no seeded review data anywhere in this project. The
 review API only accepts a submission from an account with a paid, non-cancelled
@@ -305,8 +373,8 @@ and caches nothing useful. It waits for `load` and then an idle callback, skips
 entirely on Save-Data or a 2g connection, skips the admin and checkout
 sections, and the manifest is capped at 24 images server-side.
 
-**The journal.** Posts are written by admins only; readers can only read and
-comment. The editor is a `contentEditable` surface carrying the same
+**The journal.** Posts are written by admins and bloggers, and sent in by
+readers through `/blog/write` for review. The editor is a `contentEditable` surface carrying the same
 `.post-prose` styles the article page uses, so what a writer sees while typing
 is what a reader gets — there is no separate preview to drift out of sync. Its
 output is browser HTML, so it is rebuilt from a tag/attribute/class allowlist
@@ -319,6 +387,34 @@ just means nobody leaves one. Spam is handled the same way the contact form
 handles it: a Postgres-backed rate limit, a CSS-hidden honeypot, a minimum fill
 time, and moderation. Comments land unapproved and a post's star rating is
 recomputed by a database trigger from approved comments only.
+
+**Being found by more than Google.** Ranking on Google and nowhere else is
+almost always the same story: everything was built for Google's discovery, and
+nothing was ever told to anybody else. Four things address that here.
+
+*Bing Webmaster Tools is the lever.* Bing's index is what DuckDuckGo, Ecosia,
+Yahoo and a large share of Brave's results are built from, so verifying there
+and submitting the sitemap covers most of "everywhere except Google" in one
+step. Set `NEXT_PUBLIC_BING_SITE_VERIFICATION` (and `NEXT_PUBLIC_YANDEX_VERIFICATION`
+if you want Yandex) and redeploy — they are baked in at build time.
+
+*IndexNow* (`src/lib/indexnow.ts`) pushes a changed URL to Bing, Yandex, Seznam,
+Naver and Yep the moment a trip or a post is published, instead of waiting weeks
+for a new domain to be recrawled. It fires from `revalidateContent`, so the same
+call that purges our cache tells them. It needs `INDEXNOW_KEY` and a matching
+`public/<key>.txt` — both are already in the repo. Google ignores IndexNow and
+discovers by crawling; the sitemap is its route in.
+
+*robots.txt* names Bingbot, Bravebot, DuckDuckBot, Yandex, Applebot and the rest
+explicitly. The wildcard rule already allowed them, but Brave Search has no
+submission form at all — being crawlable and having a sitemap is the entire
+lever there — and several of these crawlers behave better with an entry of their
+own. `max-image-preview: large` is set on the generic robots meta as well as the
+Google-specific one, because Bing and Yandex read the generic block.
+
+*An RSS feed* at `/feed.xml`, linked from the document head. Aggregators poll it,
+readers subscribe to it, and several non-Google crawlers treat it as a signal
+that a site publishes regularly and is worth coming back to.
 
 **Refunds.** `REFUND_TIERS` in `src/config/site.ts` is the single source of
 truth. The table on `/refund-policy`, the figure shown in the cancellation

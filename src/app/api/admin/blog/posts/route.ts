@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi } from "@/lib/auth";
+import { requireBlogEditorApi } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildBlogPostPayload } from "@/lib/blog-payload";
 import { revalidateContent } from "@/lib/revalidate";
@@ -14,7 +14,7 @@ import { revalidateContent } from "@/lib/revalidate";
  * somewhere the author can't skip.
  */
 export async function POST(request: Request) {
-  const guard = await requireAdminApi();
+  const guard = await requireBlogEditorApi();
   if ("response" in guard) return guard.response;
 
   let body: Record<string, unknown>;

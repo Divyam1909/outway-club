@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   ClipboardList,
   Globe2,
@@ -8,36 +9,69 @@ import {
   Newspaper,
   Receipt,
   Star,
+  Tag,
   Users,
   Mail,
 } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { requireAdminPage } from "@/lib/auth";
-import { getAdminStats } from "@/lib/data";
+import { getCurrentUser, isBlogEditor } from "@/lib/auth";
+import { getAdminStats, getEmptyAdminStats } from "@/lib/data";
 
+/**
+ * `journal: true` marks the sections a `blogger` can see. Everything else is
+ * admin-only, and every one of those pages states that guard itself as well —
+ * a nav that hides a link is a courtesy, not a permission check.
+ */
 const LINKS = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, badge: null },
-  { href: "/admin/requests", label: "Requests", icon: ClipboardList, badge: "newRequestCount" },
-  { href: "/admin/bookings", label: "Bookings", icon: Receipt, badge: null },
-  { href: "/admin/trips", label: "Trips", icon: MapPinned, badge: null },
-  { href: "/admin/destinations", label: "Destinations", icon: Globe2, badge: null },
-  { href: "/admin/blog", label: "Journal", icon: Newspaper, badge: "pendingCommentCount" },
-  { href: "/admin/users", label: "Users", icon: Users, badge: null },
-  { href: "/admin/reviews", label: "Reviews", icon: Star, badge: "pendingReviewCount" },
-  { href: "/admin/enquiries", label: "Enquiries", icon: MessageSquare, badge: "newEnquiryCount" },
-  { href: "/admin/subscribers", label: "Waitlist", icon: Mail, badge: null },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, badge: null, journal: false },
+  {
+    href: "/admin/requests",
+    label: "Requests",
+    icon: ClipboardList,
+    badge: "newRequestCount",
+    journal: false,
+  },
+  { href: "/admin/bookings", label: "Bookings", icon: Receipt, badge: null, journal: false },
+  { href: "/admin/trips", label: "Trips", icon: MapPinned, badge: null, journal: false },
+  { href: "/admin/destinations", label: "Destinations", icon: Globe2, badge: null, journal: false },
+  { href: "/admin/promo-codes", label: "Promo codes", icon: Tag, badge: null, journal: false },
+  {
+    href: "/admin/blog",
+    label: "Journal",
+    icon: Newspaper,
+    badge: "journalQueueCount",
+    journal: true,
+  },
+  { href: "/admin/users", label: "Users", icon: Users, badge: null, journal: false },
+  { href: "/admin/reviews", label: "Reviews", icon: Star, badge: "pendingReviewCount", journal: false },
+  {
+    href: "/admin/enquiries",
+    label: "Enquiries",
+    icon: MessageSquare,
+    badge: "newEnquiryCount",
+    journal: false,
+  },
+  { href: "/admin/subscribers", label: "Waitlist", icon: Mail, badge: null, journal: false },
 ] as const;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requireAdminPage();
-  const stats = await getAdminStats();
+  const current = await getCurrentUser();
+  if (!isBlogEditor(current)) redirect("/");
+
+  const isAdmin = current?.profile?.role === "admin";
+  const links = LINKS.filter((link) => isAdmin || link.journal);
+
+  // The dashboard counts bookings, revenue and customers, all of which a
+  // blogger has no business reading — so it isn't queried for them at all
+  // rather than queried and then hidden.
+  const stats = isAdmin ? await getAdminStats() : await getEmptyAdminStats();
 
   return (
     <div className="min-h-full bg-cream-300 py-8 sm:py-10">
       <Container>
         <nav aria-label="Admin sections" className="mb-8 -mx-1 overflow-x-auto pb-1 no-scrollbar">
           <ul className="flex w-max items-center gap-2 px-1">
-            {LINKS.map((link) => {
+            {links.map((link) => {
               const count = link.badge ? stats[link.badge] : 0;
               return (
                 <li key={link.href}>

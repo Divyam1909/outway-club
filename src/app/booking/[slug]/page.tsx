@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { TripRequestForm } from "@/components/booking/trip-request-form";
-import { PaymentDetails } from "@/components/trips/payment-details";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { SmartImage } from "@/components/ui/smart-image";
 import { getTripBySlug } from "@/lib/data";
+import { getAutoPromoForTrip } from "@/lib/promo";
 import { getCurrentUser } from "@/lib/auth";
 import { isValidAnswer } from "@/config/trip-request";
 import { seatsLeft } from "@/lib/utils";
@@ -64,6 +64,18 @@ export default async function BookingPage({
       )
     : trip.group_size_max;
 
+  // The live offer, priced here rather than left to the browser to discover.
+  // The form re-quotes on every change and the request is priced again on
+  // submit — this is only so the first paint already carries the discount the
+  // trip page just promised.
+  const initialPricePerPerson = departure?.price_override ?? pricePerPerson;
+  const initialTravelers = Math.min(travelers, maxTravelers);
+  const initialPromo = await getAutoPromoForTrip(
+    trip.id,
+    initialPricePerPerson * initialTravelers,
+    initialTravelers
+  );
+
   // ?from=delhi, set by the "getting there" chips on the trip page.
   const from = typeof query.from === "string" ? query.from : "";
   const initialOrigin = isValidAnswer("origin_city", from) ? from : "";
@@ -111,6 +123,7 @@ export default async function BookingPage({
               pricePerPerson={pricePerPerson}
               initialDepartureId={departure?.id ?? ""}
               initialTravelers={travelers}
+              initialPromo={initialPromo}
               maxTravelers={maxTravelers}
               initialOrigin={initialOrigin}
               prefillName={currentUser?.profile?.full_name ?? ""}
@@ -118,10 +131,6 @@ export default async function BookingPage({
               prefillPhone={currentUser?.profile?.phone ?? ""}
             />
           </div>
-
-          {/* Stays on the page through the sent state, which is exactly when
-              someone wants to know what paying will involve. */}
-          <PaymentDetails tripTitle={trip.title} className="mt-8" />
         </div>
       </Container>
     </div>

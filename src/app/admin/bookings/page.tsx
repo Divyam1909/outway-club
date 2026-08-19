@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getAllBookingsForAdmin } from "@/lib/data";
 import { formatDate, formatDateRange, formatINR } from "@/lib/utils";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Bookings" };
 export const dynamic = "force-dynamic";
@@ -24,6 +25,9 @@ const PAYMENT_TONE: Record<string, "pine" | "clay" | "gold" | "ink"> = {
 };
 
 export default async function AdminBookingsPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const bookings = await getAllBookingsForAdmin();
 
   const totalCollected = bookings

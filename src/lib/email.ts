@@ -344,6 +344,33 @@ export interface TripRequestEmailData {
   answers: [string, string][];
   dealBreakers?: string | null;
   notes?: string | null;
+  /** Set only when a code actually applied. Already formatted as rupees. */
+  promoCode?: string | null;
+  promoLabel?: string | null;
+  subtotal?: string | null;
+  discount?: string | null;
+  total?: string | null;
+}
+
+/**
+ * The money rows, and only when there is money to show.
+ *
+ * Priced server-side before the request was stored, so what these say is what
+ * the row says — the two cannot disagree, which matters because ops read this
+ * email and quote the figure back to the customer.
+ */
+function priceRows(data: TripRequestEmailData): [string, string][] {
+  if (!data.total) return [];
+  if (!data.discount || !data.subtotal) return [["Indicative total", data.total]];
+
+  return [
+    ["Before discount", data.subtotal],
+    [
+      data.promoLabel ? `${data.promoLabel} (${data.promoCode})` : `Discount (${data.promoCode})`,
+      `− ${data.discount}`,
+    ],
+    ["Indicative total", data.total],
+  ];
 }
 
 export function tripRequestAlertEmail(data: TripRequestEmailData) {
@@ -366,6 +393,7 @@ export function tripRequestAlertEmail(data: TripRequestEmailData) {
           ["Travellers", String(data.numTravelers)],
           ["Starting from", data.origin],
           ["Flights / trains", data.travelHelp],
+          ...priceRows(data),
         ]),
         paragraph(`<strong style="color:${COLORS.ink};">How they travel</strong>`),
         detailRows(data.answers),
@@ -404,12 +432,25 @@ export function tripRequestAcknowledgementEmail(data: TripRequestEmailData) {
           ["Travellers", String(data.numTravelers)],
           ["Starting from", data.origin],
           ["Flights / trains", data.travelHelp],
+          ...priceRows(data),
         ]),
+        data.discount
+          ? paragraph(
+              `<strong style="color:${COLORS.ink};">${escapeHtml(
+                data.promoLabel ?? "Your discount"
+              )}</strong> is held against this request — ${escapeHtml(
+                data.discount
+              )} off, already in the total above. Only one code applies to a booking, and this is yours.`
+            )
+          : "",
         paragraph(
           `<strong style="color:${COLORS.ink};">What happens next.</strong> We'll write or call within ${site.responseTime} to confirm your seat is free, answer whatever you still want to ask, and only then take payment. If the answers you gave suggest a different departure would suit you better, we'll say so.`
         ),
         paragraph(
           `Timings shown on the itinerary are indicative and can shift with weather, traffic and monument hours. The route and the stays don't.`
+        ),
+        paragraph(
+          `<strong style="color:${COLORS.ink};">When you do pay.</strong> Only after we've confirmed the seat, by UPI or bank transfer to the account we send you — and then <strong style="color:${COLORS.ink};">send us the screenshot, every time</strong>. Your booking is confirmed when we say so in writing, not when the transfer leaves your account, and the screenshot is how we match your payment to your seat.`
         ),
         button(`${site.url}/contact`, "Reply or ask us something"),
         paragraph(
@@ -493,6 +534,121 @@ export function newReviewAlertEmail(data: {
         paragraph(escapeHtml(data.body).replace(/\n/g, "<br>")),
         paragraph(`It stays hidden until you approve it.`),
         button(`${site.url}/admin/reviews`, "Moderate reviews"),
+      ].join(""),
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Reader-submitted articles
+//
+// Four emails, and between them they are the whole promise of the review step:
+// you know we got it, we know it's waiting, you know when it's live, and you
+// know why if it isn't. A submission that vanishes into a queue with no reply
+// is how a contributor decides not to write a second one.
+// ---------------------------------------------------------------------------
+
+export interface BlogSubmissionEmailData {
+  postId: string;
+  title: string;
+  authorName: string;
+  authorEmail: string;
+  excerpt: string;
+  readingMinutes: number;
+  tags: string[];
+}
+
+export function blogSubmissionAlertEmail(data: BlogSubmissionEmailData) {
+  return {
+    subject: `Journal submission: "${data.title}" from ${data.authorName}`,
+    html: layout({
+      preheader: data.excerpt.slice(0, 120),
+      heading: "A reader has sent in a piece",
+      body: [
+        detailRows([
+          ["Title", data.title],
+          ["Writer", data.authorName],
+          ["Email", data.authorEmail],
+          ["Length", `About a ${data.readingMinutes} minute read`],
+          ...(data.tags.length > 0
+            ? ([["Topics", data.tags.join(", ")]] as [string, string][])
+            : []),
+        ]),
+        paragraph(escapeHtml(data.excerpt)),
+        paragraph(
+          `Nothing is public. It stays invisible to everyone but you and the writer until you publish it, and publishing puts it live immediately.`
+        ),
+        button(`${site.url}/admin/blog/${data.postId}/edit`, "Read it and decide"),
+      ].join(""),
+    }),
+  };
+}
+
+export function blogSubmissionReceivedEmail(data: BlogSubmissionEmailData) {
+  return {
+    subject: `We've got your piece: "${data.title}"`,
+    html: layout({
+      preheader: "A person reads every submission. We'll come back to you either way.",
+      heading: `Thanks, ${data.authorName.split(" ")[0] || "and welcome"}. It's with us.`,
+      body: [
+        paragraph(
+          `We have <strong style="color:${COLORS.ink};">${escapeHtml(data.title)}</strong>, all ${
+            data.readingMinutes
+          } minutes of it. It is not public yet and won't be until a person here has read it properly.`
+        ),
+        paragraph(
+          `<strong style="color:${COLORS.ink};">What happens next.</strong> One of us reads it, and we write back either way — if we're publishing it you'll get the link, and if we're not you'll get a reason rather than silence. We may fix a typo or tighten a headline; we won't change what you meant.`
+        ),
+        paragraph(
+          `You can see where it stands any time on your <a href="${site.url}/blog/write" style="color:${COLORS.pine};">writing page</a>.`
+        ),
+        button(`${site.url}/blog`, "Read the Journal"),
+      ].join(""),
+    }),
+  };
+}
+
+export function blogPublishedEmail(data: { title: string; slug: string; authorName: string }) {
+  return {
+    subject: `You're live: "${data.title}"`,
+    html: layout({
+      preheader: "Your piece is published on the Outway Club Journal.",
+      heading: `It's up, ${data.authorName.split(" ")[0] || "and thank you"}.`,
+      body: [
+        paragraph(
+          `<strong style="color:${COLORS.ink};">${escapeHtml(data.title)}</strong> is live on the Journal, with your name on it.`
+        ),
+        button(`${site.url}/blog/${data.slug}`, "Read it on the site"),
+        paragraph(
+          `Send it to whoever you wrote it for. If you spot something you'd like changed, reply to this email and we'll fix it — you don't need an account or a form for that.`
+        ),
+        paragraph(`And if you have another one in you, the page is <a href="${site.url}/blog/write" style="color:${COLORS.pine};">right here</a>.`),
+      ].join(""),
+    }),
+  };
+}
+
+export function blogDeclinedEmail(data: { title: string; authorName: string; note: string | null }) {
+  return {
+    subject: `About your piece: "${data.title}"`,
+    html: layout({
+      preheader: "We're not running this one, and here's why.",
+      heading: "We're not running this one",
+      body: [
+        paragraph(
+          `Thanks for sending <strong style="color:${COLORS.ink};">${escapeHtml(data.title)}</strong>. We've read it, and we aren't going to publish it as it stands.`
+        ),
+        data.note
+          ? `<blockquote style="margin:0 0 14px;padding:12px 16px;border-left:3px solid ${COLORS.border};font-size:14px;line-height:1.6;color:${COLORS.inkSoft};">${escapeHtml(
+              data.note
+            ).replace(/\n/g, "<br>")}</blockquote>`
+          : paragraph(
+              `We haven't left a specific note, which usually means it's a fit question rather than a quality one. Reply to this email and we'll tell you properly.`
+            ),
+        paragraph(
+          `This isn't a door closing. If you want to rework it, or write something else, send it again — we read every one.`
+        ),
+        button(`${site.url}/blog/write`, "Write another"),
       ].join(""),
     }),
   };

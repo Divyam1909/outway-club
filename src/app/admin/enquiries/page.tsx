@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { EnquiryStatus } from "@/components/admin/enquiry-status";
 import { getEnquiriesForAdmin } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
+import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Enquiries" };
 export const dynamic = "force-dynamic";
@@ -15,6 +16,9 @@ const STATUS_TONE: Record<string, "pine" | "clay" | "gold" | "ink"> = {
 };
 
 export default async function AdminEnquiriesPage() {
+  // Admin only. The layout lets a `blogger` into /admin for the Journal, so
+  // every commercial screen states its own guard rather than inheriting one.
+  await requireAdminPage();
   const enquiries = await getEnquiriesForAdmin();
   const newCount = enquiries.filter((enquiry) => enquiry.status === "new").length;
 

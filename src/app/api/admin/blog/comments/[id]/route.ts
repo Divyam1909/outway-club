@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi } from "@/lib/auth";
+import { requireBlogEditorApi } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidateContent } from "@/lib/revalidate";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -22,7 +22,7 @@ async function postSlugForComment(
 
 /** Publish or hide a reader comment. */
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  const guard = await requireAdminApi();
+  const guard = await requireBlogEditorApi();
   if ("response" in guard) return guard.response;
 
   const { id } = await context.params;
@@ -57,7 +57,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
 /** Permanently delete a comment — for spam and abuse, not disagreement. */
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const guard = await requireAdminApi();
+  const guard = await requireBlogEditorApi();
   if ("response" in guard) return guard.response;
 
   const { id } = await context.params;

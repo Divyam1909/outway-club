@@ -7,7 +7,9 @@ import { DepartureBoard } from "@/components/trips/departure-board";
 import { EnquiryLinks } from "@/components/trips/enquiry-links";
 import { TrustPoints } from "@/components/trips/trust-points";
 import { Stepper } from "@/components/ui/stepper";
+import { PromoBanner } from "@/components/trips/promo-banner";
 import { formatINR, seatsLeft } from "@/lib/utils";
+import { publicDiscount, tripPricing, type PublicPromo } from "@/lib/promo-rules";
 import type { Departure, Trip } from "@/lib/types";
 
 /**
@@ -22,6 +24,7 @@ import type { Departure, Trip } from "@/lib/types";
 export function BookingWidget({
   trip,
   departures,
+  promo,
 }: {
   trip: Pick<
     Trip,
@@ -35,6 +38,12 @@ export function BookingWidget({
     | "group_size_max"
   >;
   departures: Departure[];
+  /**
+   * A live auto-applying code. Shown here so the sidebar quotes the same number
+   * the booking form will — but the binding figure is always the one
+   * /api/promo/validate returns on the next screen, never this one.
+   */
+  promo?: PublicPromo | null;
 }) {
   const router = useRouter();
   // Default to the first date that can still be booked rather than simply the
@@ -58,7 +67,9 @@ export function BookingWidget({
     return Math.max(1, Math.min(trip.group_size_max, seatsLeft(selectedDeparture.total_seats, selectedDeparture.seats_booked)));
   }, [selectedDeparture, trip.group_size_max, trip.is_group_trip]);
 
-  const total = pricePerPerson * travelers;
+  const subtotal = pricePerPerson * travelers;
+  const promoDiscount = promo ? publicDiscount(promo, subtotal, travelers) : 0;
+  const total = subtotal - promoDiscount;
   const isFixedDeparture = trip.trip_type === "group";
 
   /** The questionnaire — it carries the date and headcount picked here. */
@@ -69,23 +80,27 @@ export function BookingWidget({
   }
 
   const noDepartures = trip.is_group_trip && departures.length === 0;
-  const hasDiscount = Boolean(
-    trip.discounted_price && trip.discounted_price < trip.price_per_person
-  );
+  const headline = tripPricing(trip, promo);
 
   return (
     <div className="rounded-2xl border border-border bg-white p-6 shadow-card lg:sticky lg:top-20">
       <div className="flex items-baseline gap-2">
         <span className="font-display text-3xl font-semibold text-ink">
-          {formatINR(pricePerPerson)}
+          {formatINR(headline.effective)}
         </span>
-        {hasDiscount && (
-          <span className="text-sm text-ink-400 line-through">
-            {formatINR(trip.price_per_person)}
-          </span>
+        {headline.struck !== null && (
+          <span className="text-sm text-ink-400 line-through">{formatINR(headline.struck)}</span>
         )}
       </div>
       <p className="text-xs text-ink-500">per person, taxes in</p>
+
+      {promo && (
+        <PromoBanner
+          promo={promo}
+          pricePerPerson={headline.effective + headline.promoDiscount}
+          className="mt-3"
+        />
+      )}
 
       {/* Against the number, not at the foot of the card: the doubt these
           answer arrives while someone is reading the price. */}
@@ -124,13 +139,30 @@ export function BookingWidget({
       )}
 
       {!noDepartures && isFixedDeparture && (
-        <div className="mb-5 flex items-center justify-between border-t border-border pt-4 text-sm">
-          <span className="text-ink-500">
-            {formatINR(pricePerPerson)} &times; {travelers}
-          </span>
-          <output aria-live="polite" className="heading-sm text-lg text-ink">
-            {formatINR(total)}
-          </output>
+        <div className="mb-5 border-t border-border pt-4 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-ink-500">
+              {formatINR(pricePerPerson)} &times; {travelers}
+            </span>
+            <span className={promoDiscount > 0 ? "text-ink-500" : "heading-sm text-lg text-ink"}>
+              {formatINR(subtotal)}
+            </span>
+          </div>
+
+          {promoDiscount > 0 && promo && (
+            <>
+              <div className="mt-1.5 flex items-center justify-between text-pine">
+                <span className="truncate pr-2">{promo.label}</span>
+                <span className="shrink-0 font-medium">&minus;{formatINR(promoDiscount)}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
+                <span className="font-medium text-ink">You pay</span>
+                <output aria-live="polite" className="heading-sm text-lg text-ink">
+                  {formatINR(total)}
+                </output>
+              </div>
+            </>
+          )}
         </div>
       )}
 
