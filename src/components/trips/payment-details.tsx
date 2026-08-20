@@ -43,7 +43,7 @@ export function PaymentDetails({
 }) {
   if (!hasPaymentDetails()) return null;
 
-  const { upiId, accountName, bankName, accountNumber, ifsc } = site.bank;
+  const { upiId, upiQr, accountName, bankName, accountNumber, ifsc } = site.bank;
   const hasBank = Boolean(accountName && bankName && accountNumber && ifsc);
   const quoted = typeof amount === "number" && amount > 0;
 
@@ -94,14 +94,52 @@ export function PaymentDetails({
         </p>
       )}
 
-      {upiId && (
+      {(upiId || upiQr) && (
         <div className="mt-5">
           <p className="flex items-center gap-2 text-sm font-semibold text-ink">
             <Smartphone size={15} className="text-pine" aria-hidden="true" /> UPI
           </p>
-          <div className="mt-1.5 rounded-xl bg-cream-300 px-4 py-1">
-            <CopyValue label="UPI ID" value={upiId} />
+
+          <div className="mt-1.5 flex flex-col gap-4 sm:flex-row sm:items-center">
+            {upiQr && (
+              <figure className="shrink-0 rounded-xl border border-border bg-white p-3 text-center">
+                {/* A plain <img>, deliberately. A QR is a small fixed-size PNG
+                    whose one job is to survive a phone camera, so it wants no
+                    optimizer between it and the screen — and this way the value
+                    can be a /public path or any URL without needing a
+                    remotePatterns entry in next.config.mjs. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={upiQr}
+                  alt={`UPI QR code for ${accountName || site.name}`}
+                  width={148}
+                  height={148}
+                  className="mx-auto h-[148px] w-[148px] object-contain"
+                  loading="lazy"
+                />
+                <figcaption className="mt-2 text-[11px] leading-tight text-ink-500">
+                  Scan in GPay, PhonePe, Paytm
+                  <br /> or any banking app
+                </figcaption>
+              </figure>
+            )}
+
+            {upiId && (
+              <div className="min-w-0 flex-1 rounded-xl bg-cream-300 px-4 py-1">
+                <CopyValue label="UPI ID" value={upiId} />
+              </div>
+            )}
           </div>
+
+          {/* The one check that catches a swapped QR or a lookalike UPI ID
+              before the money moves, rather than after. */}
+          {accountName && (
+            <p className="mt-2.5 text-xs leading-relaxed text-ink-500">
+              Your app should show{" "}
+              <strong className="font-semibold text-ink-700">{accountName}</strong> before you
+              confirm. Any other name means stop.
+            </p>
+          )}
         </div>
       )}
 

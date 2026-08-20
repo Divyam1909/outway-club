@@ -50,6 +50,7 @@ const PUBLIC_ENV: Record<string, string | undefined> = {
   NEXT_PUBLIC_BING_SITE_VERIFICATION: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION,
   NEXT_PUBLIC_YANDEX_VERIFICATION: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
   NEXT_PUBLIC_UPI_ID: process.env.NEXT_PUBLIC_UPI_ID,
+  NEXT_PUBLIC_UPI_QR: process.env.NEXT_PUBLIC_UPI_QR,
   NEXT_PUBLIC_BANK_ACCOUNT_NAME: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME,
   NEXT_PUBLIC_BANK_NAME: process.env.NEXT_PUBLIC_BANK_NAME,
   NEXT_PUBLIC_BANK_ACCOUNT_NUMBER: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER,
@@ -152,12 +153,19 @@ export const site = {
    * how every small operator in this market does it — seeing the account
    * before you commit is reassurance, not exposure.
    *
-   * Every field is env-sourced and the block hides itself unless a UPI ID or a
-   * complete bank account is set. A half-filled account number would send
-   * someone's money nowhere, so partial data renders nothing.
+   * Every field is env-sourced and the block hides itself unless a UPI ID, a
+   * QR, or a complete bank account is set. A half-filled account number would
+   * send someone's money nowhere, so partial data renders nothing.
    */
   bank: {
     upiId: env("NEXT_PUBLIC_UPI_ID"),
+    /**
+     * The UPI QR, given as a path under /public ("/images/upi-qr.png") or a
+     * full https URL. Optional, because the ID on its own is payable — but on
+     * a phone the QR is what people actually reach for, and a code that is
+     * scanned cannot be mistyped the way an account number can.
+     */
+    upiQr: env("NEXT_PUBLIC_UPI_QR"),
     accountName: env("NEXT_PUBLIC_BANK_ACCOUNT_NAME"),
     bankName: env("NEXT_PUBLIC_BANK_NAME"),
     accountNumber: env("NEXT_PUBLIC_BANK_ACCOUNT_NUMBER"),
@@ -167,8 +175,10 @@ export const site = {
 
 /** True when there is at least one complete, usable way to pay. */
 export function hasPaymentDetails(): boolean {
-  const { upiId, accountName, bankName, accountNumber, ifsc } = site.bank;
-  return Boolean(upiId) || Boolean(accountName && bankName && accountNumber && ifsc);
+  const { upiId, upiQr, accountName, bankName, accountNumber, ifsc } = site.bank;
+  return (
+    Boolean(upiId) || Boolean(upiQr) || Boolean(accountName && bankName && accountNumber && ifsc)
+  );
 }
 
 /**
