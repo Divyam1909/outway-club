@@ -3,16 +3,17 @@
 Drop files in with **exactly** these names and every page picks them up with no
 code change.
 
-**The `jawai/`, `jodhpur/` and `outway/` sets are branded placeholders, not
-photography.** They are real JPEGs at the right size, so nothing 404s and no
-layout moves when they are replaced — but they are generated panels. The
-detailed shot list, one paragraph per image, is in **`image.md` at the repo
-root**. That is the file to work from. The `udaipur/`, `escape-001/` and
-`blog/` sets are real.
+Every slot below holds an image. Nothing here is a placeholder panel any more.
+
+The `jawai/`, `jodhpur/` and `outway/` sets were **generated with an image
+model** on 20 Aug 2026 rather than shot on a departure. They are stand-ins good
+enough to ship, not the real thing — replace them with photographs from a real
+departure when there are some, starting with `outway/`, which is the set that
+is meant to show actual travellers.
 
 ```
 public/images/
-  jawai/                                       ← PLACEHOLDER, see image.md
+  jawai/
     hero.jpg         16:9  ≥2400px   Escape 001 hero, homepage hero, OG preview
     gallery-1.jpg     4:3  ≥1600px   Rabari shepherd country
     gallery-2.jpg    16:9  ≥2000px   open jeep, late light — first in the trip gallery
@@ -20,13 +21,13 @@ public/images/
     gallery-4.jpg     1:1  ≥1200px   chai at sunset
     gallery-5.jpg     1:1  ≥1200px   The Story Circle
     gallery-6.jpg     1:1  ≥1200px   Jawai Bandh
-  jodhpur/                                     ← PLACEHOLDER, see image.md
+  jodhpur/
     hero.jpg         16:9  ≥2400px   Escape 002 hero (unpublished; brochure only for now)
     gallery-1.jpg     4:3  ≥1600px   old city lanes
     gallery-2.jpg     1:1  ≥1200px   Toorji Ka Jhalra
     gallery-3.jpg     1:1  ≥1200px   on the table
     gallery-4.jpg     1:1  ≥1200px   Jaswant Thada
-  outway/                                      ← PLACEHOLDER, see image.md
+  outway/
     the-table.jpg    16:9  ≥2000px   About page banner. Not a place — the brand argument
     story-circle.jpg  4:5  ≥1400px   About page portrait
     the-letter.jpg    1:1  ≥1200px
@@ -98,13 +99,33 @@ clear light, warm dust, hard shadows. Don't mix the two.
 
 ## Before you upload
 
-- Export as JPEG, quality ~82, sRGB. Next.js re-encodes to AVIF/WebP on
-  delivery, so oversized sources only slow the build down.
-- Keep each file under about 1.5MB.
-- Strip GPS EXIF from anything shot on a phone.
-- Keep unprocessed originals in `raw-images/` — it is gitignored, and the
-  filenames there follow a `<set>-<slot>-<subject>.png` convention worth
-  continuing.
+Don't hand-export. Put the unprocessed original in `raw-images/` — gitignored —
+named `<set>-<slot>-<subject>.png`, add a line for it to `SLOTS` in
+[`scripts/import-photography.mjs`](../../scripts/import-photography.mjs) if it
+is a new slot, and run:
+
+```bash
+npm run images:import           # every slot
+npm run images:import jawai     # only paths matching "jawai"
+```
+
+For a frame that came out of an image model rather than a camera, run
+`npm run images:clean` **first**. It inverts the generator's corner mark — a
+white shape composited at a known opacity and a fixed inset, so the blend is
+undone algebraically rather than painted over — and banks the untouched
+original in `raw-images/_originals/`, which is where re-runs read from. See
+[`scripts/clean-generated-mark.mjs`](../../scripts/clean-generated-mark.mjs)
+for what it measures and where it stops being exact.
+
+That crops to the exact ratio the layout wants, trims any white print border
+the source came with, and writes a stripped sRGB JPEG at quality 82 — which
+also means GPS EXIF never reaches the repo, because sharp only carries metadata
+through when it's asked to. Sources are centre-cropped rather than squashed, so
+frame to the ratio in the list above and nothing of yours gets cut.
+
+If you do export by hand instead: JPEG, quality ~82, sRGB, under about 1.5MB,
+EXIF stripped. Next.js re-encodes to AVIF/WebP on delivery, so anything larger
+only slows the build down.
 
 ## Related
 
@@ -115,9 +136,10 @@ and updates the database directly.
 Branded pine-green fallback panels can be regenerated with
 `node scripts/generate-placeholders.mjs`. It skips any path that already has a
 file, so it will not overwrite real photography — pass `--force` if you
-genuinely want the placeholders back. Its `TARGETS` list and the shot list in
-`image.md` describe the same slots at the same sizes; change one and change the
-other, or a real photograph will land in a differently shaped box.
+genuinely want the placeholders back. Its `TARGETS` list, the `SLOTS` list in
+`scripts/import-photography.mjs` and the paths above all describe the same
+slots at the same sizes. Change one and change the others, or a photograph
+lands in a differently shaped box.
 
 Brand assets (`public/brand/`, `src/app/icon.png`, `apple-icon.png`) are
 generated, never shot — replace `assets/brand/outway-logo.png` and re-run

@@ -5,7 +5,7 @@ first, in the order of what it costs you to leave them undone. What has already
 been settled is at the bottom, so this file can be read top-down and stopped at
 any point.
 
-**Last updated: 16 August 2026** — see the [change log](#change-log).
+**Last updated: 20 August 2026** — see the [change log](#change-log).
 
 Nothing here is broken. `src/config/site.ts` omits anything unset rather than
 printing a placeholder, so an unfilled value is invisible, not "TBD".
@@ -53,11 +53,14 @@ printing a placeholder, so an unfilled value is invisible, not "TBD".
 >
 > Three things are outstanding and none of them block the site:
 >
-> - [ ] **Photography.** `public/images/jawai/`, `jodhpur/` and `outway/` are
->       branded placeholder panels, not photographs. The shot list — one
->       detailed paragraph per image, ready to paste into an image model — is
->       in **`image.md`** at the repo root. Sixteen files. The Jawai set
->       matters most: it is the Escape 001 hero and the homepage hero.
+> - [x] ~~**Photography.**~~ Filled in on 20 Aug. All sixteen slots in
+>       `public/images/jawai/`, `jodhpur/` and `outway/` now hold images
+>       instead of placeholder panels — cleaned of the generator's corner mark
+>       with `npm run images:clean`, then exported with
+>       `npm run images:import`. **They are model-generated, not photographs**
+>       — good enough to ship, not the end of this. Replace them with real
+>       frames from a departure when there are some; `outway/` is the set that
+>       most needs it, because it is meant to show actual travellers.
 > - [ ] **Escape 002 costing.** Its ₹18,999 is carried across from Escape 001
 >       rather than quoted from a Jodhpur supplier, and it has no named stay
 >       for the Jodhpur night. Both need doing before that checkbox is flicked.
@@ -352,6 +355,15 @@ Decisions taken and things verified. Not to be re-litigated.
 ---
 
 ## Change log
+
+**20 Aug 2026**
+- Escape 001 rebuilt as **Jawai × Udaipur** out of Delhi; **Escape 002
+  (Jawai × Jodhpur)** seeded unpublished; Mount Abu renumbered to Escape 003.
+- Photography closed out: sixteen model-generated images imported over the
+  placeholder panels via `scripts/clean-generated-mark.mjs` and then
+  `scripts/import-photography.mjs`. The shot list at `image.md` was consumed
+  and deleted — `public/images/README.md` is now the only description of the
+  slots.
 
 **16 Aug 2026**
 - The four undeployed commits shipped, and each fix was checked against the live

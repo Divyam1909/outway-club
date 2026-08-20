@@ -13,7 +13,9 @@
     "db:migrate": "node scripts/db.mjs supabase/migrations/0002_launch.sql",
     "db:seed": "node scripts/db.mjs supabase/seed.sql",
     "admin": "node scripts/make-admin.mjs",
-    "itinerary:pdf": "node scripts/build-itinerary-pdf.mjs"
+    "itinerary:pdf": "node scripts/build-itinerary-pdf.mjs",
+    "images:clean": "node scripts/clean-generated-mark.mjs",
+    "images:import": "node scripts/import-photography.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

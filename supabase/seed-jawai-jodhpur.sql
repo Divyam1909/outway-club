@@ -11,9 +11,10 @@
 -- row points at it. It is fully visible and editable at /admin/trips.
 --
 -- Publishing it is one checkbox in the admin trip editor. Before flicking it,
--- three things need doing: real Jodhpur photography (see image.md), a stay
--- named for the Jodhpur night, and confirmed pricing — the number below is
--- carried across from Escape 001 rather than costed from a Jodhpur supplier.
+-- two things need doing: a stay named for the Jodhpur night, and confirmed
+-- pricing — the number below is carried across from Escape 001 rather than
+-- costed from a Jodhpur supplier. public/images/jodhpur/ is filled in, though
+-- with model-generated stand-ins rather than photographs.
 --
 -- Deliberately no destination row for Jodhpur. A `destinations` row renders on
 -- /destinations and in the homepage grid the moment it exists, with or without

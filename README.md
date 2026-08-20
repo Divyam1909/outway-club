@@ -208,11 +208,18 @@ Replace the file in `assets/brand/` and re-run to change the logo everywhere.
 Every image path the site expects — trip, destination and Journal — is listed
 with its aspect ratio and usage in
 [`public/images/README.md`](public/images/README.md), alongside the house style
-and the export settings. Every slot currently holds real photography.
+and the export settings. Every slot currently holds an image — though the
+`jawai/`, `jodhpur/` and `outway/` sets are model-generated stand-ins rather
+than photographs from a departure.
 
-Drop replacements in using the same filenames, or upload through the admin trip
-editor (Admin → Trips → edit → Content), which writes to Supabase Storage and
-needs no redeploy. Journal figures are the exception: the article body lives in
+Drop a new original into the gitignored `raw-images/` folder and run
+`npm run images:import`, which crops to the ratio each layout expects, trims
+any white border the source came with and writes a stripped sRGB JPEG. For a
+generated frame, `npm run images:clean` runs first and takes the model's corner
+mark off. Or
+upload through the admin trip editor (Admin → Trips → edit → Content), which
+writes to Supabase Storage and needs no redeploy. Journal figures are the
+exception: the article body lives in
 Postgres, so changing one also means editing `supabase/seed-blog.sql` and
 re-running `node scripts/db.mjs supabase/seed-blog.sql`.
 

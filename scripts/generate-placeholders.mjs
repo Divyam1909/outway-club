@@ -23,10 +23,11 @@ const PINE = { deep: "#102019", mid: "#1E3D32", light: "#2C5A49" };
 const CREAM = "#FBF7F0";
 const GOLD = "#D9A441";
 
-// Aspect ratios and long edges here must match the ones documented in
-// image.md and public/images/README.md — that document is what the real
-// photography gets shot and generated against, and a placeholder in a
-// different shape would move the layout the day it is replaced.
+// Aspect ratios and long edges here must match the SLOTS list in
+// scripts/import-photography.mjs and the paths in public/images/README.md.
+// Those are what real photography is framed and imported against, and a
+// placeholder in a different shape would move the layout the day it is
+// replaced.
 const TARGETS = [
   // The Jawai set — Escape 001's hero imagery, and the highest priority to
   // replace with real files.
