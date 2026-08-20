@@ -8,8 +8,60 @@
  * the UI omits it entirely rather than printing a placeholder.
  */
 
+/**
+ * Every `NEXT_PUBLIC_*` value this file reads, written out as a **static**
+ * `process.env.NAME` reference.
+ *
+ * This looks like pointless repetition and is not. Next inlines
+ * `process.env.NEXT_PUBLIC_FOO` into the browser bundle by textual
+ * substitution, which only works on a literal member expression — a dynamic
+ * `process.env[key]` is left alone, and `process.env` does not exist in the
+ * browser, so every lookup through it returned `undefined` and silently took
+ * the fallback.
+ *
+ * That was invisible on the server and wrong in the browser, and Next renders
+ * client components in both places: the SSR pass runs in Node and got the real
+ * value, the hydration pass got the fallback, and React threw a mismatch on
+ * the one string where the two differed visibly (the search preview in the
+ * blog editor said `outway.club` server-side and `localhost:3000` after
+ * hydration).
+ *
+ * The mismatch was the symptom. The bug was that `site.whatsapp`,
+ * `site.bank.*`, `site.phoneDisplay` and the rest were all empty in the
+ * browser — so the moment those env vars were filled in, the WhatsApp buttons
+ * and the whole payment-details block would have rendered on the server and
+ * then vanished on hydration.
+ *
+ * If you add a `NEXT_PUBLIC_*` var below, add it here too, or it will read as
+ * empty in the browser and you will not be told.
+ */
+const PUBLIC_ENV: Record<string, string | undefined> = {
+  NEXT_PUBLIC_LEGAL_NAME: process.env.NEXT_PUBLIC_LEGAL_NAME,
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_CONTACT_EMAIL: process.env.NEXT_PUBLIC_CONTACT_EMAIL,
+  NEXT_PUBLIC_WHATSAPP_NUMBER: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,
+  NEXT_PUBLIC_CONTACT_PHONE: process.env.NEXT_PUBLIC_CONTACT_PHONE,
+  NEXT_PUBLIC_BUSINESS_ADDRESS: process.env.NEXT_PUBLIC_BUSINESS_ADDRESS,
+  NEXT_PUBLIC_BUSINESS_CITY: process.env.NEXT_PUBLIC_BUSINESS_CITY,
+  NEXT_PUBLIC_GSTIN: process.env.NEXT_PUBLIC_GSTIN,
+  NEXT_PUBLIC_INSTAGRAM_URL: process.env.NEXT_PUBLIC_INSTAGRAM_URL,
+  NEXT_PUBLIC_YOUTUBE_URL: process.env.NEXT_PUBLIC_YOUTUBE_URL,
+  NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  NEXT_PUBLIC_BING_SITE_VERIFICATION: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION,
+  NEXT_PUBLIC_YANDEX_VERIFICATION: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
+  NEXT_PUBLIC_UPI_ID: process.env.NEXT_PUBLIC_UPI_ID,
+  NEXT_PUBLIC_BANK_ACCOUNT_NAME: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME,
+  NEXT_PUBLIC_BANK_NAME: process.env.NEXT_PUBLIC_BANK_NAME,
+  NEXT_PUBLIC_BANK_ACCOUNT_NUMBER: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER,
+  NEXT_PUBLIC_BANK_IFSC: process.env.NEXT_PUBLIC_BANK_IFSC,
+};
+
 function env(key: string, fallback = ""): string {
-  return (process.env[key] ?? "").trim() || fallback;
+  // `PUBLIC_ENV` first, because that is the only form the browser can see.
+  // The dynamic read behind it still serves server-only vars like OPS_EMAIL,
+  // which are never evaluated in a browser bundle anyway.
+  const value = key in PUBLIC_ENV ? PUBLIC_ENV[key] : process.env[key];
+  return (value ?? "").trim() || fallback;
 }
 
 export const site = {
