@@ -223,7 +223,7 @@ const coverPage = `
 <section class="page cover">
   <div>
     <div class="mark"><span class="dot"></span>OUTWAY CLUB</div>
-    <p class="tagline">Journeys, not tour packages.</p>
+    <p class="tagline">Escape Ordinary. Meet The World, One Journey At A Time.</p>
   </div>
 
   <div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { site } from "@/config/site";
 import { getCurrentEscape } from "@/lib/data";
 import { editionLabel, formatDateRange } from "@/lib/utils";
 
@@ -71,7 +72,7 @@ export async function AuthShell({
             {edition ?? "Outway Club"}
           </Eyebrow>
           <p className="mt-3 font-display text-3xl font-semibold leading-tight">
-            {trip?.title ?? "Journeys, not tour packages"}
+            {trip?.title ?? site.taglineLong}
           </p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-cream-100/75">
             {trip?.short_description ??

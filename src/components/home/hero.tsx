@@ -95,7 +95,7 @@ export function Hero({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-60 motion-reduce:animate-none" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
             </span>
-            {trip ? [edition, "Now boarding"].filter(Boolean).join(" · ") : "Journeys, not tour packages"}
+            {trip ? [edition, "Now boarding"].filter(Boolean).join(" · ") : "Escape Ordinary. Meet The World"}
           </p>
 
           <h1 className="max-w-3xl font-display text-[2.6rem] font-semibold leading-[1.05] text-cream-100 text-shadow-hero sm:text-6xl lg:text-7xl">

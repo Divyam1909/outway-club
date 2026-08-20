@@ -68,7 +68,14 @@ export const site = {
   name: "Outway Club",
   /** Registered entity name used on legal pages & invoices. */
   legalName: env("NEXT_PUBLIC_LEGAL_NAME", "Outway Club"),
-  tagline: "Journeys, not tour packages.",
+  /**
+   * Short form. This is the one that goes in <title> — `"Outway Club: " +
+   * tagline` lands at 45 characters, inside the ~60 Google renders before it
+   * truncates. Use `taglineLong` anywhere the line has room to breathe.
+   */
+  tagline: "Escape Ordinary. Meet The World.",
+  /** Full form, for display surfaces with room: PDF cover, auth panel, print. */
+  taglineLong: "Escape Ordinary. Meet The World, One Journey At A Time.",
   description:
     "Outway Club runs small-group escapes across India, each one planned end to end, capped tight, and on sale only once every night and transfer is booked.",
 
