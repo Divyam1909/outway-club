@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const TRIP = "/trips/udaipur-jawai";
+const TRIP = "/trips/jawai-udaipur";
 
 test("gallery lightbox opens, counts and closes", async ({ page }, info) => {
   test.skip(info.project.name !== "desktop");

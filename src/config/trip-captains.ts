@@ -22,9 +22,9 @@
  *   {
  *     name: "Riya Sharma",
  *     role: "Trip captain",
- *     bio: "Has driven the Udaipur–Mount Abu ghat road in every month of the year, including the two you shouldn't.",
+ *     bio: "Has driven the Jawai–Udaipur road in every month of the year, including the two you shouldn't.",
  *     photo: "/images/team/riya.jpg",
- *     trips: ["udaipur-mount-abu"],
+ *     trips: ["jawai-udaipur"],
  *   }
  */
 

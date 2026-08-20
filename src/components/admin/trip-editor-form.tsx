@@ -72,6 +72,14 @@ export function TripEditorForm({
   const [description, setDescription] = useState(initialTrip?.description ?? "");
   const [heroImage, setHeroImage] = useState(initialTrip?.hero_image ?? "");
   const [gallery, setGallery] = useState<string[]>(initialTrip?.gallery ?? []);
+  const [promise, setPromise] = useState(initialTrip?.promise ?? "");
+  const [journeyRouteText, setJourneyRouteText] = useState(fromLines(initialTrip?.journey_route));
+  const [reallyBookingText, setReallyBookingText] = useState(
+    fromLines(initialTrip?.really_booking)
+  );
+  const [whoForText, setWhoForText] = useState(fromLines(initialTrip?.who_for));
+  const [notForText, setNotForText] = useState(fromLines(initialTrip?.not_for));
+  const [feelingsText, setFeelingsText] = useState(fromLines(initialTrip?.feelings));
   const [highlightsText, setHighlightsText] = useState(fromLines(initialTrip?.highlights));
   const [inclusionsText, setInclusionsText] = useState(fromLines(initialTrip?.inclusions));
   const [exclusionsText, setExclusionsText] = useState(fromLines(initialTrip?.exclusions));
@@ -113,12 +121,21 @@ export function TripEditorForm({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  /**
+   * Day numbers are not array indexes.
+   *
+   * An escape that starts on a platform the night before has a Day 00, so a
+   * new day continues from the last one's own number and a removal renumbers
+   * from whatever the first remaining day is called. Counting from 1 on every
+   * edit would silently move the meeting point a night later on every trip
+   * that opens with an overnight journey — which is both of them.
+   */
   function addDay() {
     setDays((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
-        day_number: prev.length + 1,
+        day_number: prev.length > 0 ? prev[prev.length - 1].day_number + 1 : 1,
         title: "",
         description: "",
         activitiesText: "",
@@ -135,7 +152,11 @@ export function TripEditorForm({
   }
 
   function removeDay(id: string) {
-    setDays((prev) => prev.filter((d) => d.id !== id).map((d, i) => ({ ...d, day_number: i + 1 })));
+    setDays((prev) => {
+      const kept = prev.filter((d) => d.id !== id);
+      const start = kept[0]?.day_number ?? 1;
+      return kept.map((d, i) => ({ ...d, day_number: start + i }));
+    });
   }
 
   function addDeparture() {
@@ -196,6 +217,12 @@ export function TripEditorForm({
       is_published: isPublished,
       edition_number: editionNumber === "" ? null : Number(editionNumber),
       spotlight_rank: spotlightRank === "" ? null : Number(spotlightRank),
+      promise: promise.trim() || null,
+      journey_route: toLines(journeyRouteText),
+      really_booking: toLines(reallyBookingText),
+      who_for: toLines(whoForText),
+      not_for: toLines(notForText),
+      feelings: toLines(feelingsText),
     };
 
     let tripId = initialTrip?.id;
@@ -521,9 +548,128 @@ export function TripEditorForm({
         </div>
       </section>
 
+      {/* ---- The journey ------------------------------------------------
+          Everything here is optional and everything here is one item per
+          line. Leaving a box empty removes its whole block from the trip
+          page rather than rendering an empty heading, so a trip that has no
+          "not for you if" list simply doesn't show one. */}
+      <section className="rounded-2xl border border-border bg-white p-6">
+        <h2 className="heading-sm text-lg text-ink">The journey</h2>
+        <p className="mb-5 mt-1 text-xs leading-relaxed text-ink-500">
+          The blocks that sell the escape rather than describe it. One item per line. Split a
+          line with an em dash — <span className="font-medium">Label — the sentence</span> — and
+          the label renders as the lead. A line with no dash is fine and renders as plain text.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className={LABEL} htmlFor="trip-promise">
+              The promise
+            </label>
+            <input
+              id="trip-promise"
+              className={INPUT}
+              value={promise}
+              onChange={(e) => setPromise(e.target.value)}
+              placeholder="Come looking for the wild. Leave with a story."
+            />
+            <p className="mt-1.5 text-xs text-ink-500">
+              One line, under the title. What they leave with, not what happens.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className={LABEL} htmlFor="trip-feelings">
+                Three feelings
+              </label>
+              <textarea
+                id="trip-feelings"
+                className={INPUT}
+                rows={3}
+                value={feelingsText}
+                onChange={(e) => setFeelingsText(e.target.value)}
+                placeholder={"Jawai — Discover\nUdaipur — Experience\nOutway — Connect"}
+              />
+              <p className="mt-1.5 text-xs text-ink-500">
+                Three. A fourth dilutes the only line on the page people repeat.
+              </p>
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor="trip-journey-route">
+                Visual journey
+              </label>
+              <textarea
+                id="trip-journey-route"
+                className={INPUT}
+                rows={3}
+                value={journeyRouteText}
+                onChange={(e) => setJourneyRouteText(e.target.value)}
+                placeholder={"Delhi — A night train out\nJawai — Granite, shepherds, leopards"}
+              />
+              <p className="mt-1.5 text-xs text-ink-500">
+                The emotional arc, in order. More beats than there are days, deliberately.
+              </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className={LABEL} htmlFor="trip-really-booking">
+                What they&apos;re really booking
+              </label>
+              <textarea
+                id="trip-really-booking"
+                className={INPUT}
+                rows={4}
+                value={reallyBookingText}
+                onChange={(e) => setReallyBookingText(e.target.value)}
+                placeholder="Conversations — The people sitting next to you are the actual product"
+              />
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor="trip-who-for">
+                This is for you if
+              </label>
+              <textarea
+                id="trip-who-for"
+                className={INPUT}
+                rows={4}
+                value={whoForText}
+                onChange={(e) => setWhoForText(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor="trip-not-for">
+                Not for you if
+              </label>
+              <textarea
+                id="trip-not-for"
+                className={INPUT}
+                rows={4}
+                value={notForText}
+                onChange={(e) => setNotForText(e.target.value)}
+              />
+              <p className="mt-1.5 text-xs text-ink-500">
+                The one that does the work. Naming who will be disappointed is a claim about
+                everyone else.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="rounded-2xl border border-border bg-white p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="heading-sm text-lg text-ink">Day-by-day itinerary</h2>
+          <div>
+            <h2 className="heading-sm text-lg text-ink">Day-by-day itinerary</h2>
+            <p className="mt-1 text-xs leading-relaxed text-ink-500">
+              Activities are one per line, written{" "}
+              <span className="font-medium">Band (exact time) — What happens</span>. The website
+              shows only the band; the brochure PDF prints the time as well.
+            </p>
+          </div>
           <button type="button" onClick={addDay} className="btn-outline btn-sm">
             <Plus size={14} /> Add day
           </button>
@@ -531,8 +677,20 @@ export function TripEditorForm({
         <div className="space-y-4">
           {days.map((day) => (
             <div key={day.id} className="rounded-xl border border-border p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-ink-700">Day {day.day_number}</span>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+                  Day
+                  {/* Editable, and 0 is valid: a trip that leaves Delhi the
+                      night before opens on Day 00. */}
+                  <input
+                    type="number"
+                    min={0}
+                    aria-label="Day number"
+                    className="w-16 rounded-lg border border-border px-2 py-1 text-sm focus:border-pine focus:outline-none"
+                    value={day.day_number}
+                    onChange={(e) => updateDay(day.id, { day_number: Number(e.target.value) })}
+                  />
+                </label>
                 <button type="button" onClick={() => removeDay(day.id)} className="text-clay hover:text-clay-600">
                   <Trash2 size={15} />
                 </button>

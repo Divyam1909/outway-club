@@ -37,9 +37,11 @@ Nine SQL files, run in order. All are safe to re-run.
 | `supabase/migrations/0005_booking_integrity.sql` | One booking per Razorpay order, atomic seat allocation |
 | `supabase/migrations/0006_trip_requests.sql` | `trip_requests`: the pre-booking questionnaire, one column per answer. **Required** — "Book now" writes here while payments are off |
 | `supabase/migrations/0007_promos_blog_roles.sql` | The `blogger` role and `is_blog_editor()`; reader-submitted articles (`submitted` / `rejected` statuses, review notes, contributor uploads); `promo_codes`, `promo_redemptions` and the atomic `claim_promo_code` |
-| `supabase/seed.sql` | Escape 001 content. Deletes the pre-launch demo catalogue. **No seeded reviews** — those come from real travellers only. |
+| `supabase/migrations/0008_journey.sql` | The journey layer on `trips`: `promise`, `journey_route`, `really_booking`, `who_for`, `not_for`, `feelings`. Every one is authored `Label — the sentence`, one per line in the admin trip editor |
+| `supabase/seed.sql` | Base catalogue content and the Udaipur destination. Deletes the pre-launch demo catalogue. **No seeded reviews** — those come from real travellers only. |
 | `supabase/seed-blog.sql` | The Udaipur destination guide, the Journal's first post. Real editorial copy kept in version control rather than typed into the admin console, so a fresh environment comes up with the same article. Re-runnable: it upserts on `slug` and never overwrites the original `published_at`. |
-| `supabase/seed-udaipur-jawai.sql` | Escape 002 — Udaipur × Jawai, 4–8 September, and the Janmashtami code that prices it. Also unpublishes Escape 001, which is between dates. |
+| `supabase/seed-jawai-udaipur.sql` | **Escape 001 — Jawai × Udaipur**, Delhi → Jawai → Udaipur → Delhi, 4–8 September, and the code that prices it. Adds the Jawai destination and pushes the old Mount Abu escape to edition 003. Run this before the Jodhpur seed: it is what frees edition number 2. |
+| `supabase/seed-jawai-jodhpur.sql` | **Escape 002 — Jawai × Jodhpur**, 23–27 October. `is_published = false`, so it exists only in the admin console: the public URL 404s and it is absent from the catalogue, sitemap and feed. Publishing it is one checkbox in the trip editor. |
 
 Paste them into the Supabase SQL editor, or apply them from the command line:
 
@@ -51,10 +53,15 @@ node scripts/db.mjs supabase/migrations/0004_catalogue.sql
 node scripts/db.mjs supabase/migrations/0005_booking_integrity.sql
 node scripts/db.mjs supabase/migrations/0006_trip_requests.sql
 node scripts/db.mjs supabase/migrations/0007_promos_blog_roles.sql
+node scripts/db.mjs supabase/migrations/0008_journey.sql
 npm run db:seed
 node scripts/db.mjs supabase/seed-blog.sql
-node scripts/db.mjs supabase/seed-udaipur-jawai.sql
+node scripts/db.mjs supabase/seed-jawai-udaipur.sql
+node scripts/db.mjs supabase/seed-jawai-jodhpur.sql
 ```
+
+The two escape seeds are order-dependent: `trips_edition_number_key` is a
+unique index, so 001 has to take its number back before 002 can claim its own.
 
 `scripts/db.mjs` probes Supabase's direct, session-pooler and
 transaction-pooler endpoints and uses whichever answers, so it works from most
@@ -145,12 +152,19 @@ by hand:
 
 ```bash
 npm run itinerary:pdf                        # the spotlight trip
-npm run itinerary:pdf -- udaipur-jawai       # a specific slug
+npm run itinerary:pdf -- jawai-udaipur       # a specific slug
+npm run itinerary:pdf -- jawai-jodhpur       # works for unpublished escapes too
 ```
 
 It reads `trips`, `itinerary_days`, the next `departure` and any auto-applying
-promo code, and writes `public/itineraries/<slug>.pdf` — cover, overview, one
-page per day, then inclusions and packing list. Living under `public/` means
+promo code, and writes `public/itineraries/<slug>.pdf` as a mini magazine:
+cover, the brand philosophy, the visual journey, highlights, one page per day,
+the community spread, inclusions and packing, who it's for, and a closing page.
+
+The brochure is the one surface that prints the operational clock times.
+Activities are authored `Band (exact time) — What happens`; the website renders
+only the band, because the customer-facing journey shows the experience, and
+somebody still has to run the day. Living under `public/` means
 the trip page can offer it as a download; add the slug to
 `src/config/itineraries.ts` and a "Download as PDF" button appears beside the
 itinerary. Naming a slug outright also works for an unpublished trip, which is
@@ -312,7 +326,7 @@ run it and look at `tests/__screens__/`.
 ## How a few things work
 
 **Promo codes.** One code per booking, always — not a list, not a stack. The
-event code on Escape 002 applies itself, and a code someone types replaces it
+event code on Escape 001 applies itself, and a code someone types replaces it
 *only if it saves more*; otherwise the bigger one stays and the panel says why.
 The arithmetic lives in `src/lib/promo-rules.ts` (pure, no database, shared by
 the browser and the server) and every figure that reaches the database is
@@ -443,11 +457,14 @@ is a column in `trip_requests` — add one without adding the column and
 submissions fail. The Razorpay checkout is parked, not deleted: render
 `BookingPanel` from the booking page again and the old flow returns.
 
-**How people actually pay.** `site.bank` (five `NEXT_PUBLIC_*` vars, see
+**How people actually pay.** `site.bank` (six `NEXT_PUBLIC_*` vars, see
 `.env.example`) drives the "Payment details" block on the trip and booking
-pages: UPI ID, bank account, and a screenshot on WhatsApp. It renders nothing
-unless a UPI ID or a *complete* account is configured — a payment section with
-half an account number is worse than none. Because the vars are
+pages: UPI ID and QR, bank account, and a screenshot on WhatsApp. It renders
+nothing unless a UPI ID, a QR, or a *complete* account is configured — a payment
+section with half an account number is worse than none. The QR is a plain
+`<img>` pointed at a `/public` path or any URL, so it needs no
+`remotePatterns` entry, and the account name is printed beside it as the check
+that catches a swapped code before the money moves. Because the vars are
 `NEXT_PUBLIC_`, they are inlined at build time: set them in `.env.local`, then
 rebuild and redeploy — changing them anywhere else has no effect. They are all
 still blank, which is why the block is invisible in production

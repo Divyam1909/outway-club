@@ -84,8 +84,8 @@ const GROUPS = [
         a: "Payment, after we've replied. Sending the form does not hold anything: seat counts on the site are live but not reserved, and until we've confirmed and you've paid, the seat can still go to someone else.",
       },
       {
-        q: "Are the timings on the itinerary fixed?",
-        a: "The route, the stays and everything included are fixed. The clock times are indicative and marked with an asterisk on every trip page, because they genuinely move: weather, traffic on the ghat roads, and monument or temple hours all shift a day around. Your trip captain tells the group the actual plan each morning.",
+        q: "Why does the journey say 'late afternoon' instead of 4:00 PM?",
+        a: "Because that is the honest version. We plan every day to the hour internally — and the downloadable brochure prints those times — but what we publish is the shape of the day, because light, weather, road conditions and temple hours all get a vote. The route, the stays, the order of the days and everything included are fixed and do not move. Your trip captain gives the group the actual plan each morning, and the exact timings come with your joining note a few days before you leave.",
       },
       {
         q: "When do I get the joining details?",
@@ -121,6 +121,18 @@ const GROUPS = [
   {
     heading: "About Outway",
     faqs: [
+      {
+        q: "Will I definitely see a leopard at Jawai?",
+        a: "No, and anybody who tells you otherwise is selling you something. Jawai is open country — no park boundary, no fence, no numbered zone — and the leopards live on the rocks above working villages rather than to a timetable. Sightings there are genuinely common and our naturalists know the ground extremely well, but the sighting is never promised. The experience is: two days in a landscape almost nobody gives two days to, with the people who live in it. If a guaranteed animal is what you want, a national park with a booking window is a better buy than us.",
+      },
+      {
+        q: "I don't know anyone. Is this actually for me?",
+        a: "It is the person we design for. Most people on an Outway escape book alone, nobody arrives as part of a clique, and every evening has something in it — a question round a fire, a shared table — whose entire job is to make that easy. You don't have to know anyone before you come. That's the point.",
+      },
+      {
+        q: "Is this a tour?",
+        a: "No, and the difference is not marketing. A tour is optimised for coverage: as many places as the days allow. We optimise for the opposite — fewer places, longer in each, whole afternoons left deliberately empty, and time built in for the people rather than the monuments. If you count the stops, we look like poor value. If you count what you remember six months later, we don't.",
+      },
       {
         q: "Why are there so few trips on the site?",
         a: "Because we build them one at a time. We'd rather plan a handful of routes obsessively than list twenty destinations we've half-researched. A new escape goes live only when every night, transfer and meal on it is genuinely booked, which is slower than putting up a photo and a 'coming soon' badge, and is the whole point.",

@@ -1,62 +1,60 @@
-import { Coffee, Utensils, Moon, Home, MapPin } from "lucide-react";
-import { TIMINGS_NOTE } from "@/config/trip-request";
+import { Coffee, Utensils, Moon, Home } from "lucide-react";
 import { ItineraryDescription } from "@/components/trips/itinerary-description";
+import { TIMINGS_NOTE_SHORT } from "@/config/trip-request";
+import { splitActivity } from "@/lib/utils";
 import type { ItineraryDay } from "@/lib/types";
 
 /**
- * Anything that looks like a clock time at the head of an activity —
- * "5:30 PM — Sunset boat…", "7 AM depart" — so it can be marked with an
- * asterisk. Written against how the itinerary is actually authored: a time,
- * then a separator, then the activity.
+ * "Your Journey", day by day.
+ *
+ * Activities are authored as `Band (exact time) — What happens` and this
+ * renders only the band. That is a deliberate brand rule, not an oversight:
+ * the customer-facing journey shows the experience, and the operational clock
+ * lives in the ops sheet and the brochure. A day that reads "Late afternoon —
+ * open jeep with a naturalist" is also a day we can run honestly when the
+ * light, the weather or the road disagrees with a printed 4:00 PM.
+ *
+ * Days are numbered from whatever the data says, zero-padded. An escape that
+ * starts on a platform in Delhi the night before has a Day 00, and calling it
+ * Day 1 would quietly move the meeting point a night later in the reader's
+ * head.
  */
-const LEADING_TIME = /^\s*(\d{1,2}([:.]\d{2})?\s*(am|pm|AM|PM)|\d{1,2}[:.]\d{2})\b/;
-
-/** The same idea, anywhere in a sentence: "out by 7am", "the 7pm show". */
-const TIME_IN_PROSE = /\b\d{1,2}([:.]\d{2})?\s?(am|pm)\b/i;
-
-function hasTime(activity: string): boolean {
-  return LEADING_TIME.test(activity);
-}
-
 export function ItineraryTimeline({ days }: { days: ItineraryDay[] }) {
-  // Only footnote what's actually on screen. A day-by-day with no clock times
-  // in it shouldn't carry a disclaimer about clock times.
-  const anyTimings = days.some(
-    (day) => day.activities.some(hasTime) || TIME_IN_PROSE.test(day.description)
-  );
-
   return (
     <>
       <ol className="relative border-l border-border pl-8">
         {days.map((day) => (
           <li key={day.id} className="mb-10 last:mb-0">
-            <span className="absolute -left-[1.15rem] flex h-9 w-9 items-center justify-center rounded-full bg-pine heading-sm text-sm text-cream-100">
-              {day.day_number}
+            <span className="absolute -left-[1.15rem] flex h-9 w-9 items-center justify-center rounded-full bg-pine heading-sm text-xs text-cream-100">
+              {String(day.day_number).padStart(2, "0")}
             </span>
 
             <h3 className="heading-sm text-lg text-ink">{day.title}</h3>
             <ItineraryDescription text={day.description} />
 
             {day.activities.length > 0 && (
-              <ul className="mt-3 flex flex-wrap gap-2">
-                {day.activities.map((activity) => (
-                  <li
-                    key={activity}
-                    className="flex items-center gap-1.5 rounded-full bg-cream-300 px-3 py-1.5 text-xs text-ink-700"
-                  >
-                    <MapPin size={12} className="text-clay" />
-                    {activity}
-                    {hasTime(activity) && (
-                      <span aria-hidden="true" className="font-semibold text-clay">
-                        *
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <dl className="mt-4 space-y-2.5 border-l-2 border-cream-300 pl-4">
+                {day.activities.map((activity) => {
+                  const { band, label } = splitActivity(activity);
+                  return (
+                    <div key={activity} className="sm:flex sm:gap-4">
+                      {band && (
+                        <dt className="shrink-0 text-xs font-semibold uppercase tracking-[0.1em] text-clay sm:w-36 sm:pt-0.5">
+                          {band}
+                        </dt>
+                      )}
+                      <dd
+                        className={`text-sm leading-relaxed text-ink-700 ${band ? "" : "sm:ml-40"}`}
+                      >
+                        {label}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
             )}
 
-            <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-ink-500">
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-ink-500">
               <span className="flex items-center gap-1">
                 <Coffee size={13} className={day.meals.breakfast ? "text-pine" : "text-ink-200"} />
                 Breakfast {day.meals.breakfast ? "included" : "not included"}
@@ -80,14 +78,12 @@ export function ItineraryTimeline({ days }: { days: ItineraryDay[] }) {
         ))}
       </ol>
 
-      {anyTimings && (
-        <p className="mt-6 rounded-xl bg-cream-300 px-4 py-3 text-xs leading-relaxed text-ink-500">
-          <span aria-hidden="true" className="font-semibold text-clay">
-            *
-          </span>{" "}
-          {TIMINGS_NOTE} The order of the days and everything included in them stays as written.
-        </p>
-      )}
+      <p className="mt-6 rounded-xl bg-cream-300 px-4 py-3 text-xs leading-relaxed text-ink-500">
+        {TIMINGS_NOTE_SHORT} We plan to the hour internally and publish the shape of the day
+        instead, because light, weather and local conditions get a vote. The order of the days,
+        and everything included in them, stays exactly as written. Exact timings come with your
+        joining note and the downloadable brochure.
+      </p>
     </>
   );
 }

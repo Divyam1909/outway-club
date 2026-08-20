@@ -10,6 +10,8 @@ import { TripCard } from "@/components/trips/trip-card";
 import { Hero } from "@/components/home/hero";
 import { OfferBand } from "@/components/home/offer-band";
 import { WhyUs } from "@/components/home/why-us";
+import { BrandFoundation } from "@/components/home/brand-foundation";
+import { Pillars } from "@/components/home/pillars";
 import { Testimonials } from "@/components/home/testimonials";
 import { CtaBanner } from "@/components/home/cta-banner";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -74,6 +76,8 @@ export default async function HomePage() {
           It writes itself from the promo row and removes itself when the
           window closes — no festival is hardcoded anywhere on this page. */}
       {trip && heroPromo && <OfferBand trip={trip} departure={departure} promo={heroPromo} />}
+
+      <BrandFoundation region={trip?.destination?.region ?? null} />
 
       {!trip && (
         <section className="section-lg">
@@ -168,6 +172,8 @@ export default async function HomePage() {
           </Container>
         </section>
       )}
+
+      <Pillars />
 
       <WhyUs />
 

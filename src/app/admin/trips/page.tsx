@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DeleteTripButton } from "@/components/admin/delete-trip-button";
 import { getAllTripsForAdmin } from "@/lib/data";
-import { formatINR } from "@/lib/utils";
+import { itineraryPdfFor } from "@/config/itineraries";
+import { editionLabel, formatINR } from "@/lib/utils";
 import { requireAdminPage } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Manage trips" };
@@ -32,13 +33,21 @@ export default async function AdminTripsPage() {
               <th className="px-5 py-3">Destination</th>
               <th className="px-5 py-3">Price</th>
               <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Brochure</th>
               <th className="px-5 py-3" />
             </tr>
           </thead>
           <tbody>
             {trips.map((trip) => (
               <tr key={trip.id} className="border-b border-border last:border-0">
-                <td className="px-5 py-4 font-medium text-ink">{trip.title}</td>
+                <td className="px-5 py-4 font-medium text-ink">
+                  {trip.title}
+                  {editionLabel(trip) && (
+                    <span className="mt-0.5 block text-xs font-normal uppercase tracking-wide text-ink-500">
+                      {editionLabel(trip)}
+                    </span>
+                  )}
+                </td>
                 <td className="px-5 py-4 text-ink-500">{trip.destination?.name}</td>
                 <td className="px-5 py-4 text-ink-500">{formatINR(trip.discounted_price ?? trip.price_per_person)}</td>
                 <td className="px-5 py-4">
@@ -46,6 +55,22 @@ export default async function AdminTripsPage() {
                     <Badge tone={trip.is_published ? "pine" : "ink"}>{trip.is_published ? "Published" : "Draft"}</Badge>
                     {trip.is_featured && <Badge tone="gold">Featured</Badge>}
                   </div>
+                </td>
+                {/* A draft escape 404s on the public site, so this link is the
+                    only way to get at its brochure — which is exactly what ops
+                    send to somebody asking what else is coming. */}
+                <td className="px-5 py-4">
+                  {itineraryPdfFor(trip.slug) ? (
+                    <a
+                      href={itineraryPdfFor(trip.slug)!}
+                      download
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-pine hover:underline"
+                    >
+                      <Download size={14} aria-hidden="true" /> PDF
+                    </a>
+                  ) : (
+                    <span className="text-xs text-ink-500">Not generated</span>
+                  )}
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center justify-end gap-4">

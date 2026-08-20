@@ -1,24 +1,49 @@
 # Real photography goes here
 
 Drop files in with **exactly** these names and every page picks them up with no
-code change. Every slot below is filled with real photography — there are no
-placeholders left.
+code change.
+
+**The `jawai/`, `jodhpur/` and `outway/` sets are branded placeholders, not
+photography.** They are real JPEGs at the right size, so nothing 404s and no
+layout moves when they are replaced — but they are generated panels. The
+detailed shot list, one paragraph per image, is in **`image.md` at the repo
+root**. That is the file to work from. The `udaipur/`, `escape-001/` and
+`blog/` sets are real.
 
 ```
 public/images/
-  escape-001/
-    hero.jpg         16:9  ≥2400px   homepage hero, trip hero, login panel, OG preview
-    gallery-1.jpg     4:3  ≥1600px   homepage "what you'll remember"
-    gallery-2.jpg    16:9  ≥2000px   about page banner, trip gallery, Journal season figure
-    gallery-3.jpg     4:5  ≥1400px   about page portrait, trip gallery
-    gallery-4.jpg     1:1  ≥1200px   trip gallery thumbnail
-    gallery-5.jpg     1:1  ≥1200px   trip gallery thumbnail
+  jawai/                                       ← PLACEHOLDER, see image.md
+    hero.jpg         16:9  ≥2400px   Escape 001 hero, homepage hero, OG preview
+    gallery-1.jpg     4:3  ≥1600px   Rabari shepherd country
+    gallery-2.jpg    16:9  ≥2000px   open jeep, late light — first in the trip gallery
+    gallery-3.jpg     4:5  ≥1400px   leopard on the granite, distant
+    gallery-4.jpg     1:1  ≥1200px   chai at sunset
+    gallery-5.jpg     1:1  ≥1200px   The Story Circle
+    gallery-6.jpg     1:1  ≥1200px   Jawai Bandh
+  jodhpur/                                     ← PLACEHOLDER, see image.md
+    hero.jpg         16:9  ≥2400px   Escape 002 hero (unpublished; brochure only for now)
+    gallery-1.jpg     4:3  ≥1600px   old city lanes
+    gallery-2.jpg     1:1  ≥1200px   Toorji Ka Jhalra
+    gallery-3.jpg     1:1  ≥1200px   on the table
+    gallery-4.jpg     1:1  ≥1200px   Jaswant Thada
+  outway/                                      ← PLACEHOLDER, see image.md
+    the-table.jpg    16:9  ≥2000px   About page banner. Not a place — the brand argument
+    story-circle.jpg  4:5  ≥1400px   About page portrait
+    the-letter.jpg    1:1  ≥1200px
+    the-road.jpg     16:9  ≥2000px   About page, the long-term-model section
   udaipur/
-    hero.jpg         16:9  ≥2400px   destination page banner
-    gallery-1.jpg     1:1  ≥1200px   destination grid
+    hero.jpg         16:9  ≥2400px   destination page banner, hero fallback
+    gallery-1.jpg     1:1  ≥1200px   destination grid, Escape 001 gallery
     gallery-2.jpg     1:1  ≥1200px
-    gallery-3.jpg     1:1  ≥1200px
+    gallery-3.jpg     1:1  ≥1200px   Escape 001 gallery
     gallery-4.jpg     1:1  ≥1200px
+  escape-001/                    ← legacy folder name: this is the Mount Abu
+    hero.jpg         16:9  ≥2400px    shoot, which belongs to Escape 003 since
+    gallery-1.jpg     4:3  ≥1600px    the August 2026 renumbering. The path is
+    gallery-2.jpg    16:9  ≥2000px    left alone because the Journal and an
+    gallery-3.jpg     4:5  ≥1400px    unpublished trip row both point at it.
+    gallery-4.jpg     1:1  ≥1200px
+    gallery-5.jpg     1:1  ≥1200px
   blog/udaipur-travel-guide/
     cover.jpg        16:9  ≥2048px   article cover, OG card, featured card on /blog
     01-city-palace.jpg       4:5     "The City Palace" section
@@ -63,10 +88,13 @@ rather than tour brochure: no HDR, no oversaturated skies, no lens flare, no
 text or logos in frame. People appear mid-activity and unposed, never looking at
 the camera.
 
-Everything is **mid-August monsoon in Rajasthan**: green Aravallis, heavy skies,
-wet stone, full lakes. That season is the whole pitch of Escape 001 and the
-argument of the Journal's first article, so don't substitute dry golden-hour
-desert imagery — it would misrepresent what travellers actually get.
+Season is not decoration. The Jawai, Udaipur and `outway/` sets are **early
+September, the tail of the monsoon**: green Aravallis and green grass on the
+granite, heavy skies, wet stone, full lakes and a full dam. That season is the
+whole pitch of Escape 001 and the argument of the Journal's first article, so
+don't substitute dry golden-hour desert imagery — it would misrepresent what
+travellers actually get. The Jodhpur set is **late October, post-monsoon**: dry
+clear light, warm dust, hard shadows. Don't mix the two.
 
 ## Before you upload
 
@@ -85,9 +113,11 @@ trip editor (Admin → Trips → edit → Content). That writes to Supabase Stor
 and updates the database directly.
 
 Branded pine-green fallback panels can be regenerated with
-`node scripts/generate-placeholders.mjs`. It now skips any path that already
-has a file, so it will not overwrite the real photography — pass `--force` if
-you genuinely want the placeholders back.
+`node scripts/generate-placeholders.mjs`. It skips any path that already has a
+file, so it will not overwrite real photography — pass `--force` if you
+genuinely want the placeholders back. Its `TARGETS` list and the shot list in
+`image.md` describe the same slots at the same sizes; change one and change the
+other, or a real photograph will land in a differently shaped box.
 
 Brand assets (`public/brand/`, `src/app/icon.png`, `apple-icon.png`) are
 generated, never shot — replace `assets/brand/outway-logo.png` and re-run

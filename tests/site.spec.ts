@@ -1,10 +1,13 @@
 import { test, expect, type Page } from "@playwright/test";
 
-// The escape currently on sale. Escape 001 (udaipur-mount-abu) is between
-// dates and deliberately unpublished, so its public URL 404s — pointing these
-// at a hidden trip is how the suite starts failing for a reason that is
-// actually correct behaviour.
-const TRIP_SLUG = "udaipur-jawai";
+// The escape currently on sale. Escapes 002 (jawai-jodhpur) and 003
+// (udaipur-mount-abu) are deliberately unpublished, so their public URLs 404 —
+// pointing these at a hidden trip is how the suite starts failing for a reason
+// that is actually correct behaviour.
+const TRIP_SLUG = "jawai-udaipur";
+
+/** Unpublished editions. Nothing public may reach these. */
+const DRAFT_SLUGS = ["jawai-jodhpur", "udaipur-mount-abu"];
 
 const PUBLIC_ROUTES = [
   { path: "/", heading: /Udaipur/i },
@@ -13,7 +16,7 @@ const PUBLIC_ROUTES = [
   { path: "/blog", heading: /Field notes/i },
   { path: "/testimonials", heading: /.+/ },
   { path: "/destinations/udaipur", heading: /Udaipur/i },
-  { path: "/about", heading: /vague itineraries/i },
+  { path: "/about", heading: /Escape Ordinary/i },
   { path: "/contact", heading: /Ask us anything/i },
   { path: "/faq", heading: /Questions people actually ask/i },
   { path: "/terms", heading: /Terms of Service/i },
@@ -154,21 +157,76 @@ test.describe("navigation", () => {
 });
 
 test.describe("the live escape", () => {
-  test("trip page shows dates, price and full itinerary", async ({ page }) => {
+  test("trip page shows dates, price and the full journey", async ({ page }) => {
     await page.goto(`/trips/${TRIP_SLUG}`, { waitUntil: "networkidle" });
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Udaipur");
     await expect(page.getByText(/4\s*to\s*8 Sep/i).first()).toBeVisible();
     // The price after the Janmashtami code, which applies by itself — this is
     // the number the customer is actually quoted everywhere on the site.
-    await expect(page.getByText("₹7,999").and(page.locator(":visible")).first()).toBeVisible();
+    await expect(page.getByText("₹16,999").and(page.locator(":visible")).first()).toBeVisible();
 
     // Five itinerary days, each with a heading.
     const timeline = page.locator("ol.border-l > li");
     await expect(timeline).toHaveCount(5);
 
-    await expect(page.getByRole("heading", { name: /Full itinerary/i })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Inclusions, exclusions/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Your journey, day by day/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /What's included, in plain words/i })).toBeVisible();
+  });
+
+  test("carries the journey layer, not just an itinerary", async ({ page }) => {
+    await page.goto(`/trips/${TRIP_SLUG}`, { waitUntil: "networkidle" });
+
+    // The promise, the three feelings, and the two blocks that qualify the
+    // audience. These are read from the trip row, so an escape saved without
+    // them renders nothing at all rather than an empty heading — which is
+    // exactly what this asserts is not happening on the live one.
+    await expect(page.getByText("Come looking for the wild").first()).toBeVisible();
+    await expect(page.getByText("Discover", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(/What you're really booking/i).first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Not a bus seat, a hotel room/i })
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Is this your kind of trip/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Not for you if/i })).toBeVisible();
+  });
+
+  test("the journey shows bands, never operational clock times", async ({ page }) => {
+    await page.goto(`/trips/${TRIP_SLUG}`, { waitUntil: "networkidle" });
+
+    const timeline = page.locator("ol.border-l");
+    await expect(timeline.getByText("Late afternoon").first()).toBeVisible();
+
+    // The exact times live in the brochure and the ops sheet. If one leaks
+    // onto the page, the authoring convention has been broken somewhere.
+    await expect(timeline.getByText(/\d{1,2}:\d{2}\s*(AM|PM)/)).toHaveCount(0);
+  });
+
+  test("unpublished editions are not on the public site at all", async ({ page }) => {
+    for (const slug of DRAFT_SLUGS) {
+      const response = await page.goto(`/trips/${slug}`);
+      expect(response?.status(), `${slug} should not resolve publicly`).toBe(404);
+    }
+
+    // …and nothing links to them either: not the catalogue, not the sitemap.
+    await page.goto("/trips", { waitUntil: "networkidle" });
+    for (const slug of DRAFT_SLUGS) {
+      await expect(page.locator(`a[href*="${slug}"]`)).toHaveCount(0);
+    }
+
+    const sitemap = await page.request.get("/sitemap.xml");
+    const xml = await sitemap.text();
+    for (const slug of DRAFT_SLUGS) {
+      expect(xml, `${slug} should be absent from the sitemap`).not.toContain(slug);
+    }
+    expect(xml).toContain(TRIP_SLUG);
+  });
+
+  test("the old slug still resolves", async ({ page }) => {
+    // Same trip row, new address, since the launch escape was rebuilt around
+    // Jawai. Every shared link and indexed result points at the old one.
+    await page.goto("/trips/udaipur-jawai", { waitUntil: "networkidle" });
+    await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_SLUG}$`));
   });
 
   test("shows an honest empty state instead of invented reviews", async ({ page }) => {

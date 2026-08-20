@@ -13,7 +13,7 @@ const ADMIN = { email: "playwright-admin@outway.test", password: "pw-test-Admin-
 const BLOGGER = { email: "playwright-blogger@outway.test", password: "pw-test-Blogger-2026!" };
 const READER = { email: "playwright-reader@outway.test", password: "pw-test-Reader-2026!" };
 
-const TRIP_SLUG = "udaipur-jawai";
+const TRIP_SLUG = "jawai-udaipur";
 
 async function signIn(page: Page, account: { email: string; password: string }) {
   await page.goto("/login");
@@ -186,22 +186,37 @@ test.describe("reader submissions", () => {
 // ---------------------------------------------------------------------------
 
 test.describe("promo codes", () => {
-  test("the event code is applied without anyone typing it", async ({ page }) => {
+  test("the event code is applied without anyone typing it", async ({ page, isMobile }) => {
     await page.goto(`/trips/${TRIP_SLUG}`);
 
     // Two prices, one struck through, and the live one is the discounted one.
-    const widget = page.locator(".lg\\:sticky").first();
-    await expect(widget.getByText("₹7,999").first()).toBeVisible();
-    await expect(widget.locator(".line-through")).toContainText("8,999");
-    await expect(page.getByText("Janmashtami special").first()).toBeVisible();
+    //
+    // Which element carries them depends on the viewport, and that is the
+    // design rather than an accident: BookingWidget is `hidden lg:block` and
+    // MobileBookingBar owns booking below lg. This used to assert on the
+    // desktop widget in both projects, so at 412px it was waiting on an
+    // element the reader is deliberately never shown.
+    if (isMobile) {
+      // The bar slides in on scroll, so get off the top of the page first.
+      await page.evaluate(() => window.scrollTo(0, 900));
+      const bar = page.locator("div.fixed.bottom-0.lg\\:hidden").first();
+      await expect(bar.getByText("₹16,999").first()).toBeVisible();
+      await expect(bar.locator(".line-through").first()).toContainText("18,999");
+    } else {
+      const widget = page.locator(".lg\\:sticky").first();
+      await expect(widget.getByText("₹16,999").first()).toBeVisible();
+      await expect(widget.locator(".line-through")).toContainText("18,999");
+    }
+
+    await expect(page.getByText("Janmashtami departure").first()).toBeVisible();
   });
 
   test("carries through to the booking form and scales with headcount", async ({ page }) => {
     await page.goto(`/booking/${TRIP_SLUG}`);
 
     // The quote lands from the server, so wait for it rather than the paint.
-    await expect(page.getByText("Janmashtami special")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("−₹1,000")).toBeVisible();
+    await expect(page.getByText("Janmashtami departure")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("−₹2,000")).toBeVisible();
 
     await page.getByRole("button", { name: "One traveller more" }).click();
     await expect(page.getByText("−₹2,000")).toBeVisible({ timeout: 15_000 });
@@ -209,7 +224,7 @@ test.describe("promo codes", () => {
 
   test("refuses a code that isn't ours, and keeps the one that is", async ({ page }) => {
     await page.goto(`/booking/${TRIP_SLUG}`);
-    await expect(page.getByText("Janmashtami special")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("Janmashtami departure")).toBeVisible({ timeout: 15_000 });
 
     await page.getByRole("button", { name: /different code|promo code/i }).click();
     await page.locator("#promo-code-input").fill("NOTREAL99");
@@ -217,7 +232,7 @@ test.describe("promo codes", () => {
 
     await expect(page.getByText(/isn't one of ours/)).toBeVisible({ timeout: 15_000 });
     // The event discount survived the failed attempt.
-    await expect(page.getByText("−₹1,000")).toBeVisible();
+    await expect(page.getByText("−₹2,000")).toBeVisible();
   });
 
   test("an admin can create one, and it works at checkout", async ({ page, browser }) => {
@@ -240,7 +255,7 @@ test.describe("promo codes", () => {
     const context = await browser.newContext();
     const visitor = await context.newPage();
     await visitor.goto(`/booking/${TRIP_SLUG}`);
-    await expect(visitor.getByText("Janmashtami special")).toBeVisible({ timeout: 15_000 });
+    await expect(visitor.getByText("Janmashtami departure")).toBeVisible({ timeout: 15_000 });
 
     await visitor.getByRole("button", { name: /different code|promo code/i }).click();
     await visitor.locator("#promo-code-input").fill(code);
@@ -249,7 +264,7 @@ test.describe("promo codes", () => {
     await expect(visitor.getByText("−₹2,500")).toBeVisible({ timeout: 15_000 });
     await expect(visitor.getByText("Playwright partner")).toBeVisible();
     // Exactly one discount line — never both.
-    await expect(visitor.getByText("Janmashtami special")).toHaveCount(0);
+    await expect(visitor.getByText("Janmashtami departure")).toHaveCount(0);
 
     await context.close();
 

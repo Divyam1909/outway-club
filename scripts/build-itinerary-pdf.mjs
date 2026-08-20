@@ -1,18 +1,31 @@
 /**
- * Builds the customer-facing itinerary PDF from the live trip data.
+ * Builds the customer-facing brochure from the live trip data.
  *
  *   node scripts/build-itinerary-pdf.mjs                  (the spotlight trip)
- *   node scripts/build-itinerary-pdf.mjs udaipur-jawai
- *   node scripts/build-itinerary-pdf.mjs udaipur-jawai public/itineraries/custom.pdf
+ *   node scripts/build-itinerary-pdf.mjs jawai-udaipur
+ *   node scripts/build-itinerary-pdf.mjs jawai-udaipur public/itineraries/x.pdf
  *
  * Output lands in public/itineraries/<slug>.pdf by default, so the brochure is
  * downloadable from the trip page rather than living in docs/ where only we can
  * see it. See src/config/itineraries.ts for the link.
  *
- * This exists because the brochure used to be a hand-made file: the moment the
- * itinerary changed in the database, the PDF quietly started lying about the
- * dates, the price and the number of days. Now it reads the same rows the trip
- * page reads, so regenerating is the fix rather than a redesign.
+ * This is a mini magazine, not a package PDF, and the page order is the
+ * argument rather than a table of contents:
+ *
+ *   cover → philosophy → the journey → day by day → the people →
+ *   what's included → who it's for → price, practicals and the closing line
+ *
+ * Every word of it reads the same rows the website reads. That is the whole
+ * reason this script exists: the brochure used to be a hand-made file, and the
+ * moment the itinerary changed in the database it quietly started lying about
+ * the dates, the price and the number of days. There is deliberately no
+ * per-trip copy hard-coded in here any more — anything that needs saying about
+ * one escape belongs in that escape's row, where the site can say it too.
+ *
+ * One thing the brochure carries that the website does not: exact clock times.
+ * Activities are authored `Band (exact time) — What happens`; the site shows
+ * only the band, because the customer-facing journey shows the experience.
+ * Somebody still has to run the day, so the PDF prints both.
  *
  * Operator-only, like scripts/db.mjs — it uses the service-role key and
  * Playwright's bundled Chromium to print. Both are already devDependencies.
@@ -26,25 +39,38 @@ const { createClient } = require("@supabase/supabase-js");
 const { chromium } = require("@playwright/test");
 
 // ---------------------------------------------------------------------------
-// Brochure-only copy.
+// Brand copy.
 //
-// Everything else on the page comes from the database. These two notes are
-// sales copy that has no column to live in, so they are kept here where they
-// are easy to find rather than buried in the template below. A day note is
-// matched against the day title, case-insensitively.
+// The only text in this file that is not read from the database, and it is
+// here because it is true of every escape rather than any one of them. If a
+// line below ever needs to differ per trip, it has become trip data and wants
+// a column, not a conditional.
 // ---------------------------------------------------------------------------
-const EXTENDING_NOTE = {
-  title: "Extending your stay?",
-  body: "Kumbhalgarh Fort and the Ranakpur Jain temple, both under two and a half hours from Udaipur, are the two side trips most people wish they'd added on afterwards. Ask your trip captain and we'll help you book the extra day, either side of the dates above.",
+const PHILOSOPHY = {
+  eyebrow: "WHAT WE'RE ACTUALLY BUILDING",
+  title: "You don't just visit a place. You experience it.",
+  lede: "Outway Club is not a weekend-trip company. The trips are the way in. What we are building is a different way to travel — fewer places, longer in each, and real time with the people who live there. Four preferences decide every call we make, from who we eat with to what we leave out.",
+  preferences: [
+    ["People", "Places", "A place is the reason you booked. The people are the reason you remember it."],
+    ["Stories", "Sightseeing", "Anyone can stand in front of a fort. We would rather you left knowing why."],
+    ["Experiences", "Itineraries", "A full schedule is easy to sell and exhausting to live. Empty hours are in the plan."],
+    ["Community", "Customers", "You arrive not knowing anyone. You leave on a group thread that stays open."],
+  ],
+  pillars: [
+    ["People", "You come for the destination. You remember the people."],
+    ["Place", "Understand a place, don't just visit it."],
+    ["Culture", "Participate, don't observe from outside."],
+    ["Experience", "Curate the journey, don't fill every minute."],
+    ["Connection", "Arrive with strangers. Leave with stories."],
+  ],
 };
 
-const DAY_NOTES = [
-  {
-    match: /dilwara/i,
-    title: "Good to know",
-    body: "Dilwara bans phones, cameras and leather items inside, and requires shoulders and knees covered. Nothing to carry in but yourself.",
-  },
-];
+const COMMUNITY = {
+  eyebrow: "THE PART THAT ISN'T ON THE ITINERARY",
+  title: "You don't have to know anyone before you come. That's the point.",
+  body: "Most people on an Outway escape book alone. The group is capped small enough that everyone is at one table by the first evening, and every evening has something in it whose only job is to make that easy — a question round a fire, a shared dinner, a letter written to somebody you met four days ago. Nothing about that appears on an invoice, and it is the thing people write to us about six months later.",
+  closing: "You came for the destination. You leave remembering the people.",
+};
 
 // ---------------------------------------------------------------------------
 // Environment + data
@@ -74,8 +100,9 @@ const outArg = process.argv[3];
 
 // Naming a slug outright includes unpublished trips: an escape between dates is
 // hidden from the catalogue but its brochure is still the thing ops send to
-// somebody asking when it runs again. Without a slug we take the spotlight
-// trip, and that one has to be live.
+// somebody asking when it runs again — and for a draft edition it is the only
+// surface that exists at all. Without a slug we take the spotlight trip, and
+// that one has to be live.
 let query = db.from("trips").select("*, destination:destinations(name, region, best_time)");
 
 query = slugArg
@@ -134,10 +161,18 @@ function parseDate(value) {
 const fmt = (date, options) =>
   date.toLocaleDateString("en-GB", { timeZone: "UTC", ...options });
 
-const dayDate = (index) => {
+/**
+ * The calendar date for a day row.
+ *
+ * Keyed off `day_number`, not the array index. An escape that leaves Delhi the
+ * night before opens on Day 00, and counting from the index would print every
+ * date on that trip a day late.
+ */
+const dayDate = (dayNumber) => {
   if (!departure) return null;
+  const first = days?.[0]?.day_number ?? 0;
   const start = parseDate(departure.start_date);
-  start.setUTCDate(start.getUTCDate() + index);
+  start.setUTCDate(start.getUTCDate() + (dayNumber - first));
   return start;
 };
 
@@ -152,10 +187,36 @@ function dateRange() {
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
-/** "5:30 PM — Sunset boat" splits into a time column and a label column. */
+/**
+ * `Label — the sentence` splits into a lead and a body; a line without a dash
+ * comes back as body-only. Mirrors splitLead() in src/lib/utils.ts.
+ */
+function splitLead(line) {
+  const match = String(line).match(/^\s*(.{1,60}?)\s+—\s+([\s\S]+)$/);
+  if (!match) return { lead: null, body: String(line).trim() };
+  return { lead: match[1].trim(), body: match[2].trim() };
+}
+
+/**
+ * `Band (exact time) — What happens` splits into a time column and a label.
+ * Mirrors splitActivity() in src/lib/utils.ts — change one, change the other.
+ * The brochure prints the band and the exact time; the website prints only the
+ * band.
+ */
 function splitActivity(activity) {
-  const match = String(activity).match(/^\s*([^—]{1,18}?)\s+—\s+(.*)$/);
-  return match ? { time: match[1], label: match[2] } : { time: "", label: String(activity) };
+  const { lead, body } = splitLead(activity);
+  if (lead === null) return { band: "", exact: null, label: body };
+
+  const timed = lead.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  return timed
+    ? { band: timed[1].trim(), exact: timed[2].trim(), label: body }
+    : { band: lead, exact: null, label: body };
+}
+
+/** `Label — body` rendered as a bolded lead followed by its sentence. */
+function leadHtml(line) {
+  const { lead, body } = splitLead(line);
+  return lead ? `<strong>${esc(lead)}.</strong> ${esc(body)}` : esc(body);
 }
 
 /**
@@ -163,8 +224,8 @@ function splitActivity(activity) {
  *
  * Three things can move the price and the PDF used to know about one of them:
  * the list price, an optional `discounted_price`, and any auto-applying promo
- * code covering this trip. A brochure quoting ₹8,999 while the site quotes
- * ₹7,999 is worse than no brochure, so all three are resolved here — the same
+ * code covering this trip. A brochure quoting ₹18,999 while the site quotes
+ * ₹16,999 is worse than no brochure, so all three are resolved here — the same
  * precedence src/lib/promo-rules.ts uses, deliberately, because these two
  * places disagreeing is exactly the bug this script exists to prevent.
  */
@@ -211,11 +272,15 @@ const finalPrice = Math.max(0, basePrice - promoDiscount);
 const saving = Math.max(0, listPrice - finalPrice);
 
 // ---------------------------------------------------------------------------
-// Template
+// Pages
 // ---------------------------------------------------------------------------
+const edition = trip.edition_number
+  ? `ESCAPE ${String(trip.edition_number).padStart(3, "0")}`
+  : null;
+
 const footer = (right) => `
   <div class="foot">
-    <span>OUTWAY CLUB${trip.edition_number ? ` · ESCAPE ${String(trip.edition_number).padStart(3, "0")}` : ""}</span>
+    <span>OUTWAY CLUB${edition ? ` · ${edition}` : ""}</span>
     <span>${esc(right)}</span>
   </div>`;
 
@@ -228,7 +293,8 @@ const coverPage = `
 
   <div>
     <h1>${esc(trip.title)}</h1>
-    ${trip.edition_number ? `<span class="pill">ESCAPE ${String(trip.edition_number).padStart(3, "0")}</span>` : ""}
+    ${edition ? `<span class="pill">${edition}</span>` : ""}
+    ${trip.promise ? `<p class="cover-promise">${esc(trip.promise)}</p>` : ""}
     <p class="cover-sub">${esc(trip.short_description)}</p>
     ${departure ? `<p class="cover-dates"><strong>${esc(dateRange())}</strong> · ${trip.duration_nights} nights</p>` : ""}
   </div>
@@ -248,36 +314,102 @@ const coverPage = `
   </div>
 </section>`;
 
-const overviewPage = `
+const philosophyPage = `
 <section class="page">
-  <p class="eyebrow">THE TRIP</p>
-  <h2>${esc(trip.short_description.split(",")[0])}</h2>
+  <p class="eyebrow">${PHILOSOPHY.eyebrow}</p>
+  <h2>${esc(PHILOSOPHY.title)}</h2>
+  <hr class="rule" />
+  <p class="lede">${esc(PHILOSOPHY.lede)}</p>
+
+  <div class="prefs">
+    ${PHILOSOPHY.preferences
+      .map(
+        ([over, under, body]) => `
+      <div class="pref">
+        <div class="pref-head">${esc(over)} <span class="gt">&gt;</span> <s>${esc(under)}</s></div>
+        <div class="pref-body">${esc(body)}</div>
+      </div>`
+      )
+      .join("")}
+  </div>
+
+  <p class="eyebrow mt">HOW AN ESCAPE IS DESIGNED</p>
+  <p class="sub">Five things decide what goes in, and what gets left out. Every one of them removes something — that is how you can tell they are real.</p>
+  <table class="pillars">
+    ${PHILOSOPHY.pillars
+      .map(
+        ([name, line], index) => `
+      <tr>
+        <td class="pillar-n">${String(index + 1).padStart(2, "0")}</td>
+        <td class="pillar-name">${esc(name)}</td>
+        <td class="pillar-line">${esc(line)}</td>
+      </tr>`
+      )
+      .join("")}
+  </table>
+  ${footer("THE PHILOSOPHY")}
+</section>`;
+
+const journeyPage = `
+<section class="page">
+  <p class="eyebrow">THE JOURNEY</p>
+  <h2>${esc(trip.title)}</h2>
   <hr class="rule" />
   <p class="lede">${esc(trip.description)}</p>
 
-  <div class="facts">
-    <div class="fact"><span class="fact-label">STARTING POINT</span><strong>${esc(trip.starting_point)}</strong></div>
-    <div class="fact"><span class="fact-label">BEST TIME</span><strong>${esc(trip.destination?.best_time ?? "—")}</strong></div>
-    <div class="fact"><span class="fact-label">ROUTE</span><strong>${esc(trip.destination?.name ?? "")} → ${esc(trip.title.replace(/^.*×\s*/, ""))} → ${esc(trip.destination?.name ?? "")}</strong></div>
-  </div>
+  ${
+    asArray(trip.feelings).length > 0
+      ? `<div class="feelings">
+          ${asArray(trip.feelings)
+            .map((feeling) => {
+              const { lead, body } = splitLead(feeling);
+              return `<div class="feeling"><span class="feeling-where">${esc(lead ?? "")}</span><span class="feeling-what">${esc(body)}</span></div>`;
+            })
+            .join("")}
+        </div>`
+      : ""
+  }
 
-  <p class="eyebrow mt">TRIP HIGHLIGHTS</p>
+  ${
+    asArray(trip.journey_route).length > 0
+      ? `<p class="eyebrow mt">THE SHAPE OF IT</p>
+         <ol class="route">
+           ${asArray(trip.journey_route)
+             .map((step, index) => {
+               const { lead, body } = splitLead(step);
+               return `<li><span class="route-n">${String(index + 1).padStart(2, "0")}</span><span class="route-lead">${esc(lead ?? body)}</span>${lead ? `<span class="route-body">${esc(body)}</span>` : ""}</li>`;
+             })
+             .join("")}
+         </ol>`
+      : ""
+  }
+  ${footer("THE JOURNEY")}
+</section>`;
+
+const highlightsPage =
+  asArray(trip.highlights).length > 0
+    ? `
+<section class="page">
+  <p class="eyebrow">WHAT YOU'LL REMEMBER</p>
+  <h2>The moments this escape was built around</h2>
+  <hr class="rule" />
   <div class="grid">
     ${asArray(trip.highlights)
       .map((item) => `<div class="card"><span class="bullet"></span>${esc(item)}</div>`)
       .join("")}
   </div>
 
-  <div class="callout">
-    <strong>${esc(EXTENDING_NOTE.title)}</strong> ${esc(EXTENDING_NOTE.body)}
+  <div class="facts mt">
+    <div class="fact"><span class="fact-label">STARTING POINT</span><strong>${esc(trip.starting_point ?? "—")}</strong></div>
+    <div class="fact"><span class="fact-label">BEST TIME</span><strong>${esc(trip.destination?.best_time ?? "—")}</strong></div>
   </div>
-  ${footer(trip.title)}
-</section>`;
+  ${footer("HIGHLIGHTS")}
+</section>`
+    : "";
 
 const dayPages = asArray(days)
-  .map((day, index) => {
-    const date = dayDate(index);
-    const note = DAY_NOTES.find((entry) => entry.match.test(day.title));
+  .map((day) => {
+    const date = dayDate(day.day_number);
     const meals = [
       ["Breakfast", day.meals?.breakfast],
       ["Lunch", day.meals?.lunch],
@@ -287,7 +419,7 @@ const dayPages = asArray(days)
     return `
 <section class="page">
   <div class="day-head">
-    <span class="day-num">${day.day_number}</span>
+    <span class="day-num">${String(day.day_number).padStart(2, "0")}</span>
     <div>
       <h2 class="day-title">${esc(day.title)}</h2>
       ${date ? `<p class="day-date">${fmt(date, { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}</p>` : ""}
@@ -299,8 +431,14 @@ const dayPages = asArray(days)
   <table class="times">
     ${asArray(day.activities)
       .map((activity) => {
-        const { time, label } = splitActivity(activity);
-        return `<tr><td class="t">${esc(time)}</td><td>${esc(label)}</td></tr>`;
+        const { band, exact, label } = splitActivity(activity);
+        // Band on top, exact time under it in clay. The website prints only
+        // the band; this column is the reason the brochure is what ops and
+        // the trip captain actually run the day from.
+        const when =
+          (band ? esc(band) : "") +
+          (exact ? `<span class="exact">${esc(exact)}</span>` : "");
+        return `<tr><td class="t">${when}</td><td>${esc(label)}</td></tr>`;
       })
       .join("")}
   </table>
@@ -315,11 +453,30 @@ const dayPages = asArray(days)
     ${day.accommodation ? `<span class="chip stay">Stay: ${esc(day.accommodation)}</span>` : ""}
   </div>
 
-  ${note ? `<div class="callout"><strong>${esc(note.title)} —</strong> ${esc(note.body)}</div>` : ""}
-  ${footer(`DAY ${day.day_number} OF ${days.length}`)}
+  ${footer(`DAY ${String(day.day_number).padStart(2, "0")} OF ${String(days[days.length - 1].day_number).padStart(2, "0")}`)}
 </section>`;
   })
   .join("");
+
+const communityPage = `
+<section class="page">
+  <p class="eyebrow">${COMMUNITY.eyebrow}</p>
+  <h2>${esc(COMMUNITY.title)}</h2>
+  <hr class="rule" />
+  <p class="lede">${esc(COMMUNITY.body)}</p>
+
+  ${
+    asArray(trip.really_booking).length > 0
+      ? `<div class="booking-block">
+          <p class="block-eyebrow">WHAT YOU'RE REALLY BOOKING</p>
+          <ul class="arrows">
+            ${asArray(trip.really_booking).map((item) => `<li>${leadHtml(item)}</li>`).join("")}
+          </ul>
+        </div>`
+      : ""
+  }
+  ${footer("THE PEOPLE")}
+</section>`;
 
 const finePrintPage = `
 <section class="page">
@@ -349,6 +506,65 @@ const finePrintPage = `
   ${footer("INCLUSIONS & PACKING LIST")}
 </section>`;
 
+const audiencePage =
+  asArray(trip.who_for).length > 0 || asArray(trip.not_for).length > 0
+    ? `
+<section class="page">
+  <p class="eyebrow">BEFORE YOU BOOK</p>
+  <h2>Is this your kind of journey?</h2>
+  <hr class="rule" />
+  <p class="lede">${trip.group_size_max} people share this one. We would genuinely rather you read the right-hand column and book something else than read it afterwards.</p>
+
+  <div class="two mt">
+    <div>
+      <h3>This is for you if</h3>
+      <ul class="ticks">
+        ${asArray(trip.who_for).map((item) => `<li>${leadHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+    <div>
+      <h3>Not for you if</h3>
+      <ul class="crosses">
+        ${asArray(trip.not_for).map((item) => `<li>${leadHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+  </div>
+  ${footer("WHO IT'S FOR")}
+</section>`
+    : "";
+
+const closingPage = `
+<section class="page closing">
+  <div>
+    <div class="mark"><span class="dot"></span>OUTWAY CLUB</div>
+  </div>
+
+  <div>
+    <p class="closing-line">&ldquo;${esc(COMMUNITY.closing)}&rdquo;</p>
+
+    <div class="closing-price">
+      ${saving > 0 ? `<span class="was">${rupees(listPrice)}</span>` : ""}
+      <span class="now">${rupees(finalPrice)}</span>
+      <span class="price-label">per person, all taxes in</span>
+    </div>
+
+    <p class="closing-meta">
+      ${esc(trip.title)}${edition ? ` · ${edition}` : ""}${departure ? ` · ${esc(dateRange())}` : ""}
+      · ${trip.duration_days}D/${trip.duration_nights}N · capped at ${trip.group_size_max}
+    </p>
+
+    <p class="closing-how">
+      Booking is a two-minute form on the trip page, then a person confirms your seat within one
+      business day. Nothing is charged online and nothing is held until we have both said yes.
+    </p>
+  </div>
+
+  <div class="closing-foot">
+    <span>outway.club/trips/${esc(trip.slug)}</span>
+    <span>hello@outway.club</span>
+  </div>
+</section>`;
+
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -373,7 +589,7 @@ const html = `<!doctype html>
   }
   .page:last-child { page-break-after: auto; }
 
-  h1, h2, h3, .stat, .now { font-family: "Playfair Display", Georgia, serif; color: var(--ink); }
+  h1, h2, h3, .stat, .now, .pillar-name, .feeling-what, .closing-line { font-family: "Playfair Display", Georgia, serif; color: var(--ink); }
 
   /* --- Cover ------------------------------------------------------------ */
   .cover {
@@ -386,8 +602,9 @@ const html = `<!doctype html>
   .tagline { font-size: 9.5pt; font-style: italic; color: #B9C6BE; margin-top: 6px; }
   .cover h1 { font-size: 40pt; color: var(--cream-100); line-height: 1.1; }
   .pill { display: inline-block; margin-top: 14px; border: 1px solid var(--gold); color: var(--gold); border-radius: 999px; padding: 5px 14px; font-size: 7.5pt; letter-spacing: .18em; font-weight: 600; }
-  .cover-sub { margin-top: 22px; font-size: 11pt; color: #CBD6D0; }
-  .cover-dates { margin-top: 6px; font-size: 11pt; color: var(--cream-100); }
+  .cover-promise { margin-top: 20px; font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 16pt; color: var(--gold); line-height: 1.3; }
+  .cover-sub { margin-top: 14px; font-size: 10.5pt; color: #CBD6D0; line-height: 1.6; }
+  .cover-dates { margin-top: 8px; font-size: 11pt; color: var(--cream-100); }
   .cover-bar { background: var(--pine-700); margin: 0 -16mm; padding: 12mm 16mm; display: flex; justify-content: space-between; align-items: flex-end; }
   .stats { display: flex; gap: 16mm; }
   .stat { display: block; font-size: 15pt; color: var(--cream-100); }
@@ -401,37 +618,71 @@ const html = `<!doctype html>
 
   /* --- Shared ----------------------------------------------------------- */
   .eyebrow { font-size: 7.5pt; letter-spacing: .2em; font-weight: 600; color: var(--clay); }
-  h2 { font-size: 19pt; margin-top: 8px; }
+  h2 { font-size: 19pt; margin-top: 8px; line-height: 1.25; }
   .rule { border: 0; border-top: 2px solid var(--gold); margin: 12px 0 16px; }
   .lede { font-size: 9.5pt; line-height: 1.75; color: var(--ink-700); }
+  .sub { font-size: 8.5pt; line-height: 1.65; color: var(--ink-500); margin-top: 6px; }
   .mt { margin-top: 20px; }
 
-  .facts { display: flex; gap: 8px; margin-top: 18px; }
-  .fact { flex: 1; background: var(--cream-300); border-radius: 10px; padding: 11px 13px; font-size: 9pt; }
+  .facts { display: flex; gap: 8px; }
+  .fact { flex: 1; background: var(--cream-300); border-radius: 10px; padding: 11px 13px; font-size: 8.5pt; line-height: 1.5; }
   .fact-label { display: block; font-size: 6.5pt; letter-spacing: .14em; color: var(--ink-500); margin-bottom: 5px; }
 
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
   .card { background: var(--cream-100); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; font-size: 8.5pt; line-height: 1.55; position: relative; padding-left: 26px; }
   .bullet { position: absolute; left: 12px; top: 15px; width: 5px; height: 5px; border-radius: 50%; background: var(--clay); }
 
-  .callout { margin-top: 16px; border-left: 3px solid var(--pine); background: var(--pine-50); border-radius: 0 8px 8px 0; padding: 12px 14px; font-size: 8.5pt; line-height: 1.6; }
+  /* --- Philosophy -------------------------------------------------------- */
+  .prefs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 10mm; margin-top: 20px; }
+  .pref { border-top: 1px solid var(--border); padding-top: 10px; }
+  .pref-head { font-family: "Playfair Display", Georgia, serif; font-size: 14pt; color: var(--ink); }
+  .gt { color: var(--gold); }
+  .pref-head s { color: var(--ink-500); font-size: 12pt; }
+  .pref-body { font-size: 8.5pt; line-height: 1.6; color: var(--ink-500); margin-top: 5px; }
+
+  .pillars { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .pillars td { border-bottom: 1px dotted var(--border); padding: 9px 0; vertical-align: baseline; }
+  .pillar-n { width: 12mm; font-size: 7.5pt; color: var(--clay); font-weight: 600; }
+  .pillar-name { width: 32mm; font-size: 13pt; }
+  .pillar-line { font-size: 9pt; font-style: italic; color: var(--pine); }
+
+  /* --- Journey ----------------------------------------------------------- */
+  .feelings { display: flex; gap: 8px; margin-top: 16px; }
+  .feeling { flex: 1; background: var(--pine-50); border-radius: 10px; padding: 11px 13px; text-align: center; }
+  .feeling-where { display: block; font-size: 6.5pt; letter-spacing: .16em; font-weight: 600; color: var(--ink-500); text-transform: uppercase; }
+  .feeling-what { display: block; font-size: 14pt; color: var(--pine); margin-top: 3px; }
+
+  .route { list-style: none; margin-top: 10px; column-count: 2; column-gap: 10mm; }
+  .route li { break-inside: avoid; padding: 7px 0 7px 13mm; position: relative; border-bottom: 1px dotted var(--border); }
+  .route-n { position: absolute; left: 0; top: 8px; font-size: 7.5pt; font-weight: 600; color: var(--clay); }
+  .route-lead { display: block; font-size: 9pt; font-weight: 600; color: var(--ink); }
+  .route-body { display: block; font-size: 8pt; line-height: 1.5; color: var(--ink-500); margin-top: 2px; }
 
   /* --- Day pages -------------------------------------------------------- */
   .day-head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
-  .day-num { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--pine); color: var(--cream-100); font-family: "Playfair Display", serif; font-size: 14pt; display: flex; align-items: center; justify-content: center; }
+  .day-num { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--pine); color: var(--cream-100); font-family: "Playfair Display", serif; font-size: 12pt; display: flex; align-items: center; justify-content: center; }
   .day-title { font-size: 17pt; line-height: 1.25; }
   .day-date { font-size: 7.5pt; letter-spacing: .16em; color: var(--clay); font-weight: 600; margin-top: 5px; }
 
   .times { width: 100%; border-collapse: collapse; margin-top: 18px; }
   .times td { border-bottom: 1px dotted var(--border); padding: 9px 0; font-size: 9pt; vertical-align: top; }
-  .times .t { width: 30mm; font-weight: 600; color: var(--ink); font-size: 8.5pt; }
+  .times .t { width: 34mm; font-weight: 600; color: var(--ink); font-size: 8.5pt; padding-right: 6mm; }
+  .times .exact { display: block; font-weight: 500; font-size: 7.5pt; color: var(--clay); letter-spacing: .04em; }
 
   .chips { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 7px; }
   .chip { background: var(--cream-300); border-radius: 999px; padding: 5px 12px; font-size: 7.5pt; color: var(--ink-500); }
   .chip.on { background: var(--pine-50); color: var(--pine); font-weight: 500; }
   .chip.stay { background: var(--gold-100); color: #6B4E12; }
 
-  /* --- Fine print ------------------------------------------------------- */
+  /* --- Community --------------------------------------------------------- */
+  .booking-block { margin-top: 20px; border-left: 3px solid var(--pine); background: var(--pine-50); border-radius: 0 10px 10px 0; padding: 14px 16px; }
+  .block-eyebrow { font-size: 7pt; letter-spacing: .18em; font-weight: 600; color: var(--pine); margin-bottom: 10px; }
+  .arrows { list-style: none; }
+  .arrows li { font-size: 8.5pt; line-height: 1.6; margin-bottom: 9px; padding-left: 16px; position: relative; }
+  .arrows li:last-child { margin-bottom: 0; }
+  .arrows li::before { content: "→"; position: absolute; left: 0; color: var(--clay); }
+
+  /* --- Fine print / audience -------------------------------------------- */
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; }
   /* A grid row is as tall as its tallest cell, which leaves ragged gaps down a
      packing list of mixed-length items. Flowing columns pack it tight. */
@@ -444,9 +695,23 @@ const html = `<!doctype html>
   .crosses li::before { content: "✕"; position: absolute; left: 0; color: var(--ink-500); }
   .dots li::before { content: ""; position: absolute; left: 2px; top: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--clay); }
 
+  /* --- Closing ----------------------------------------------------------- */
+  .closing {
+    background: var(--pine); color: var(--cream-100);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 20mm 16mm 16mm;
+  }
+  .closing-line { font-size: 24pt; font-style: italic; color: var(--cream-100); line-height: 1.35; max-width: 150mm; }
+  .closing-price { margin-top: 26px; display: flex; align-items: baseline; gap: 10px; }
+  .closing-price .was { font-size: 11pt; }
+  .closing-price .now { font-size: 24pt; }
+  .closing-meta { margin-top: 14px; font-size: 9pt; color: #CBD6D0; }
+  .closing-how { margin-top: 10px; font-size: 9pt; line-height: 1.7; color: #B9C6BE; max-width: 140mm; }
+  .closing-foot { display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,.18); padding-top: 9px; font-size: 7.5pt; letter-spacing: .1em; color: #8FA39A; }
+
   .foot { position: absolute; left: 16mm; right: 16mm; bottom: 10mm; display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 7px; font-size: 6.5pt; letter-spacing: .12em; color: var(--ink-500); }
 </style></head>
-<body>${coverPage}${overviewPage}${dayPages}${finePrintPage}</body></html>`;
+<body>${coverPage}${philosophyPage}${journeyPage}${highlightsPage}${dayPages}${communityPage}${finePrintPage}${audiencePage}${closingPage}</body></html>`;
 
 // ---------------------------------------------------------------------------
 // Print
@@ -464,9 +729,10 @@ try {
   await browser.close();
 }
 
-const pages = 2 + (days?.length ?? 0) + 1;
+const pages = (html.match(/class="page/g) ?? []).length;
 console.log(
   `wrote ${outPath} — ${trip.title}, ${trip.duration_days}D/${trip.duration_nights}N, ` +
     `${departure ? dateRange() : "no departure"}, ${rupees(finalPrice)}` +
-    `${promoLabel ? ` after ${promoLabel}` : ""} (${pages} pages)`
+    `${promoLabel ? ` after ${promoLabel}` : ""} (${pages} pages)` +
+    `${trip.is_published ? "" : " — DRAFT, this escape is not on the public site"}`
 );

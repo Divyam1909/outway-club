@@ -15,9 +15,22 @@
  * Adding one:
  *   1. npm run itinerary:pdf -- your-trip-slug
  *   2. add the slug below
+ *
+ * A brochure listed here is a public URL. That is fine and deliberate for a
+ * published escape; for an unpublished one it is the whole point — ops need
+ * something to send to the person asking what else is coming, and the trip
+ * page itself 404s, so the file is the only surface. Nothing links to a draft
+ * escape's PDF from the public site — the trip page that would carry the
+ * button doesn't render at all — so the admin trips table is the only place
+ * it is reachable from, and `trips.is_published` stays the single source of
+ * truth for what is live.
  */
 export const ITINERARY_PDFS: Record<string, { updated: string }> = {
-  "udaipur-jawai": { updated: "2026-08-19" },
+  /** Escape 001. Live. */
+  "jawai-udaipur": { updated: "2026-08-20" },
+  /** Escape 002. Unpublished — admin console only. */
+  "jawai-jodhpur": { updated: "2026-08-20" },
+  /** Escape 003. Between departures, kept for ops. */
   "udaipur-mount-abu": { updated: "2026-08-19" },
 };
 

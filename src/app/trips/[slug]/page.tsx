@@ -9,6 +9,10 @@ import { Reveal } from "@/components/ui/reveal";
 import { TripGallery } from "@/components/trips/trip-gallery";
 import { GettingThere } from "@/components/trips/getting-there";
 import { ItineraryTimeline } from "@/components/trips/itinerary-timeline";
+import { JourneyStrip } from "@/components/trips/journey-strip";
+import { ReallyBooking } from "@/components/trips/really-booking";
+import { WhoItsFor } from "@/components/trips/who-its-for";
+import { FeelingsBand } from "@/components/trips/feelings-band";
 import { InclusionsExclusions } from "@/components/trips/inclusions-exclusions";
 import { PaymentDetails } from "@/components/trips/payment-details";
 import { ReviewsSection } from "@/components/trips/reviews-section";
@@ -139,6 +143,15 @@ export default async function TripDetailPage({
               {trip.title}
             </h1>
 
+            {/* The promise, not the pitch. One line, and it is the line the
+                whole escape is sold on — so it sits directly under the title
+                and above every list on the page. */}
+            {trip.promise && (
+              <p className="mt-4 font-display text-xl italic leading-snug text-clay-600 sm:text-2xl">
+                {trip.promise}
+              </p>
+            )}
+
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-500">
               <span className="flex items-center gap-1.5">
                 <MapPin size={15} /> {trip.destination.name}, {trip.destination.region}
@@ -168,10 +181,41 @@ export default async function TripDetailPage({
               />
             )}
 
+            {trip.feelings.length > 0 && (
+              <div className="mt-6">
+                <FeelingsBand feelings={trip.feelings} />
+              </div>
+            )}
+
             <p className="mt-7 text-lg leading-relaxed text-ink-700">{trip.short_description}</p>
             <p className="mt-4 leading-relaxed text-ink-500">{trip.description}</p>
 
-            <div className="mt-7">
+            {/* The arc before the schedule. Someone deciding whether this is
+                their kind of trip needs the shape of it, not a departure time
+                — the day-by-day is further down for the person who has already
+                decided and now wants the detail. */}
+            {trip.journey_route.length > 0 && (
+              <Reveal>
+                <section className="mt-12">
+                  <h2 className="heading-sm mb-2 text-xl text-ink">Your journey</h2>
+                  <p className="mb-5 text-ink-500">
+                    {trip.journey_route.length} moments, in order. This is the shape of the{" "}
+                    {trip.duration_days} days.
+                  </p>
+                  <JourneyStrip route={trip.journey_route} />
+                </section>
+              </Reveal>
+            )}
+
+            {trip.really_booking.length > 0 && (
+              <Reveal>
+                <section className="mt-12">
+                  <ReallyBooking items={trip.really_booking} />
+                </section>
+              </Reveal>
+            )}
+
+            <div className="mt-12">
               <GettingThere
                 tripSlug={trip.slug}
                 destinationName={trip.destination.name}
@@ -213,7 +257,7 @@ export default async function TripDetailPage({
             <Reveal>
               <section className="mt-12">
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="heading-sm text-xl text-ink">Full itinerary, day by day</h2>
+                  <h2 className="heading-sm text-xl text-ink">Your journey, day by day</h2>
                   {/* Generated from these same rows, so the brochure and the
                       page can never quote different dates or a different
                       price. See scripts/build-itinerary-pdf.mjs. */}
@@ -237,11 +281,27 @@ export default async function TripDetailPage({
               </section>
             </Reveal>
 
+            {(trip.who_for.length > 0 || trip.not_for.length > 0) && (
+              <Reveal>
+                <section className="mt-12">
+                  <h2 className="heading-sm mb-2 text-xl text-ink">Is this your kind of trip?</h2>
+                  <p className="mb-5 text-ink-500">
+                    Eighteen people share this one. Both columns are worth reading.
+                  </p>
+                  <WhoItsFor whoFor={trip.who_for} notFor={trip.not_for} />
+                </section>
+              </Reveal>
+            )}
+
             <Reveal>
               <section className="mt-12">
-                <h2 className="heading-sm mb-6 text-xl text-ink">
-                  Inclusions, exclusions &amp; packing list
+                <h2 className="heading-sm mb-2 text-xl text-ink">
+                  What&apos;s included, in plain words
                 </h2>
+                <p className="mb-6 text-ink-500">
+                  The literal half of the answer. The one above it is the reason people come
+                  back.
+                </p>
                 <InclusionsExclusions
                   inclusions={trip.inclusions}
                   exclusions={trip.exclusions}

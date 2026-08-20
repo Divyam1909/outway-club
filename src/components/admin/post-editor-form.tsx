@@ -138,7 +138,7 @@ export function PostEditorForm({
                 setTitle(event.target.value);
                 if (!slugTouched) setSlug(slugify(event.target.value));
               }}
-              placeholder="Why we put Mount Abu after Udaipur, not before"
+              placeholder="Why we put Jawai before Udaipur, not after"
               required
             />
           </div>

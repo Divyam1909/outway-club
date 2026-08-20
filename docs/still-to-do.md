@@ -42,6 +42,30 @@ printing a placeholder, so an unfilled value is invisible, not "TBD".
 
 # Open
 
+> ### The Jawai relaunch — 20 Aug 2026
+>
+> Escape 001 is now **Jawai × Udaipur**, Delhi → Jawai → Udaipur → Delhi, two
+> nights in Jawai and one full day in Udaipur, 4–8 September, ₹18,999 list and
+> ₹16,999 with the departure code. Same trip row as before, so bookings and
+> requests survived; the slug moved from `udaipur-jawai` and redirects.
+> **Escape 002 (Jawai × Jodhpur)** is seeded and unpublished — admin console
+> only. **Escape 003** is the old Mount Abu route, also unpublished.
+>
+> Three things are outstanding and none of them block the site:
+>
+> - [ ] **Photography.** `public/images/jawai/`, `jodhpur/` and `outway/` are
+>       branded placeholder panels, not photographs. The shot list — one
+>       detailed paragraph per image, ready to paste into an image model — is
+>       in **`image.md`** at the repo root. Sixteen files. The Jawai set
+>       matters most: it is the Escape 001 hero and the homepage hero.
+> - [ ] **Escape 002 costing.** Its ₹18,999 is carried across from Escape 001
+>       rather than quoted from a Jodhpur supplier, and it has no named stay
+>       for the Jodhpur night. Both need doing before that checkbox is flicked.
+> - [ ] **A trip captain.** `src/config/trip-captains.ts` is still an empty
+>       array, so every trip page shows the explainer and no face. The brand
+>       now rests on "you remember the people" harder than it did, which makes
+>       an anonymous host a bigger gap than it was.
+
 > ### ~~Four commits are on GitHub and none of them are live~~ — shipped 16 Aug
 >
 > Deployed by hand on 16 Aug, and GitHub is now connected to Cloudflare, so a
@@ -83,13 +107,20 @@ Set **either** the UPI ID **or** all four bank fields. Both is better.
 | Variable | Format |
 |---|---|
 | `NEXT_PUBLIC_UPI_ID` | `yourname@okhdfcbank` |
+| `NEXT_PUBLIC_UPI_QR` | `/images/upi-qr.png` — commit the image under `public/images/` — or a full https URL. Optional |
 | `NEXT_PUBLIC_BANK_ACCOUNT_NAME` | Exact name on the account |
 | `NEXT_PUBLIC_BANK_NAME` | e.g. `HDFC Bank, Udaipur` |
 | `NEXT_PUBLIC_BANK_ACCOUNT_NUMBER` | Full number |
 | `NEXT_PUBLIC_BANK_IFSC` | e.g. `HDFC0001234` |
 
-UPI renders on its own. The bank block is all-or-nothing — account name, bank
-name, account number and IFSC must all be present or none of it shows.
+UPI renders on its own, with the QR beside it when one is set. The bank block
+is all-or-nothing — account name, bank name, account number and IFSC must all be
+present or none of it shows.
+
+Set them in **both** places or they will drift: `.env.local` for local builds,
+and the build variables in Workers Builds for anything pushed to `main`. These
+are `NEXT_PUBLIC_`, so they are baked in at build time — adding them to the
+Worker's runtime variables does nothing.
 
 Shows on: trip page and booking page. Logic: `hasPaymentDetails()` in
 `src/config/site.ts`.
@@ -155,9 +186,11 @@ nameserver move. The sitemap is live with 14 URLs and serves 200 as
       and leave it; do not use *Request indexing*, which is for pages and does
       nothing for a sitemap. If it is still `Couldn't fetch` after 48h, remove
       the entry and re-add it.
-- [ ] Request indexing for `/trips/udaipur-mount-abu`, `/blog/udaipur-travel-guide`,
-      `/destinations/udaipur`, `/trips` and `/blog`. Only `/` is indexed so far
-      and the quota is about ten URLs a day.
+- [ ] Request indexing for `/trips/jawai-udaipur`, `/destinations/jawai`,
+      `/blog/udaipur-travel-guide`, `/destinations/udaipur`, `/trips` and
+      `/blog`. Only `/` is indexed so far and the quota is about ten URLs a day.
+      `/trips/udaipur-jawai` now 301s to `/trips/jawai-udaipur`, so anything
+      already indexed under the old slug will follow on its own.
 - [ ] Bing Webmaster Tools — can import the whole property from Search Console
 
 `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` and `NEXT_PUBLIC_BING_SITE_VERIFICATION`

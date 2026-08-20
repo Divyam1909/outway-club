@@ -105,6 +105,26 @@ export interface Trip {
   things_to_carry: string[];
   hero_image: string;
   gallery: string[];
+  /**
+   * The one line the escape is sold on — "Come looking for the wild. Leave
+   * with a story." `short_description` says what happens; this says what you
+   * leave with. Null on trips that predate the journey layer.
+   */
+  promise: string | null;
+  /**
+   * The five arrays below are all authored the same way: one item per line in
+   * the admin editor, with an optional `Label — body` split. Renderers take
+   * the half before the em dash as a heading and fall back to plain text when
+   * there is no dash. See supabase/migrations/0008_journey.sql.
+   */
+  /** The emotional arc of the trip, in order. Not one node per day. */
+  journey_route: string[];
+  /** "What you're really booking" — the counterweight to the inclusions list. */
+  really_booking: string[];
+  who_for: string[];
+  not_for: string[];
+  /** Three beats: "Jawai — Discover", "Udaipur — Experience", "Outway — Connect". */
+  feelings: string[];
   rating: number;
   review_count: number;
   is_featured: boolean;

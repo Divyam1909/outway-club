@@ -23,18 +23,52 @@ const PINE = { deep: "#102019", mid: "#1E3D32", light: "#2C5A49" };
 const CREAM = "#FBF7F0";
 const GOLD = "#D9A441";
 
+// Aspect ratios and long edges here must match the ones documented in
+// image.md and public/images/README.md — that document is what the real
+// photography gets shot and generated against, and a placeholder in a
+// different shape would move the layout the day it is replaced.
 const TARGETS = [
-  { file: "escape-001/hero.jpg", w: 2400, h: 1350, label: "Escape 001", sub: "Udaipur × Mount Abu" },
-  { file: "escape-001/gallery-1.jpg", w: 1600, h: 1200, label: "Escape 001", sub: "Ambrai Ghat" },
-  { file: "escape-001/gallery-2.jpg", w: 2000, h: 1125, label: "Escape 001", sub: "The Aravalli drive" },
-  { file: "escape-001/gallery-3.jpg", w: 1400, h: 1750, label: "Escape 001", sub: "Dilwara" },
-  { file: "escape-001/gallery-4.jpg", w: 1200, h: 1200, label: "Escape 001", sub: "Guru Shikhar" },
-  { file: "escape-001/gallery-5.jpg", w: 1200, h: 1200, label: "Escape 001", sub: "Nakki Lake" },
+  // The Jawai set — Escape 001's hero imagery, and the highest priority to
+  // replace with real files.
+  { file: "jawai/hero.jpg", w: 2400, h: 1350, label: "Jawai", sub: "Granite country" },
+  { file: "jawai/gallery-1.jpg", w: 1600, h: 1200, label: "Jawai", sub: "Rabari shepherd country" },
+  { file: "jawai/gallery-2.jpg", w: 2000, h: 1125, label: "Jawai", sub: "Open jeep, late light" },
+  { file: "jawai/gallery-3.jpg", w: 1400, h: 1750, label: "Jawai", sub: "On the rocks" },
+  { file: "jawai/gallery-4.jpg", w: 1200, h: 1200, label: "Jawai", sub: "Chai at sunset" },
+  { file: "jawai/gallery-5.jpg", w: 1200, h: 1200, label: "Jawai", sub: "The Story Circle" },
+  { file: "jawai/gallery-6.jpg", w: 1200, h: 1200, label: "Jawai", sub: "Jawai Bandh" },
+
+  // Jodhpur — Escape 002, unpublished, so these only surface in the admin
+  // console and the brochure until that trip goes live.
+  { file: "jodhpur/hero.jpg", w: 2400, h: 1350, label: "Jodhpur", sub: "The blue city" },
+  { file: "jodhpur/gallery-1.jpg", w: 1600, h: 1200, label: "Jodhpur", sub: "Old city lanes" },
+  { file: "jodhpur/gallery-2.jpg", w: 1200, h: 1200, label: "Jodhpur", sub: "Toorji Ka Jhalra" },
+  { file: "jodhpur/gallery-3.jpg", w: 1200, h: 1200, label: "Jodhpur", sub: "On the table" },
+  { file: "jodhpur/gallery-4.jpg", w: 1200, h: 1200, label: "Jodhpur", sub: "Jaswant Thada" },
+
+  // The Outway set. Not a place — these carry the brand argument on the
+  // homepage and About page, and they are referenced from code rather than
+  // from a trip row.
+  { file: "outway/the-table.jpg", w: 2000, h: 1125, label: "Outway", sub: "The Outway Table" },
+  { file: "outway/story-circle.jpg", w: 1400, h: 1750, label: "Outway", sub: "The Story Circle" },
+  { file: "outway/the-letter.jpg", w: 1200, h: 1200, label: "Outway", sub: "The Letter" },
+  { file: "outway/the-road.jpg", w: 2000, h: 1125, label: "Outway", sub: "The road between two worlds" },
+
   { file: "udaipur/hero.jpg", w: 2400, h: 1350, label: "Udaipur", sub: "Rajasthan" },
   { file: "udaipur/gallery-1.jpg", w: 1200, h: 1200, label: "Udaipur", sub: "The ghats" },
   { file: "udaipur/gallery-2.jpg", w: 1200, h: 1200, label: "Udaipur", sub: "Old city" },
   { file: "udaipur/gallery-3.jpg", w: 1200, h: 1200, label: "Udaipur", sub: "Lake Pichola" },
   { file: "udaipur/gallery-4.jpg", w: 1200, h: 1200, label: "Udaipur", sub: "On the table" },
+
+  // Legacy folder name: this is the Mount Abu shoot, which belongs to Escape
+  // 003 since the renumbering. The path is left alone because the About page,
+  // the Journal and an unpublished trip row all point at it.
+  { file: "escape-001/hero.jpg", w: 2400, h: 1350, label: "Escape 003", sub: "Udaipur × Mount Abu" },
+  { file: "escape-001/gallery-1.jpg", w: 1600, h: 1200, label: "Escape 003", sub: "Ambrai Ghat" },
+  { file: "escape-001/gallery-2.jpg", w: 2000, h: 1125, label: "Escape 003", sub: "The Aravalli drive" },
+  { file: "escape-001/gallery-3.jpg", w: 1400, h: 1750, label: "Escape 003", sub: "Dilwara" },
+  { file: "escape-001/gallery-4.jpg", w: 1200, h: 1200, label: "Escape 003", sub: "Guru Shikhar" },
+  { file: "escape-001/gallery-5.jpg", w: 1200, h: 1200, label: "Escape 003", sub: "Nakki Lake" },
 ];
 
 /** Layered ridgelines, scaled to the frame so every crop looks composed. */

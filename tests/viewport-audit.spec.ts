@@ -13,7 +13,7 @@ import { expect, test } from "@playwright/test";
 const PAGES = [
   ["home", "/"],
   ["trips", "/trips"],
-  ["trip-detail", "/trips/udaipur-jawai"],
+  ["trip-detail", "/trips/jawai-udaipur"],
   ["destination", "/destinations/udaipur"],
   ["blog", "/blog"],
   ["testimonials", "/testimonials"],

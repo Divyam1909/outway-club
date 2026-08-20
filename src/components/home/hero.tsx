@@ -35,9 +35,10 @@ type HeroTrip = Pick<
   | "starting_point"
   | "group_size_max"
   | "edition_number"
+  | "promise"
 >;
 
-/** Renders the "×" in a paired title like "Udaipur × Mount Abu" in gold. */
+/** Renders the "×" in a paired title like "Jawai × Udaipur" in gold. */
 function TripTitle({ title }: { title: string }) {
   const parts = title.split(/\s*×\s*/);
   if (parts.length !== 2) return <>{title}</>;
@@ -99,10 +100,19 @@ export function Hero({
           </p>
 
           <h1 className="max-w-3xl font-display text-[2.6rem] font-semibold leading-[1.05] text-cream-100 text-shadow-hero sm:text-6xl lg:text-7xl">
-            {trip ? <TripTitle title={trip.title} /> : "Small groups. Real places."}
+            {trip ? <TripTitle title={trip.title} /> : "Escape ordinary."}
           </h1>
 
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-cream-100/85 sm:text-lg">
+          {/* The promise gets the line directly under the title, above the
+              description. It is the sentence people repeat back to us, and
+              burying it under sixty words of route detail wasted it. */}
+          {trip?.promise && (
+            <p className="mt-5 max-w-2xl font-display text-xl italic leading-snug text-gold text-shadow-hero sm:text-2xl">
+              {trip.promise}
+            </p>
+          )}
+
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-cream-100/85 sm:text-lg">
             {trip?.short_description ??
               "We plan a handful of escapes a year, end to end, and cap every one of them small enough that you'll know everyone's name by the second evening."}
           </p>
@@ -145,7 +155,7 @@ export function Hero({
         <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
           {trip ? (
             <Link href={`/trips/${trip.slug}`} className="btn-accent btn-lg">
-              See the full itinerary <ArrowRight size={18} />
+              See the full journey <ArrowRight size={18} />
             </Link>
           ) : (
             <Link href="/trips#notify" className="btn-primary btn-lg">

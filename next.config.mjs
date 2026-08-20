@@ -103,6 +103,16 @@ const nextConfig = {
         destination: "/trips/udaipur-mount-abu",
         permanent: true,
       },
+      // The launch escape was rebuilt around Jawai in Aug 2026: the route
+      // reversed (Delhi → Jawai → Udaipur), the title led with Jawai, and the
+      // slug followed. Same trip row, same bookings, new address — so the old
+      // one has to keep resolving rather than 404ing on every shared link and
+      // indexed result.
+      {
+        source: "/trips/udaipur-jawai",
+        destination: "/trips/jawai-udaipur",
+        permanent: true,
+      },
       { source: "/cancellation-policy", destination: "/refund-policy", permanent: true },
       { source: "/privacy-policy", destination: "/privacy", permanent: true },
     ];
