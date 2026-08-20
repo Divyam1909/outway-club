@@ -86,7 +86,14 @@
 		// Setting this in .env.local does NOT change production: that file is
 		// only read when building on this machine, and OPS_EMAIL is read at
 		// request time on the Worker, from this block.
-		"OPS_EMAIL": "bookings@outway.club"
+		"OPS_EMAIL": "bookings@outway.club",
+
+		// IndexNow key, read at request time by src/lib/indexnow.ts. Not a secret:
+		// the whole scheme works by serving the same value publicly at
+		// public/<key>.txt, which is how the engines confirm we own the host. Unset
+		// means no pings are ever sent and nothing errors, so a missing entry here
+		// is invisible — it must match public/f0d61e7c54f7833367b512961e528472.txt.
+		"INDEXNOW_KEY": "f0d61e7c54f7833367b512961e528472"
 	},
 	"observability": {
 		"enabled": true
