@@ -55,3 +55,9 @@ next-env.d.ts
 
 # env backups
 .env*.bak
+
+# Windows accident. `cmd > nul` is how you discard output on Windows, but Git
+# Bash has no such device and happily writes a real file called `nul` into the
+# repo root — 95KB of stray Tailwind output, in the case that prompted this.
+# Use `> /dev/null` in Git Bash; this stops the mistake reaching a commit.
+nul
