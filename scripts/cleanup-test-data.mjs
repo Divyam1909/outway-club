@@ -49,6 +49,19 @@ await admin.from("blog_comments").delete().like("author_email", "pw-%@example.co
 await admin.from("blog_posts").delete().like("slug", "pw-test-%");
 await admin.from("destinations").delete().like("slug", "pw-test-%");
 
+// Reader submissions from roles-and-promos.spec.ts. These matter more than the
+// rest of this file: the spec puts them through the full review flow, so they
+// end up **published** and publicly visible on /blog rather than sitting
+// harmlessly in a queue. Five of them were live on 20 Aug 2026 before this was
+// added. The title is `Playwright test piece <timestamp>`, which slugifies to
+// this prefix.
+await admin.from("blog_posts").delete().like("slug", "playwright-test-piece-%");
+
+// Promo codes from the same spec. `normalizeCode` strips punctuation, so these
+// cannot use the `pw-test-` prefix everything else does — the spec generates
+// `PWTEST<digits>`. Redemptions cascade with the code.
+await admin.from("promo_codes").delete().like("code", "PWTEST%");
+
 // Rate-limit counters are ephemeral; clearing them resets the test budget.
 await admin.from("rate_limits").delete().neq("key", "");
 

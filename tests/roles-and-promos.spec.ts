@@ -119,6 +119,15 @@ test.describe("reader submissions", () => {
     await expect(page.getByText(/long enough/)).toBeVisible();
 
     await page.locator("#submission-agreed").check();
+
+    // The bot filter rejects anything submitted less than two seconds after the
+    // form mounted, and silently returns success so a script doesn't learn it
+    // was caught (src/lib/rate-limit.ts). Pasting a whole article with
+    // insertText is fast enough to trip that — which showed up as a submission
+    // that reported "It's with us" and never reached the queue. Wait out the
+    // threshold rather than weakening it: a real writer takes minutes.
+    await page.waitForTimeout(2_500);
+
     await page.getByRole("button", { name: /Send it to us/ }).click();
 
     await expect(page.getByText(/It's with us/)).toBeVisible({ timeout: 20_000 });

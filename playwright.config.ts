@@ -8,7 +8,27 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : 4,
+
+  /**
+   * One worker, locally as well as in CI.
+   *
+   * These specs share a single Supabase database and most of them mutate it —
+   * roles get promoted, posts get published, promo codes get spent, seats get
+   * booked. Run four at once and they read each other's writes: on 20 Aug 2026
+   * a parallel run reported a React hydration mismatch on the admin console
+   * that did not exist, minutes after the real one had been fixed and verified.
+   * A suite that invents failures is worse than a slow one, because the honest
+   * response to it is to stop believing the suite.
+   *
+   * CI was already serial, so this only aligns local runs with the signal that
+   * actually gates a merge. The cost is roughly 1.5 minutes to 7 for a full
+   * run; a single spec file, which is what you run while working, is unchanged.
+   *
+   * `PW_WORKERS=4 npx playwright test tests/site.spec.ts` opts back in, which is
+   * safe for the read-only specs. The real fix is per-worker data isolation —
+   * see docs/still-to-do.md.
+   */
+  workers: Number(process.env.PW_WORKERS ?? 1),
   reporter: [["list"], ["html", { open: "never" }]],
 
   use: {

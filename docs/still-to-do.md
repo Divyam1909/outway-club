@@ -180,6 +180,19 @@ redeploys and covers every subdomain. Leave them blank on purpose.
       `https://outway.club/api/razorpay/webhook`, and **the webhook must be
       re-tested on Workers** before it is trusted — see
       [`infrastructure.md`](infrastructure.md#things-that-differ-from-vercel).
+- [ ] **Per-worker test data isolation**, so the Playwright suite can run in
+      parallel again. Every spec shares one Supabase database and most of them
+      mutate it — roles, posts, promo codes, seats — so concurrent workers read
+      each other's writes. On 20 Aug 2026 that produced a phantom React
+      hydration mismatch on the admin console minutes after the real one had
+      been fixed, which cost more time than the parallelism saves.
+
+      `playwright.config.ts` is now `workers: 1` by default for that reason
+      (`PW_WORKERS=4` opts back in, and is safe for the read-only specs). To
+      get parallelism back properly, each worker needs its own data: prefix
+      every fixture the suite creates with `process.env.TEST_WORKER_INDEX` and
+      scope the reads to it, or give each worker its own Supabase schema. Not
+      urgent — CI was always serial, so nothing that gates a merge changed.
 
 ## 7. Test data still in the database
 
