@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
-import { AlertCircle, Check, Loader2, Sparkles, Tag, X } from "lucide-react";
+import { AlertCircle, Check, Info, Loader2, Sparkles, Tag, X } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 import { networkError } from "@/lib/error-messages";
 import type { AppliedPromo } from "@/lib/types";
@@ -52,7 +52,11 @@ export function PromoPricing({
 }) {
   const [input, setInput] = useState("");
   const [applied, setApplied] = useState<AppliedPromo | null>(initialPromo ?? null);
-  const [notice, setNotice] = useState<string | null>(null);
+  // Text plus how it should read. A refusal and a confirmation are both
+  // "notices" as far as the server is concerned, but showing "already applied"
+  // in the same red as "that code isn't one of ours" sends people hunting for a
+  // problem that isn't there.
+  const [notice, setNotice] = useState<{ text: string; tone: "error" | "info" } | null>(null);
   const [quote, setQuote] = useState<{ subtotal: number; pricePerPerson: number } | null>(null);
   const [checking, setChecking] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -85,11 +89,13 @@ export function PromoPricing({
           // and the request is priced server-side on submit regardless, so the
           // stale figure here can never become the stored one.
           if (options.explicit) {
-            setNotice(
-              response.status === 429
-                ? "That's a lot of tries in a short while. Give it a minute."
-                : "We couldn't check that code just now. Try again in a moment."
-            );
+            setNotice({
+              tone: "error",
+              text:
+                response.status === 429
+                  ? "That's a lot of tries in a short while. Give it a minute."
+                  : "We couldn't check that code just now. Try again in a moment.",
+            });
           }
           return;
         }
@@ -99,6 +105,7 @@ export function PromoPricing({
           pricePerPerson: number;
           applied: AppliedPromo | null;
           notice: string | null;
+          noticeTone: "error" | "info";
         };
 
         if (id !== requestId.current) return;
@@ -107,15 +114,30 @@ export function PromoPricing({
         setApplied(data.applied);
         activeCode.current = data.applied?.code ?? null;
 
-        // Shown on background re-quotes too, and that matters: a code with a
-        // minimum spend can stop applying when someone drops from two
-        // travellers to one, and silently removing the discount is how you get
-        // "the price went up when I changed something" support emails.
-        setNotice(data.notice);
+        // Refusals are shown on background re-quotes too, and that matters: a
+        // code with a minimum spend can stop applying when someone drops from
+        // two travellers to one, and silently removing the discount is how you
+        // get "the price went up when I changed something" support emails.
+        //
+        // Confirmations are not. A re-quote sends the code that is already
+        // applied, so every stepper tap would otherwise announce that it is
+        // already applied — to someone who never asked.
+        setNotice(
+          data.notice && (options.explicit || data.noticeTone === "error")
+            ? { text: data.notice, tone: data.noticeTone }
+            : null
+        );
 
-        if (data.applied && options.explicit) setInput("");
+        // Only when the server took *this* code. An auto offer is still
+        // `applied` after a typed code is refused, and clearing the box on that
+        // left "check the spelling and try again" pointing at an empty field.
+        if (options.explicit && code && data.applied?.code.toUpperCase() === code.toUpperCase()) {
+          setInput("");
+        }
       } catch {
-        if (id === requestId.current && options.explicit) setNotice(networkError());
+        if (id === requestId.current && options.explicit) {
+          setNotice({ text: networkError(), tone: "error" });
+        }
       } finally {
         if (id === requestId.current && options.explicit) setChecking(false);
       }
@@ -152,7 +174,10 @@ export function PromoPricing({
   }
 
   return (
-    <div className={clsx("rounded-xl bg-cream-300 px-4 py-3.5 text-sm text-ink-700", className)}>
+    // Square-cornered by design: this is the top band of a taller cream panel,
+    // and the caller rounds the outside. Rounding here as well left a visible
+    // step where the two blocks met.
+    <div className={clsx("bg-cream-300 px-4 py-3.5 text-sm text-ink-700", className)}>
       <div className="flex items-baseline justify-between gap-4">
         <span>
           {formatINR(perPerson)} × {travelers}
@@ -247,9 +272,19 @@ export function PromoPricing({
         )}
 
         {notice && (
-          <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-clay-600">
-            <AlertCircle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-            {notice}
+          <p
+            aria-live="polite"
+            className={clsx(
+              "mt-2 flex items-start gap-1.5 text-xs leading-relaxed",
+              notice.tone === "error" ? "text-clay-600" : "text-pine"
+            )}
+          >
+            {notice.tone === "error" ? (
+              <AlertCircle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+            ) : (
+              <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+            )}
+            {notice.text}
           </p>
         )}
       </div>

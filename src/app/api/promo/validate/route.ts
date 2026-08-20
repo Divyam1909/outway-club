@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "That trip isn't available any more." }, { status: 404 });
   }
 
-  const { applied, notice } = await resolvePromo({
+  const { applied, notice, noticeTone } = await resolvePromo({
     code,
     tripId: pricing.tripId,
     subtotal: pricing.subtotal,
@@ -59,5 +59,9 @@ export async function POST(request: Request) {
     travelers: pricing.travelers,
     applied,
     notice,
+    // Whether the sentence is a refusal or a confirmation. The box needs to
+    // know: "already applied" in the red the refusals use would read as a
+    // problem, and the customer would go looking for one.
+    noticeTone,
   });
 }

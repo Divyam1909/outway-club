@@ -8,6 +8,7 @@ import {
   type PromoFailure,
   type PublicPromo,
 } from "@/lib/promo-rules";
+import { formatINR } from "@/lib/utils";
 import type { AppliedPromo, PromoCode } from "@/lib/types";
 
 /**
@@ -143,24 +144,50 @@ export interface ResolveInput {
  * the caller is told why, so the customer is never quietly moved onto a worse
  * deal by entering a code they were given in good faith — and never ends up
  * with both.
+ *
+ * Every branch that returns `applied` unchanged also returns a `notice`, and
+ * that is the point: a code the customer typed must always produce a sentence.
+ * Silence after pressing Apply is indistinguishable from a broken button.
  */
 export async function resolvePromo(input: ResolveInput): Promise<{
   applied: AppliedPromo | null;
-  /** Set when a typed code was refused or beaten. */
+  /** Set whenever a typed code did not change what is applied. */
   notice: string | null;
+  /**
+   * How the notice should read. `error` is "this didn't work"; `info` is "this
+   * worked, and here's what happened" — an already-applied code, or one that
+   * lost to a bigger offer. Callers that re-quote in the background (on a
+   * headcount change, say) show only the `error` ones: nobody typed anything,
+   * so "already applied" would be answering a question no one asked.
+   */
+  noticeTone: "error" | "info";
   failure: PromoFailure | null;
 }> {
   const auto = await getAutoPromoForTrip(input.tripId, input.subtotal, input.travelers);
   const typed = normalizeCode(input.code);
 
-  if (!typed) return { applied: auto, notice: null, failure: null };
+  if (!typed) return { applied: auto, notice: null, noticeTone: "info", failure: null };
+
+  // Re-entering the code that is already on the order. Nothing changes, which
+  // is exactly why it needs saying out loud — the box clears either way, and a
+  // cleared box with no message reads as "it didn't take".
   if (auto && auto.code.toUpperCase() === typed) {
-    return { applied: auto, notice: null, failure: null };
+    return {
+      applied: auto,
+      notice: `${auto.code} is already applied — ${formatINR(auto.discountAmount)} is off your total.`,
+      noticeTone: "info",
+      failure: null,
+    };
   }
 
   const row = await findPromoByCode(typed);
   if (!row) {
-    return { applied: auto, notice: promoMessage("unknown"), failure: "unknown" };
+    return {
+      applied: auto,
+      notice: promoMessage("unknown"),
+      noticeTone: "error",
+      failure: "unknown",
+    };
   }
 
   const result = evaluatePromo(row, {
@@ -170,18 +197,29 @@ export async function resolvePromo(input: ResolveInput): Promise<{
   });
 
   if (!result.ok) {
-    return { applied: auto, notice: promoMessage(result.reason), failure: result.reason };
+    return {
+      applied: auto,
+      notice: promoMessage(result.reason),
+      noticeTone: "error",
+      failure: result.reason,
+    };
   }
 
   if (auto && auto.discountAmount >= result.promo.discountAmount) {
     return {
       applied: auto,
       notice: `${auto.label} already takes more off, so we've kept it — only one code applies at a time.`,
+      noticeTone: "info",
       failure: null,
     };
   }
 
-  return { applied: result.promo, notice: null, failure: null };
+  return {
+    applied: result.promo,
+    notice: `${result.promo.code} applied — ${formatINR(result.promo.discountAmount)} off.`,
+    noticeTone: "info",
+    failure: null,
+  };
 }
 
 /**

@@ -450,7 +450,11 @@ export function TripRequestForm({
               }
             />
 
-            <div>
+            {/* One cream panel, not two stacked ones. The price lines, the code
+                box and the small print are separated by the same hairline rule
+                the rest of the panel uses, so the seam between the interactive
+                half and the static half stops reading as a broken edge. */}
+            <div className="overflow-hidden rounded-xl">
               <PromoPricing
                 tripId={tripId}
                 departureId={departureId || null}
@@ -459,7 +463,7 @@ export function TripRequestForm({
                 initialPromo={initialPromo}
                 onChange={setQuote}
               />
-              <div className="rounded-b-xl bg-cream-300 px-4 pb-3.5">
+              <div className="border-t border-border/70 bg-cream-300 px-4 pb-3.5 pt-3.5">
                 <p className="text-xs leading-relaxed text-ink-500">
                   Indicative only, and not payable now. Flights and trains are not included in
                   this.
