@@ -57,7 +57,8 @@ export async function POST(request: Request) {
   }
 
   const tripId = typeof body.tripId === "string" ? body.tripId : "";
-  const departureId = typeof body.departureId === "string" && body.departureId ? body.departureId : null;
+  const requestedDepartureId =
+    typeof body.departureId === "string" && body.departureId ? body.departureId : null;
 
   const name = sanitizeText(body.name, 120);
   const email = sanitizeText(body.email, 254).toLowerCase();
@@ -135,6 +136,31 @@ export async function POST(request: Request) {
   if (!trip) {
     return NextResponse.json({ error: "That trip isn't available any more." }, { status: 404 });
   }
+
+  /**
+   * The date, checked against this trip rather than taken on trust.
+   *
+   * The form can only offer this trip's own departures, so anything else is a
+   * stale tab or a hand-made payload. It is dropped rather than refused: the
+   * row simply carries no date and ops ask for one, which costs a question.
+   * Storing it unchecked would file the request under another trip's weekend,
+   * and refusing it would throw away a real lead over a tab left open. A
+   * departure deleted between the page load and the send lands here too —
+   * that used to be a foreign-key error and a 500 in the sender's face.
+   */
+  let departure: { id: string; start_date: string; end_date: string } | null = null;
+
+  if (requestedDepartureId) {
+    const { data } = await admin
+      .from("departures")
+      .select("id, start_date, end_date")
+      .eq("id", requestedDepartureId)
+      .eq("trip_id", trip.id)
+      .maybeSingle();
+    departure = data ?? null;
+  }
+
+  const departureId = departure?.id ?? null;
 
   // ---------------------------------------------------------------------------
   // Money.
@@ -248,16 +274,9 @@ export async function POST(request: Request) {
       .eq("email", email.toLowerCase());
   }
 
-  // Dates are only quoted back if the departure still exists.
-  let dateRange: string | null = null;
-  if (departureId) {
-    const { data: departure } = await admin
-      .from("departures")
-      .select("start_date, end_date")
-      .eq("id", departureId)
-      .maybeSingle();
-    if (departure) dateRange = formatDateRange(departure.start_date, departure.end_date);
-  }
+  // Resolved and checked above, so a request that arrived with no usable
+  // date simply quotes none back.
+  const dateRange = departure ? formatDateRange(departure.start_date, departure.end_date) : null;
 
   const payload: TripRequestEmailData = {
     requestId: inserted.id,
