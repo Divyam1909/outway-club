@@ -21,9 +21,17 @@ import type { Departure, Trip } from "@/lib/types";
  * above the H1 by `order-first`, so the page opened on a price and a traveller
  * stepper for something the reader hadn't been told about yet; dropping that
  * left the widget stranded at the foot of a very long page, competing with
- * this bar for the same click. So the date board and the stepper moved in
+ * this card for the same click. So the date board and the stepper moved in
  * here instead, behind one button, as a sheet — one affordance, and mobile
  * still gets to choose which weekend it's going.
+ *
+ * This used to be pinned to the bottom of the *document* rather than the
+ * viewport, which is a long way of saying it wasn't visible until you had
+ * scrolled to the end of the page — exactly the complaint it exists to fix.
+ * The cause was one line of CSS elsewhere: `.page-transition` in globals.css
+ * kept a filled transform after its fade finished, and a transformed ancestor
+ * takes over as the containing block for `position: fixed`. Anything fixed
+ * that renders inside the route tree depends on that staying fixed.
  */
 export function MobileBookingBar({
   trip,
@@ -47,6 +55,7 @@ export function MobileBookingBar({
   const router = useRouter();
   const [shown, setShown] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [atFooter, setAtFooter] = useState(false);
 
   const firstBookable =
     departures.find(
@@ -58,13 +67,37 @@ export function MobileBookingBar({
   const [departureId, setDepartureId] = useState(firstBookable?.id ?? "");
   const [travelers, setTravelers] = useState(1);
 
+  /**
+   * Appears on the first flick of the page rather than 520px down.
+   * On a phone this card is the only booking UI there is, so waiting half
+   * a screen for it just hid the one control the page exists for. It still
+   * starts out of the way, so the gallery and the title get the opening
+   * screen to themselves.
+   */
   useEffect(() => {
     function onScroll() {
-      setShown(window.scrollY > 520);
+      setShown(window.scrollY > 120);
     }
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /**
+   * ...and steps aside once the footer arrives.
+   *
+   * A fixed card sitting over the footer covers the contact address and the
+   * newsletter field, and by then the reader has scrolled past every chance
+   * to book anyway. Watching the footer itself rather than a pixel offset
+   * means this keeps working when the footer changes height.
+   */
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(([entry]) => setAtFooter(entry.isIntersecting));
+    observer.observe(footer);
+    return () => observer.disconnect();
   }, []);
 
   const selected = departures.find((d) => d.id === departureId) ?? firstBookable;
@@ -97,17 +130,24 @@ export function MobileBookingBar({
   // sheet and goes straight where it would have sent them anyway.
   const hasChoices = departures.length > 0;
 
+  const visible = shown && !atFooter;
+
   return (
     <>
+      {/* A card, not a strip. Edge-to-edge it read as part of the browser
+          chrome and people stopped seeing it; lifted off the bottom with a
+          shadow it reads as the thing on the page you act on. The outer
+          layer stays click-through so the gutter beside the card doesn't
+          swallow taps meant for the page underneath. */}
       <div
         className={clsx(
-          "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-cream-100/95 backdrop-blur-md transition-transform duration-300 lg:hidden",
-          shown ? "translate-y-0" : "translate-y-full"
+          "pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 transition-all duration-300 lg:hidden",
+          visible ? "translate-y-0 opacity-100" : "translate-y-[130%] opacity-0"
         )}
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        aria-hidden={!shown}
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        aria-hidden={!visible}
       >
-        <div className="container-outway flex items-center justify-between gap-4 py-3">
+        <div className="pointer-events-auto mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-border bg-cream-100/95 py-3 pl-4 pr-3 shadow-lifted backdrop-blur-md">
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">
               <span className="font-display text-xl font-semibold text-ink">
@@ -134,7 +174,7 @@ export function MobileBookingBar({
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href={`/contact?trip=${trip.slug}`}
-              tabIndex={shown ? 0 : -1}
+              tabIndex={visible ? 0 : -1}
               aria-label="Enquire about this trip"
               className="btn-outline shrink-0 px-4"
             >
@@ -146,7 +186,7 @@ export function MobileBookingBar({
               type="button"
               onClick={() => (hasChoices ? setSheetOpen(true) : goToRequestForm())}
               disabled={soldOut}
-              tabIndex={shown ? 0 : -1}
+              tabIndex={visible ? 0 : -1}
               className="btn-accent shrink-0 px-5"
             >
               {soldOut ? "Sold out" : isFixedDeparture ? "Book now" : "Request"}

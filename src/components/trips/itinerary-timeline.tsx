@@ -1,5 +1,5 @@
 import { Coffee, Utensils, Moon, Home } from "lucide-react";
-import { ItineraryDescription } from "@/components/trips/itinerary-description";
+import { ExpandableProse } from "@/components/trips/expandable-prose";
 import { TIMINGS_NOTE_SHORT } from "@/config/trip-request";
 import { splitActivity } from "@/lib/utils";
 import type { ItineraryDay } from "@/lib/types";
@@ -30,7 +30,7 @@ export function ItineraryTimeline({ days }: { days: ItineraryDay[] }) {
             </span>
 
             <h3 className="heading-sm text-lg text-ink">{day.title}</h3>
-            <ItineraryDescription text={day.description} />
+            <ExpandableProse text={day.description} />
 
             {day.activities.length > 0 && (
               <dl className="mt-4 space-y-2.5 border-l-2 border-cream-300 pl-4">

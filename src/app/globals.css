@@ -397,8 +397,19 @@
   }
 
   /* Per-route fade, driven by src/app/template.tsx */
+  /*
+   * `backwards`, not `both`, and the distinction is load-bearing. With
+   * `both` the finished animation keeps filling forwards, which leaves a
+   * transform applied to this wrapper for the life of the page — even an
+   * identity one. A transformed ancestor becomes the containing block for
+   * every `position: fixed` descendant, so the mobile booking bar was being
+   * pinned to the bottom of the document instead of the bottom of the
+   * screen, and only appeared once you had scrolled to the very end of the
+   * page. `backwards` still paints the from-state before the first frame,
+   * so nothing flashes, and afterwards the transform goes away entirely.
+   */
   .page-transition {
-    animation: page-fade 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: page-fade 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   }
 }
 

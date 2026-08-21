@@ -21,6 +21,7 @@ import { TripCaptain } from "@/components/trips/trip-captain";
 import { TrustBand } from "@/components/trips/trust-band";
 import { BookingWidget } from "@/components/trips/booking-widget";
 import { MobileBookingBar } from "@/components/trips/mobile-booking-bar";
+import { ExpandableProse } from "@/components/trips/expandable-prose";
 import { BreadcrumbJsonLd, TripJsonLd } from "@/components/seo/json-ld";
 import { getPublishedTripSlugs, getTripBySlug } from "@/lib/data";
 import { getAutoPromoForTrips } from "@/lib/promo";
@@ -188,7 +189,12 @@ export default async function TripDetailPage({
             )}
 
             <p className="mt-7 text-lg leading-relaxed text-ink-700">{trip.short_description}</p>
-            <p className="mt-4 leading-relaxed text-ink-500">{trip.description}</p>
+            <ExpandableProse
+              text={trip.description}
+              lines={4}
+              clampAbove={420}
+              wrapperClassName="mt-4"
+            />
 
             {/* The arc before the schedule. Someone deciding whether this is
                 their kind of trip needs the shape of it, not a departure time
@@ -360,8 +366,9 @@ export default async function TripDetailPage({
 
       <MobileBookingBar trip={trip} departures={trip.departures} promo={promo} />
 
-      {/* Clears the fixed mobile bar so the footer is never overlapped. */}
-      <div aria-hidden="true" className="h-20 lg:hidden" />
+      {/* Clears the floating mobile booking card so the footer is never
+          overlapped by it. */}
+      <div aria-hidden="true" className="h-28 lg:hidden" />
 
       <TripJsonLd trip={trip} />
       <BreadcrumbJsonLd
